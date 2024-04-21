@@ -1,0 +1,9 @@
+{
+    "sat_sim": {
+        "satellite_count": 5,
+        "constellation_type": "delta",
+        "ground_station": { 
+            "location": { "lat": 350.23, "long": 508.23 } 
+        }
+    }
+}
