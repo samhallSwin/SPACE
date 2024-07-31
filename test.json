@@ -5,5 +5,9 @@
         "ground_station": { 
             "location": { "lat": 350.23, "long": 508.23 } 
         }
+    },
+    "algorithm": {
+        "search_depth": 2,
+        "node_processing_time": 5
     }
 }

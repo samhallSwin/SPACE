@@ -1,24 +1,31 @@
 from dataclasses import dataclass
 import json
 
-# Define data classes for options
+from algorithm import Algorithm
+from algorithm_input import AlgorithmInput
+from algorithm_config import AlgorithmConfig
 
-@dataclass
-class Location:
-    lat: float
-    long: float
+# Instantiate relevant classes
 
-@dataclass
-class GroundStation:
-    location: Location
+# Instantiate Inputs, Configs and Concretes
+# (Outputs get instantiated within Concretes)
 
-@dataclass
-class SatSimOptions:
-    satellite_count: int
-    constellation_type: str
-    # Example of object inside an object... inside an object, reflecting JSON structure
-    ground_station: GroundStation
+def create_algorithm_module():
+    algorithm = Algorithm()
+    algorithm_config = AlgorithmConfig(algorithm)
+    algorithm_input = AlgorithmInput(algorithm)
+    
+    return algorithm_config, algorithm_input
 
+'''
+def create_fl_module():
+    fl = FederatedLearning()
+    fl_input = FederatedLearningInput(fl)
+    fl_config = FederatedLearningConfig(fl)
+
+    return fl_input, fl_config
+
+'''
 
 def read_options_file():
     with open('test.json') as f:
@@ -26,22 +33,18 @@ def read_options_file():
         
     return options
 
-def get_sat_sim_options(options):
-
-    sat_sim_options = SatSimOptions(
-        options["satellite_count"],
-        options["constellation_type"],
-        GroundStation(Location(**options["ground_station"]["location"]))
-    )
-
-    return sat_sim_options
-
-def run_sat_sim(options):
-    print(f'Running Satellite Simulator with these options: {options}')
-
 if __name__ == "__main__":
     # Run helper function
     options = read_options_file()
+    
+    algorithm_config, algorithm_input = create_algorithm_module()
+    algorithm_config.read_options(options["algorithm"])
+
+    # # fl_config, fl_input = create_fl_module()
+
+    # Run Sat Sim
+
+    # Pass input to Algorithm
+
    
-    sat_sim_options = get_sat_sim_options(options["sat_sim"])
-    run_sat_sim(sat_sim_options)
+

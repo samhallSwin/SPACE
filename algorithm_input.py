@@ -18,13 +18,16 @@ from interfaces.input import Input
 class AlgorithmInput(Input):
 
     # Constructor
-    def __init__():
-        pass
+    def __init__(self, algorithm):
+        self.algorhtm = algorithm
 
     def read_adjacency_matrix():
         pass
 
     def read_adjacency_matrices():
         pass
+
+    def parse_input(file):
+        return super().parse_input()
 
     # Start algorithm

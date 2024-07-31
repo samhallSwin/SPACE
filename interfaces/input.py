@@ -13,6 +13,8 @@ Usage:
 Implement this interface by assigning this type to a derived class and defining parse_input() method.
 Example:
     class SpecialInput(Input)
+        parse_input(file):
+            # functionality here
 """
 
 import abc
