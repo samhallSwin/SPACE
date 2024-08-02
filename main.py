@@ -2,8 +2,12 @@ from dataclasses import dataclass
 import json
 
 from algorithm import Algorithm
-from algorithm_input import AlgorithmInput
 from algorithm_config import AlgorithmConfig
+from algorithm_input import AlgorithmInput
+
+from federated_learning import FederatedLearning
+from fl_config import FLConfig
+from fl_input import FLInput
 
 # Instantiate relevant classes
 
@@ -17,15 +21,12 @@ def create_algorithm_module():
     
     return algorithm_config, algorithm_input
 
-'''
 def create_fl_module():
     fl = FederatedLearning()
-    fl_input = FederatedLearningInput(fl)
-    fl_config = FederatedLearningConfig(fl)
+    fl_config = FLConfig(fl)
+    fl_input = FLInput(fl)
 
     return fl_input, fl_config
-
-'''
 
 def read_options_file():
     with open('options.json') as f:
@@ -40,7 +41,9 @@ if __name__ == "__main__":
     algorithm_config, algorithm_input = create_algorithm_module()
     algorithm_config.read_options(options["algorithm"])
 
-    # # fl_config, fl_input = create_fl_module()
+    fl_config, fl_input = create_fl_module()
+
+    # fl_input.federated_learning.start_server()
 
     # Run Sat Sim
 
