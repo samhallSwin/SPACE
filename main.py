@@ -28,7 +28,7 @@ def create_fl_module():
 '''
 
 def read_options_file():
-    with open('test.json') as f:
+    with open('options.json') as f:
         options = json.load(f)
         
     return options
