@@ -12,6 +12,7 @@ Changelog:
 Usage: 
 Instantiate to setup AlgorithmInput and AlgorithmConfig.
 """
+from algorithm_output import AlgorithmOutput
 
 class Algorithm():
 
@@ -19,6 +20,7 @@ class Algorithm():
     def __init__(self):
         self.node_processing_time = 0
         self.search_depth = 0
+        self.output = AlgorithmOutput()
 
     def set_node_processing_time(self, time):
         self.node_processing_time = time

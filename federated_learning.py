@@ -16,12 +16,14 @@ import flwr as fl
 from flwr.server.driver.grpc_driver import GrpcDriver as p2p
 
 from model import Model
+from fl_output import FLOutput
 
 class FederatedLearning():
 
     # Have MNIST as default model ?
     def __init__(self, model: Model = Model()):
         self.model = model
+        self.output = FLOutput()
 
     def start_client(self):
         # Load data

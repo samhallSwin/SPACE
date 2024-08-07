@@ -19,14 +19,15 @@ def create_algorithm_module():
     algorithm_config = AlgorithmConfig(algorithm)
     algorithm_input = AlgorithmInput(algorithm)
     
-    return algorithm_config, algorithm_input
+    return algorithm_config, algorithm_input, algorithm.output
 
 def create_fl_module():
     fl = FederatedLearning()
     fl_config = FLConfig(fl)
     fl_input = FLInput(fl)
 
-    return fl_input, fl_config
+    return fl_input, fl_config, fl.output
+
 
 def read_options_file():
     with open('options.json') as f:
@@ -38,10 +39,16 @@ if __name__ == "__main__":
     # Run helper function
     options = read_options_file()
     
-    algorithm_config, algorithm_input = create_algorithm_module()
+    algorithm_config, algorithm_input, algorithm_output = create_algorithm_module()
     algorithm_config.read_options(options["algorithm"])
 
-    fl_config, fl_input = create_fl_module()
+    fl_config, fl_input, fl_output = create_fl_module()
+
+    # Connect modules
+    # Sat Sim -> Algorithm Output
+
+    # Algorithm Output -> FL Input
+    algorithm_output.set_fl_input(fl_input)
 
     # fl_input.federated_learning.start_server()
 
