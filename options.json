@@ -9,5 +9,8 @@
     "algorithm": {
         "search_depth": 2,
         "node_processing_time": 5
+    },
+    "federated_learning": {
+        "num_clients": 3
     }
 }

@@ -13,6 +13,7 @@ Usage:
 
 """
 import flwr as fl
+from flwr.server.driver.grpc_driver import GrpcDriver as p2p
 
 from model import Model
 
