@@ -22,9 +22,9 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QLabel, QLineEdit, QHBoxLayout, QMessageBox
 from PyQt5.QtCore import QTimer
-from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 import vtk
-
+# from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from skyfield.api import load, EarthSatellite, Topos
 import networkx as nx
 
