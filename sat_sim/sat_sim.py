@@ -97,7 +97,6 @@ class SatSim():
 
 class SatSimInput(Input):
 
-    # Will hours and timeframe come from JSON options?
     def __init__(self, sat_sim: SatSim, hours, timeframe):
         self.sat_sim = sat_sim
         self.tle_data = None
