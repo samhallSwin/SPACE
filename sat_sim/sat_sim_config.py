@@ -13,11 +13,12 @@ Usage:
 
 """
 from interfaces.config import Config
+from sat_sim.sat_sim import SatSim
 
 class SatSimConfig(Config):
 
     # Constructor, accepts core module
-    def __init__(self, sat_sim):
+    def __init__(self, sat_sim: SatSim):
         self.sat_sim = sat_sim
         self.options = None
 
@@ -30,5 +31,6 @@ class SatSimConfig(Config):
         return super().read_options_from_file()
 
     def set_sat_sim(self):
-        pass
+        self.sat_sim.set_duration(self.options["duration"])
+        self.sat_sim.set_timestep(self.options["timestep"])
         

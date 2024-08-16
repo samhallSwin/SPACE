@@ -12,9 +12,12 @@ Changelog:
 Usage: Access a module and its I/O interfaces by calling the relevant create function
 
 """
+from typing import NamedTuple
 
 from sat_sim.sat_sim import SatSim
-from sat_sim.sat_sim import SatSimInput
+from sat_sim.sat_sim_config import SatSimConfig
+from sat_sim.sat_sim_input import SatSimInput
+from sat_sim.sat_sim_output import SatSimOutput
 
 from algorithm import Algorithm
 from algorithm_config import AlgorithmConfig
@@ -28,10 +31,17 @@ from fl_input import FLInput
 
 # Instantiate Inputs, Configs and Concretes
 # (Outputs get instantiated within Concretes)
+class SatSimModule(NamedTuple):
+    config: SatSimConfig
+    input: SatSimInput
+    output: SatSimOutput
 
-def create_sat_sim_module():
+def create_sat_sim_module() -> SatSimModule:
     sat_sim = SatSim()
-    sat_sim_input = SatSimInput
+    sat_sim_config = SatSimConfig(sat_sim)
+    sat_sim_input = SatSimInput(sat_sim)
+
+    return SatSimModule(sat_sim_config, sat_sim_input, sat_sim.output)
 
 def create_algorithm_module():
     algorithm = Algorithm()

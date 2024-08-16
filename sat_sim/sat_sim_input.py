@@ -12,28 +12,34 @@ Changelog:
 Usage: 
 Instantiate SatSimInput and assign SatSim. 
 """
+import os
 
 from interfaces.input import Input
 from sat_sim.sat_sim import SatSim
 
 class SatSimInput(Input):
 
-    def __init__(self, sat_sim: SatSim, hours, timeframe):
+    '''
+            Satellite 4
+        1    -4U 20004A   20125.77352221  .00000000  00000-0  10261-3 0    11
+        2    -4  55.9989 356.8090 0009545 256.3910 255.5351 14.11692457   441
+    '''
+
+    def __init__(self, sat_sim: SatSim):
         self.sat_sim = sat_sim
         self.tle_data = None
-        self.hours = hours
-        self.timeframe = timeframe
 
     def parse_input(self, file):
         tle_data = self.read_tle_file(file)
         self.send_data(tle_data)
-        self.start_module()
+        return self.start_module()
 
     def send_data(self, data):
         self.sat_sim.set_tle_data(data)
 
     def start_module(self):
-        self.sat_sim.run_with_adj_matrix()
+        matrices = self.sat_sim.run_with_adj_matrix()
+        return matrices
 
     def read_tle_file(self, file_path):
         tle_data = {}

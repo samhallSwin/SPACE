@@ -28,20 +28,33 @@ from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from skyfield.api import load, EarthSatellite, Topos
 import networkx as nx
 
+from sat_sim.sat_sim_output import SatSimOutput
+
 from interfaces.input import Input
 
 
 
 class SatSim():
 
-    def __init__(self, hours, timeframe):
+    def __init__(self):
         self.tle_data = None
-        self.hours = hours
-        self.timeframe = timeframe
+        self.duration = None
+        self.timestep = None
+        self.sf_timescale = load.timescale()
+        self.output = SatSimOutput()
 
+    # INPUT
     def set_tle_data(self, tle_data):
         self.tle_data = tle_data
     
+    # CONFIG
+    def set_duration(self, duration):
+        self.duration = duration
+
+    def set_timestep(self, timestep):
+        self.timestep = timestep
+    
+    # CORE METHODS
     def get_satellite_positions(self, tle_data, time):
         positions = {}
         for name, tle in tle_data.items():
@@ -56,16 +69,16 @@ class SatSim():
     def run_with_adj_matrix(self):
         # Setup timesteps
         try:
-            hours = int(self.hours)
-            timeframe = int(self.timeframe)
-            if hours <= 0 or timeframe <= 0:
-                raise ValueError("Hours and timeframe must be positive integers.")
+            duration = int(self.duration)
+            timestep = int(self.timestep)
+            if duration <= 0 or timestep <= 0:
+                raise ValueError("Duration and timestep must be positive integers.")
         except ValueError as e:
             print(f"Invalid input: {e}")
             return
         
-        t = self.ts.now()
-        end_time = t + timedelta(hours=hours)
+        t = self.sf_timescale.now()
+        end_time = t + timedelta(hours=duration)
         current_time = t
         matrices = []
         
@@ -80,51 +93,22 @@ class SatSim():
                     dist = calculate_distance(positions[keys[i]], positions[keys[j]])
                     adj_matrix[i, j] = adj_matrix[j, i] = 1 if dist < 10000 else 0
             matrices.append((current_time.utc_strftime('%Y-%m-%d %H:%M:%S'), adj_matrix))
-            current_time += timedelta(seconds=timeframe)
+            current_time += timedelta(seconds=timestep)
         
-        # Write to file
-        with open("adjacency_matrices.txt", "w") as f:
-            for timestamp, matrix in matrices:
-                f.write(f"Time: {timestamp}\n")
-                np.savetxt(f, matrix, fmt='%d')
-                f.write("\n")
+        # Write to file - TO GO IN OUTPUT CLASS - get matrices there though
+        self.output.write_to_file("adjacency_matrices.txt", matrices)
+
+        # with open("adjacency_matrices.txt", "w") as f:
+            # for timestamp, matrix in matrices:
+            #     f.write(f"Time: {timestamp}\n")
+            #     np.savetxt(f, matrix, fmt='%d')
+            #     f.write("\n")
 
         # Return adjacency matrices
         return matrices
     
     # Pass TLE data to MainWindow
     # SatSim as composite of MainWindow and OrbitManager ??
-
-class SatSimInput(Input):
-
-    def __init__(self, sat_sim: SatSim, hours, timeframe):
-        self.sat_sim = sat_sim
-        self.tle_data = None
-        self.hours = hours
-        self.timeframe = timeframe
-
-    def parse_input(self, file):
-        tle_data = self.read_tle_file(file)
-        self.send_data(tle_data)
-        self.start_module()
-
-    def send_data(self, data):
-        self.sat_sim.set_tle_data(data)
-
-    def start_module(self):
-        self.sat_sim.run_with_adj_matrix()
-
-    def read_tle_file(self, file_path):
-        tle_data = {}
-        with open(file_path, 'r') as f:
-            lines = f.readlines()
-            for i in range(0, len(lines), 3):
-                name = lines[i].strip()
-                tle_line1 = lines[i + 1].strip()
-                tle_line2 = lines[i + 2].strip()
-                tle_data[name] = [tle_line1, tle_line2]
-        return tle_data
-    
 
 
 # Ground stations
@@ -309,12 +293,12 @@ class MainWindow(QMainWindow):
 '''
 GUI Version
 '''
-def main():
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    window.show()
-    window.iren.Initialize()
-    sys.exit(app.exec_())
+# def main():
+#     app = QApplication(sys.argv)
+#     window = MainWindow()
+#     window.show()
+#     window.iren.Initialize()
+#     sys.exit(app.exec_())
 
-if __name__ == '__main__':
-    main()
+# if __name__ == '__main__':
+#     main()

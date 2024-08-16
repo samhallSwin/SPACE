@@ -4,7 +4,9 @@
         "constellation_type": "delta",
         "ground_station": { 
             "location": { "lat": 350.23, "long": 508.23 } 
-        }
+        },
+        "duration": 24,
+        "timestep": 620
     },
     "algorithm": {
         "search_depth": 2,
