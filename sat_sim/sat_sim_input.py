@@ -32,12 +32,11 @@ class SatSimInput(Input):
     def parse_input(self, file):
         tle_data = self.read_tle_file(file)
         self.send_data(tle_data)
-        return self.start_module()
 
     def send_data(self, data):
         self.sat_sim.set_tle_data(data)
 
-    def start_module(self):
+    def run_module(self):
         matrices = self.sat_sim.run_with_adj_matrix()
         return matrices
 
