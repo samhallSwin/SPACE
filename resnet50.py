@@ -1,14 +1,13 @@
 """
-Filename: model.py
-Description: Class for ML model.
-Author: Elysia Guglielmo and Connor Bett
-Date: 2024-08-02
+Filename: resnet50.py
+Description: Class for ResNet50 model.
+Author: Ahmed Mubeenul Azim & Michelle Abrigo
+Date: 2024-08-24
 Version: 1.0
 Python Version: 
 
 Changelog:
-- 2024-08-02: Initial creation.
-- 2024-08-24: Added ResNet50 model to train on MNIST dataset.
+- 2024-08-24: Initial creation and added ResNet50 model to train on MNIST dataset.
 
 Usage: 
 Run this file directly to start training the ResNet50 model on MNIST.
