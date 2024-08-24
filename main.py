@@ -1,7 +1,14 @@
-from dataclasses import dataclass
+import argparse
+from enum import Enum
 import json
 
 import module_factory
+
+class ModuleKeys(Enum):
+    SAT_SIM = "sat_sim"
+    ALGORITHM = "algorithm"
+    FL = "federated_learning"
+    MODEL = "model"
 
 def read_options_file():
     with open('options.json') as f:
@@ -10,11 +17,48 @@ def read_options_file():
     return options
 
 if __name__ == "__main__":
-    # Run helper function
     options = read_options_file()
-    # print(options)    # Commented by Yuganya Perumal on 24/08/2024 for testing
+
+    # read_cli(options)
 
     # Argparse
+    # TODO: Provide better description once official program name is known
+    parser = argparse.ArgumentParser(description='Run FLOMPS Simulation Suite')
+
+    # Create a parser group for each module, such that group titles match JSON module keys for configuration
+    sat_sim_group = parser.add_argument_group(ModuleKeys.SAT_SIM)
+    algorithm_group = parser.add_argument_group(ModuleKeys.ALGORITHM)
+    fl_group = parser.add_argument_group(ModuleKeys.FL)
+    model_group = parser.add_argument_group(ModuleKeys.MODEL)
+
+    # Options which can be configured from the command line
+    sat_sim_group.add_argument('--start-time', type=int, help='The start date/time for the satellite simulation')
+    sat_sim_group.add_argument('--end-time', type=int, help='The end date/time for the satellite simulation')
+
+    fl_group.add_argument('--num-clients', type=int, help='Number of Federated Learning clients for the simulation')
+
+    # Only get arg keys with specified values
+    args = parser.parse_args()
+    args_for_config = {k: v for k, v in args.__dict__.items() if v is not None}
+
+    print(args_for_config)
+    # Apply incoming args to update options.json
+    for group in parser._action_groups:
+        # Skip default Argparser groups
+        if group.title == "positional arguments" or group.title == "options":
+            continue
+
+        # Select args pertaining to group
+        print(f'ARG GROUP: {group.title}')
+        group_arg_keys = [a.dest for a in group._group_actions]
+        options_to_update = {k: v for k, v in args_for_config.items() if k in group_arg_keys}
+
+        # Apply new settings to JSON options of relevant module
+        options[group.title.value].update(options_to_update)
+
+    # Rewrite to JSON options file
+    with open('options.json', 'w') as f:
+        json.dump(options, f, indent=4)
 
     # 1) End-to-End Simulation
 
@@ -28,38 +72,22 @@ if __name__ == "__main__":
     #                run either MNIST or ResNet
     #                on its own without FL overhead)
 
-    
-
     # Create Modules
-    '''
-    Commented by Yuganya Perumal on 24/08/2024 for testing
     sat_sim_module = module_factory.create_sat_sim_module()
     sat_sim_module.config.read_options(options["sat_sim"])
-    '''
+
     algorithm_module = module_factory.create_algorithm_module()
     algorithm_module.config.read_options(options["algorithm"])
-    '''
-    Commented by Yuganya Perumal on 24/08/2024 for testing
+
     fl_module = module_factory.create_fl_module()
     fl_module.config.read_options(options["federated_learning"])
-    '''
+
     # Simulation Process
-    '''
-    Commented by Yuganya Perumal on 24/08/2024 for testing
     sat_sim_module.input.parse_input('TLEs/leoSatelliteConstellation4.tle')
     matrices = sat_sim_module.input.run_module()
     print(matrices)
-    '''
 
-    # Commented by Yuganya Perumal on 24/08/2024 for testing algorithm_module.input.parse_input(matrices)
-    # Process Algorithm Component Block 
-    print("Number of nodes read from JSON file")
-    print (algorithm_module.config.get_algorithm_no_of_nodes()) # Successfully reads the no of nodes from JSON
-    print("Node Names read from JSON file")
-    print (algorithm_module.config.get_algorithm_node_names()) # Successfully reads the Node Names from JSON
-
-    # Pass Adjacency Matrices text file into Algorithm input module
-    algorithm_module.input.parse_input('adjacency_matrices.txt')
+    algorithm_module.input.parse_input(matrices)
 
     # Algorithm Output -> FL Input
     # algorithm_output.set_fl_input(fl_input)
@@ -68,6 +96,7 @@ if __name__ == "__main__":
 
     # Run Sat Sim
     
+
     # Pass input to Algorithm
 
    
