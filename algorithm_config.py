@@ -8,6 +8,7 @@ Python Version:
 
 Changelog:
 - 2024-07-11: Initial creation.
+- 2024-08-24: Reading JSON Options no_of_nodes and node_names to configure the setters by Yuganya Perumal
 
 Usage: 
 
@@ -34,19 +35,18 @@ class AlgorithmConfig(Config):
         self.algorithm = algorithm
         self.options = None
 
-    # Traverse JSON options to check for nested objects?
+    # Traverse JSON options to check for nested objects
     def read_options(self, options):
         self.options = options
         self.set_algorithm()
 
     def read_options_from_file(file):
-        return super().read_options_from_file()
+         return super().read_options_from_file()
+
 
     def set_algorithm(self):
-        '''
-        self.algorithm.set_node_processing_time(self.options["node_processing_time"])
-        self.algorithm.set_search_depth(self.options["search_depth"])
-        '''
+        # self.algorithm.set_node_processing_time(self.options["node_processing_time"])
+        # self.algorithm.set_search_depth(self.options["search_depth"])
         self.algorithm.set_no_of_nodes(self.options["no_of_nodes"])
         self.algorithm.set_node_names(self.options["node_names"])
 
@@ -55,4 +55,3 @@ class AlgorithmConfig(Config):
 
     def get_algorithm_node_names(self):
         return self.algorithm.get_node_names() 
-        

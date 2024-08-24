@@ -32,6 +32,7 @@ class Algorithm():
     def set_search_depth(self, depth):
         self.search_depth = depth
     '''
+
     def set_no_of_nodes(self, noofnodes):
         self.no_of_nodes = noofnodes
 
