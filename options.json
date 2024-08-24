@@ -9,8 +9,8 @@
         "timestep": 620
     },
     "algorithm": {
-        "search_depth": 2,
-        "node_processing_time": 5
+        "no_of_nodes": 4,
+        "node_names": ["GS","S1","S2","S3"]
     },
     "federated_learning": {
         "num_clients": 3
