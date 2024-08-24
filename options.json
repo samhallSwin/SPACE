@@ -2,17 +2,30 @@
     "sat_sim": {
         "satellite_count": 5,
         "constellation_type": "delta",
-        "ground_station": { 
-            "location": { "lat": 350.23, "long": 508.23 } 
+        "ground_station": {
+            "location": {
+                "lat": 350.23,
+                "long": 508.23
+            }
         },
+        "start_time": 2,
+        "end_time": 10,
         "duration": 24,
         "timestep": 620
     },
+<<<<<<< HEAD
     "algorithm": {
+=======
+   "algorithm": {
+>>>>>>> e7cb8e130b7ab3e0cce8af7ca230aba92162faa9
         "no_of_nodes": 4,
         "node_names": ["GS","S1","S2","S3"]
     },
     "federated_learning": {
-        "num_clients": 3
+        "num_rounds": 3,
+        "num_clients": 8
+    },
+    "model": {
+        "type": "mnist"
     }
 }
