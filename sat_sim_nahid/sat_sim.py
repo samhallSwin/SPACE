@@ -1,3 +1,7 @@
+"""
+Filename: sat_sim.py
+Author: Md Nahid Tanjum"""
+
 import argparse
 from datetime import datetime, timedelta
 from skyfield.api import load, EarthSatellite
