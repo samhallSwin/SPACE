@@ -1,3 +1,7 @@
+"""
+Filename: sat_sim.py
+Author: Md Nahid Tanjum"""
+
 from skyfield.api import load, Topos
 
 class SatSimConfig:
