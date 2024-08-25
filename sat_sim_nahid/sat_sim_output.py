@@ -1,3 +1,7 @@
+"""
+Filename: sat_sim_output.py
+Author: Md Nahid Tanjum"""
+
 import numpy as np
 
 from interfaces.output import Output
