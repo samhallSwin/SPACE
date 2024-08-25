@@ -1,5 +1,7 @@
 {
     "sat_sim": {
+        "start_time": 2,
+        "end_time": 16,
         "satellite_count": 5,
         "constellation_type": "delta",
         "ground_station": {
@@ -8,8 +10,6 @@
                 "long": 508.23
             }
         },
-        "start_time": 2,
-        "end_time": 10,
         "duration": 24,
         "timestep": 620
     },
@@ -19,9 +19,7 @@
     },
     "federated_learning": {
         "num_rounds": 3,
-        "num_clients": 8
-    },
-    "model": {
-        "type": "mnist"
+        "num_clients": 4,
+        "model_type": "mnist"
     }
 }
