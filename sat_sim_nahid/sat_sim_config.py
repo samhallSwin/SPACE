@@ -1,5 +1,5 @@
 """
-Filename: sat_sim.py
+Filename: sat_sim_config.py
 Author: Md Nahid Tanjum"""
 
 from skyfield.api import load, Topos
