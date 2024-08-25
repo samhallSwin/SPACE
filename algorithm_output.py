@@ -18,15 +18,12 @@ class AlgorithmOutput(Output):
 
     # Constructor
     def __init__(self):
-        self.fl_input = None
+        pass
 
     def write_to_file(file):
         return super().write_to_file()
     
     def set_result():
         pass
-
-    def set_fl_input(self, fl_input):
-        self.fl_input = fl_input
 
     # Start algorithm

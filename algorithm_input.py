@@ -1,5 +1,5 @@
 """
-Filename: algorithm_input.py
+Filename: algorithm_handler.py
 Description: Reads satellite link data to perform preprocessing before satellite communication algorithm execution. 
 Author:
 Date: 2024-06-29
@@ -10,12 +10,12 @@ Changelog:
 - 2024-06-29: Initial creation.
 
 Usage: 
-Instantiate AlgorithmInput and assign Algorithm. 
+Instantiate AlgorithmHandler and assign Algorithm. 
 Then run start_algorithm() with adjacency matrices. 
 """
-from interfaces.input import Input
+from interfaces.handler import Handler
 
-class AlgorithmInput(Input):
+class AlgorithmHandler(Handler):
 
     # Constructor
     def __init__(self, algorithm):

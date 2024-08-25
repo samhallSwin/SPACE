@@ -10,7 +10,7 @@ Changelog:
 - 2024-07-31: Initial creation.
 
 Usage: 
-Instantiate to setup AlgorithmInput and AlgorithmConfig.
+Instantiate to setup Algorithmhandler and AlgorithmConfig.
 """
 from algorithm_output import AlgorithmOutput
 

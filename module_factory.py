@@ -16,56 +16,56 @@ from typing import NamedTuple
 
 from sat_sim.sat_sim import SatSim
 from sat_sim.sat_sim_config import SatSimConfig
-from sat_sim.sat_sim_input import SatSimInput
+from sat_sim.sat_sim_handler import SatSimHandler
 from sat_sim.sat_sim_output import SatSimOutput
 
 from algorithm import Algorithm
 from algorithm_config import AlgorithmConfig
-from algorithm_input import AlgorithmInput
+from algorithm_handler import AlgorithmHandler
 from algorithm_output import AlgorithmOutput
 
 from federated_learning import FederatedLearning
 from fl_config import FLConfig
-from fl_input import FLInput
+from fl_handler import FLHandler
 from fl_output import FLOutput
 
 # Instantiate relevant classes
 
-# Instantiate Inputs, Configs and Concretes
+# Instantiate Handlers, Configs and Concretes
 # (Outputs get instantiated within Concretes)
 class SatSimModule(NamedTuple):
     config: SatSimConfig
-    input: SatSimInput
+    handler: SatSimHandler
     output: SatSimOutput
 
 class AlgorithmModule(NamedTuple):
     config: AlgorithmConfig
-    input: AlgorithmInput
+    handler: AlgorithmHandler
     output: AlgorithmOutput
 
 class FLModule(NamedTuple):
     config: FLConfig
-    input: FLInput
+    handler: FLHandler
     output: FLOutput
 
 def create_sat_sim_module() -> SatSimModule:
     sat_sim = SatSim()
     sat_sim_config = SatSimConfig(sat_sim)
-    sat_sim_input = SatSimInput(sat_sim)
+    sat_sim_handler = SatSimHandler(sat_sim)
 
-    return SatSimModule(sat_sim_config, sat_sim_input, sat_sim.output)
+    return SatSimModule(sat_sim_config, sat_sim_handler, sat_sim.output)
 
 def create_algorithm_module() -> AlgorithmModule:
     algorithm = Algorithm()
     algorithm_config = AlgorithmConfig(algorithm)
-    algorithm_input = AlgorithmInput(algorithm)
+    algorithm_handler = AlgorithmHandler(algorithm)
     
-    return AlgorithmModule(algorithm_config, algorithm_input, algorithm.output)
+    return AlgorithmModule(algorithm_config, algorithm_handler, algorithm.output)
 
 def create_fl_module() -> FLModule:
     fl = FederatedLearning()
     fl_config = FLConfig(fl)
-    fl_input = FLInput(fl)
+    fl_handler = FLHandler(fl)
 
-    return FLModule(fl_input, fl_config, fl.output)
+    return FLModule(fl_handler, fl_config, fl.output)
 

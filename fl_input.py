@@ -1,5 +1,5 @@
 """
-Filename: fl_input.py
+Filename: fl_handler.py
 Description: Reads algorithm data to perform preprocessing before running federated learning round. 
 Author: Elysia Guglielmo
 Date: 2024-08-02
@@ -12,9 +12,9 @@ Changelog:
 Usage: 
 
 """
-from interfaces.input import Input
+from interfaces.handler import Handler
 
-class FLInput(Input):
+class FLHandler(Handler):
 
     # Constructor
     def __init__(self, federated_learning):
