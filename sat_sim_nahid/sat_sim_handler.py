@@ -1,5 +1,5 @@
 """
-Filename: sat_sim.py
+Filename: sat_sim_handler.py
 Author: Md Nahid Tanjum"""
 import os
 import logging
