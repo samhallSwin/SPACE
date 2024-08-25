@@ -1,3 +1,6 @@
+"""
+Filename: sat_sim.py
+Author: Md Nahid Tanjum"""
 import os
 import logging
 from interfaces.handler import Handler
