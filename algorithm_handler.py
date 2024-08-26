@@ -14,7 +14,7 @@ Instantiate AlgorithmHandler and assign Algorithm.
 Then run start_algorithm() with adjacency matrices. 
 """
 from interfaces.handler import Handler
-
+import numpy as npy
 class AlgorithmHandler(Handler):
 
     # Constructor
