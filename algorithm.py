@@ -13,7 +13,7 @@ Usage:
 Instantiate to setup AlgorithmInput and AlgorithmConfig.
 """
 from algorithm_output import AlgorithmOutput
-
+import numpy as npy
 class Algorithm():
 
     # Constructor
@@ -44,3 +44,4 @@ class Algorithm():
     
     def get_node_names(self):
         return self.node_names
+    
