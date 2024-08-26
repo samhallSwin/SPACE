@@ -1,5 +1,5 @@
 """
-Filename: sat_sim_input.py
+Filename: sat_sim_handler.py
 Description: Reads in TLE file for Satellite Simulation
 Authors: Elysia Guglielmo, Md Nahid Tanjum
 Date: 2024-08-11
@@ -10,14 +10,14 @@ Changelog:
 - 2024-08-11: Initial creation.
 
 Usage: 
-Instantiate SatSimInput and assign SatSim. 
+Instantiate SatSimHandler and assign SatSim. 
 """
 import os
 
-from interfaces.input import Input
+from interfaces.handler import Handler
 from sat_sim.sat_sim import SatSim
 
-class SatSimInput(Input):
+class SatSimHandler(Handler):
 
     '''
             Satellite 4

@@ -75,17 +75,17 @@ if __name__ == "__main__":
     # fl_module = module_factory.create_fl_module()
     # fl_module.config.read_options(options["federated_learning"])
 
-    # # Simulation Process
-    # sat_sim_module.input.parse_input('TLEs/leoSatelliteConstellation4.tle')
-    # matrices = sat_sim_module.input.run_module()
+    # Simulation Process
+    # sat_sim_module.handler.parse_input('TLEs/leoSatelliteConstellation4.tle')
+    # matrices = sat_sim_module.handler.run_module()
     # print(matrices)
 
-    # algorithm_module.input.parse_input(matrices)
+    # algorithm_module.handler.parse_input(matrices)
 
     # Algorithm Output -> FL Input
-    # algorithm_output.set_fl_input(fl_input)
+    # algorithm_output.set_fl_input(fl_handler)
 
-    # fl_input.federated_learning.start_server()
+    # fl_handler.federated_learning.start_server()
 
     # Run Sat Sim
     
