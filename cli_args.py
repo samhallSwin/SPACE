@@ -23,3 +23,8 @@ def add_fl_args(parser):
 
     # Add args here
     fl_group.add_argument('--num-clients', type=int, help='Number of Federated Learning clients for the simulation')
+    fl_group.add_argument('--model', type=str, help='The Model to use for the simulation (mnist/resnet)') 
+    # Currently implemented models include MNIST & resnet, will have to adapt this once resnet trained with bigearthnet dataset is implemented
+    fl_group.add_argument('--epochs', type=int, help='Number of Epochs used for simulation')
+    fl_group.add_argument('--batch-size', type=int, help='The Batch Size of the model to use for simulation')
+
