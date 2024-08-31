@@ -13,20 +13,27 @@ Usage:
 Instantiate AlgorithmOutput and assign FLInput. 
 """
 from interfaces.output import Output
-
+import numpy as npy
 class AlgorithmOutput(Output):
 
     # Constructor
     def __init__(self):
-        self.fl_input = None
-
-    def write_to_file(file):
-        return super().write_to_file()
-    
-    def set_result():
         pass
 
-    def set_fl_input(self, fl_input):
-        self.fl_input = fl_input
+    '''
+    def write_to_file(file):
+        return super().write_to_file()
+    '''  
+    def write_to_file(self, algorithmoutput):
+        file_name = 'algorithm_output_data.txt'
+        with open(file_name, 'w') as file:
+            for timestamp, data in algorithmoutput.items():
+                file.write(f"Timestamp: {timestamp}\n")
+                file.write(f"Selected Node: {data['selected_node']} (Aggregator Flag: {data['aggregator_flag']})\n")
+                file.write("Trimmed Matrix:\n")
+                npy.savetxt(file, data['trimmed_matrix'], fmt='%d', delimiter=',')
+                file.write("\n")
+    def set_result():
+        pass
 
     # Start algorithm

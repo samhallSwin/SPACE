@@ -30,9 +30,6 @@ import networkx as nx
 
 from sat_sim.sat_sim_output import SatSimOutput
 
-from interfaces.input import Input
-
-
 
 class SatSim():
 
