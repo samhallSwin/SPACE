@@ -14,8 +14,7 @@
         "timestep": 620
     },
    "algorithm": {
-        "no_of_nodes": 4,
-        "node_names": ["GS","S1","S2","S3"]
+        "satellite_names": ["Sat1","Sat2","Sat3","Sat4"]
     },
     "federated_learning": {
         "num_rounds": 3,

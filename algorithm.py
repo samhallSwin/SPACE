@@ -21,9 +21,9 @@ class Algorithm():
         '''
         self.node_processing_time = 0
         self.search_depth = 0
-        '''
         self.no_of_nodes = 0
-        self.node_names = []
+        '''
+        self.satellite_names = []
         self.output = AlgorithmOutput()
     '''
     def set_node_processing_time(self, time):
@@ -31,17 +31,16 @@ class Algorithm():
 
     def set_search_depth(self, depth):
         self.search_depth = depth
-    '''
-
+    
     def set_no_of_nodes(self, noofnodes):
         self.no_of_nodes = noofnodes
 
-    def set_node_names(self, nodenames):
-        self.node_names = nodenames
-
     def get_no_of_nodes(self):
         return self.no_of_nodes
-    
-    def get_node_names(self):
-        return self.node_names
+    '''
+    def set_satellite_names(self, satellitenames):
+        self.satellite_names = satellitenames
+
+    def get_satellite_names(self):
+        return self.satellite_names
     
