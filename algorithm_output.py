@@ -15,7 +15,6 @@ Instantiate AlgorithmOutput and assign FLInput.
 from interfaces.output import Output
 import numpy as npy
 import pandas as pds
-from io import StringIO
 class AlgorithmOutput(Output):
 
     # Constructor
@@ -47,12 +46,10 @@ class AlgorithmOutput(Output):
         algo_op_rows = []
 
         for algo_op in algorithmoutput.values():
-            # Convert the aggregator_flag to 'None' if it is None
+            # Convert the aggregator_flag to 'None' if there is no connectivity among satellites
             aggregator_flag = algo_op['aggregator_flag'] if algo_op['aggregator_flag'] is not None else 'None'
-
-            # Convert the matrix to a string representation (each row as a separate line)
-            fl_am = '\n'.join([','.join(map(str, row)) for row in algo_op['federatedlearning_adjacencymatrix']])
-            
+            # Get FLAM
+            fl_am = algo_op['federatedlearning_adjacencymatrix']
             # Get satellite count
             satellite_count = algo_op['satellite_count']
             # Append the row with the aggregator flag and matrix
@@ -61,13 +58,7 @@ class AlgorithmOutput(Output):
                 'aggregator_flag': aggregator_flag,
                 'federatedlearning_adjacencymatrix': fl_am
             })
-
-        # Convert the list of algorith output rows to a DataFrame
+        
+        # Convert the list of algorithm output rows to a DataFrame for easy processing and manipulation
         algo_op_df = pds.DataFrame(algo_op_rows)
-
-        # Convert DataFrame to CSV string
-        csv_buffer = StringIO()
-        algo_op_df.to_csv(csv_buffer, index=False)
-        algorithm_output = csv_buffer.getvalue()
-
-        return algorithm_output
+        return algo_op_df

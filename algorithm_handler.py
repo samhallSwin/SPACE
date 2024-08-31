@@ -74,7 +74,7 @@ class AlgorithmHandler(Handler):
     def parse_input(self, adjacencymatrices):
         algorithmoutput = {}
 
-        # Initialize aggregator flags for all nodes to False
+        # Initialize aggregator flags for all satellite to False
         aggregator_flags = {node_name: False for node_name in self.algorithm.get_satellite_names()}
 
         for timestamp, eachmatrix in adjacencymatrices:
@@ -96,14 +96,14 @@ class AlgorithmHandler(Handler):
             satelliteconnections = npy.sum(eachmatrix, axis=1)
             maxconnections = npy.max(satelliteconnections)
 
-            # Find all nodes with the maximum number of connections
+            # Find all satellite with the maximum number of connections
             max_connected_satellite = [i for i, conn in enumerate(satelliteconnections) if conn == maxconnections]
 
-            # Choose the first node in case of a tie
+            # Choose the first satellite in case of a tie
             selected_satellite_index = max_connected_satellite[0]
             selected_satellite = self.get_selected_satellite_name(selected_satellite_index)
 
-            # Set the aggregator flag for the selected node
+            # Set the aggregator flag for the selected satellite
             aggregator_flags[selected_satellite] = True
 
             # Create a copy of the matrix to modify
