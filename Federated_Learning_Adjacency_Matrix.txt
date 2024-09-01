@@ -1,0 +1,1260 @@
+Timestamp: 2024-08-24 06:38:45
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,1
+1,0,0,0
+0,0,0,0
+1,0,0,0
+
+Timestamp: 2024-08-24 06:49:05
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,1
+1,0,0,1
+0,0,0,0
+1,1,0,0
+
+Timestamp: 2024-08-24 06:59:25
+satellite_count: 4
+selected_satellite: None (Aggregator Flag: None)
+Federated Learning Adjacency Matrix:
+0,0,0,0
+0,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 07:09:45
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 07:20:05
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 07:30:25
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,1
+1,0,0,0
+0,0,0,0
+1,0,0,0
+
+Timestamp: 2024-08-24 07:40:45
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,1
+1,0,0,1
+0,0,0,0
+1,1,0,0
+
+Timestamp: 2024-08-24 07:51:05
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 08:01:25
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 08:11:45
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 08:22:05
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,1
+1,0,0,0
+0,0,0,0
+1,0,0,0
+
+Timestamp: 2024-08-24 08:32:25
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,1
+1,0,0,1
+0,0,0,0
+1,1,0,0
+
+Timestamp: 2024-08-24 08:42:45
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 08:53:05
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 09:03:25
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 09:13:45
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,1
+1,0,0,0
+0,0,0,0
+1,0,0,0
+
+Timestamp: 2024-08-24 09:24:05
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,1
+1,0,0,1
+0,0,0,0
+1,1,0,0
+
+Timestamp: 2024-08-24 09:34:25
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 09:44:45
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 09:55:05
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 10:05:25
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,1
+1,0,0,0
+0,0,0,0
+1,0,0,0
+
+Timestamp: 2024-08-24 10:15:45
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,1
+1,0,0,1
+0,0,0,0
+1,1,0,0
+
+Timestamp: 2024-08-24 10:26:05
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 10:36:25
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 10:46:45
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 10:57:05
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,1
+1,0,0,0
+0,0,0,0
+1,0,0,0
+
+Timestamp: 2024-08-24 11:07:25
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,1
+1,0,0,1
+0,0,0,0
+1,1,0,0
+
+Timestamp: 2024-08-24 11:17:45
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 11:28:05
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 11:38:25
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 11:48:45
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,1
+1,0,0,0
+0,0,0,0
+1,0,0,0
+
+Timestamp: 2024-08-24 11:59:05
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,1
+1,0,0,1
+0,0,0,0
+1,1,0,0
+
+Timestamp: 2024-08-24 12:09:25
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 12:19:45
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 12:30:05
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 12:40:25
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,1
+1,0,0,0
+0,0,0,0
+1,0,0,0
+
+Timestamp: 2024-08-24 12:50:45
+satellite_count: 4
+selected_satellite: Sat2 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,1
+0,0,0,0
+0,1,0,0
+
+Timestamp: 2024-08-24 13:01:05
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 13:11:25
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 13:21:45
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 13:32:05
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,1
+1,0,0,0
+0,0,0,0
+1,0,0,0
+
+Timestamp: 2024-08-24 13:42:25
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 13:52:45
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 14:03:05
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 14:13:25
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 14:23:45
+satellite_count: 4
+selected_satellite: Sat4 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,1
+1,0,0,1
+0,0,0,1
+1,1,1,0
+
+Timestamp: 2024-08-24 14:34:05
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 14:44:25
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 14:54:45
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 15:05:05
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 15:15:25
+satellite_count: 4
+selected_satellite: Sat4 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,1
+1,0,0,1
+0,0,0,1
+1,1,1,0
+
+Timestamp: 2024-08-24 15:25:45
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 15:36:05
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 15:46:25
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 15:56:45
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 16:07:05
+satellite_count: 4
+selected_satellite: Sat4 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,1
+1,0,0,1
+0,0,0,1
+1,1,1,0
+
+Timestamp: 2024-08-24 16:17:25
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 16:27:45
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 16:38:05
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 16:48:25
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 16:58:45
+satellite_count: 4
+selected_satellite: Sat4 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,1
+1,0,0,1
+0,0,0,1
+1,1,1,0
+
+Timestamp: 2024-08-24 17:09:05
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 17:19:25
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 17:29:45
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 17:40:05
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,1
+1,0,0,0
+0,0,0,0
+1,0,0,0
+
+Timestamp: 2024-08-24 17:50:25
+satellite_count: 4
+selected_satellite: Sat4 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,1
+1,0,0,1
+0,0,0,1
+1,1,1,0
+
+Timestamp: 2024-08-24 18:00:45
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 18:11:05
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 18:21:25
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 18:31:45
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,1
+1,0,0,0
+0,0,0,0
+1,0,0,0
+
+Timestamp: 2024-08-24 18:42:05
+satellite_count: 4
+selected_satellite: Sat4 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,1
+1,0,0,1
+0,0,0,1
+1,1,1,0
+
+Timestamp: 2024-08-24 18:52:25
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 19:02:45
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 19:13:05
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 19:23:25
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,1
+1,0,0,0
+0,0,0,0
+1,0,0,0
+
+Timestamp: 2024-08-24 19:33:45
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,1
+1,0,0,1
+0,0,0,0
+1,1,0,0
+
+Timestamp: 2024-08-24 19:44:05
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 19:54:25
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 20:04:45
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 20:15:05
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,1
+1,0,0,0
+0,0,0,0
+1,0,0,0
+
+Timestamp: 2024-08-24 20:25:25
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,1
+1,0,0,1
+0,0,0,0
+1,1,0,0
+
+Timestamp: 2024-08-24 20:35:45
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 20:46:05
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 20:56:25
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 21:06:45
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,1
+1,0,0,0
+0,0,0,0
+1,0,0,0
+
+Timestamp: 2024-08-24 21:17:05
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,1
+1,0,0,1
+0,0,0,0
+1,1,0,0
+
+Timestamp: 2024-08-24 21:27:25
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 21:37:45
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 21:48:05
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 21:58:25
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,1
+1,0,0,0
+0,0,0,0
+1,0,0,0
+
+Timestamp: 2024-08-24 22:08:45
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,1
+1,0,0,1
+0,0,0,0
+1,1,0,0
+
+Timestamp: 2024-08-24 22:19:05
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 22:29:25
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 22:39:45
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 22:50:05
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,1
+1,0,0,0
+0,0,0,0
+1,0,0,0
+
+Timestamp: 2024-08-24 23:00:25
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,1
+1,0,0,0
+0,0,0,0
+1,0,0,0
+
+Timestamp: 2024-08-24 23:10:45
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 23:21:05
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 23:31:25
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-24 23:41:45
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,1
+1,0,0,0
+0,0,0,0
+1,0,0,0
+
+Timestamp: 2024-08-24 23:52:05
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-25 00:02:25
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-25 00:12:45
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-25 00:23:05
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-25 00:33:25
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,1
+1,0,0,0
+0,0,0,0
+1,0,0,0
+
+Timestamp: 2024-08-25 00:43:45
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-25 00:54:05
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-25 01:04:25
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-25 01:14:45
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-25 01:25:05
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,1
+1,0,0,0
+0,0,0,0
+1,0,0,0
+
+Timestamp: 2024-08-25 01:35:25
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-25 01:45:45
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-25 01:56:05
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-25 02:06:25
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-25 02:16:45
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,1
+1,0,0,0
+0,0,0,0
+1,0,0,0
+
+Timestamp: 2024-08-25 02:27:05
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-25 02:37:25
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-25 02:47:45
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-25 02:58:05
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-25 03:08:25
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,1
+1,0,0,0
+0,0,0,0
+1,0,0,0
+
+Timestamp: 2024-08-25 03:18:45
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-25 03:29:05
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-25 03:39:25
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-25 03:49:45
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-25 04:00:05
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,1
+1,0,0,0
+0,0,0,0
+1,0,0,0
+
+Timestamp: 2024-08-25 04:10:25
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-25 04:20:45
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-25 04:31:05
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-25 04:41:25
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-25 04:51:45
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,1
+1,0,0,0
+0,0,0,0
+1,0,0,0
+
+Timestamp: 2024-08-25 05:02:05
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-25 05:12:25
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-25 05:22:45
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-25 05:33:05
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-25 05:43:25
+satellite_count: 4
+selected_satellite: Sat4 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,1
+1,0,0,1
+0,0,0,1
+1,1,1,0
+
+Timestamp: 2024-08-25 05:53:45
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-25 06:04:05
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-25 06:14:25
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,0
+1,0,0,0
+0,0,0,0
+0,0,0,0
+
+Timestamp: 2024-08-25 06:24:45
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,1
+1,0,0,0
+0,0,0,0
+1,0,0,0
+
+Timestamp: 2024-08-25 06:35:05
+satellite_count: 4
+selected_satellite: Sat1 (Aggregator Flag: True)
+Federated Learning Adjacency Matrix:
+0,1,0,1
+1,0,0,0
+0,0,0,0
+1,0,0,0
+

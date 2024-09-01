@@ -24,9 +24,9 @@ class AlgorithmOptions:
     '''
     node_processing_time: int
     search_depth: int
-    '''
     no_of_nodes : int
-    node_names = []
+    '''
+    satellite_names = []
 
 class AlgorithmConfig(Config):
 
@@ -47,11 +47,11 @@ class AlgorithmConfig(Config):
     def set_algorithm(self):
         # self.algorithm.set_node_processing_time(self.options["node_processing_time"])
         # self.algorithm.set_search_depth(self.options["search_depth"])
-        self.algorithm.set_no_of_nodes(self.options["no_of_nodes"])
-        self.algorithm.set_node_names(self.options["node_names"])
-
+        # self.algorithm.set_no_of_nodes(self.options["no_of_nodes"])
+        self.algorithm.set_satellite_names(self.options["satellite_names"])
+    '''
     def get_algorithm_no_of_nodes(self):
         return self.algorithm.get_no_of_nodes() 
-
+    '''
     def get_algorithm_node_names(self):
-        return self.algorithm.get_node_names() 
+        return self.algorithm.get_satellite_names() 
