@@ -27,6 +27,7 @@ from typing import Tuple, List
 import multiprocessing
 import time
 
+## To Be Replaced by algorithm module
 class ModelManager:
     """Handles model creation and dataset loading."""
 
@@ -59,10 +60,21 @@ class ModelManager:
 class FederatedLearning:
     """Manages the Flower FL server and clients."""
 
-    def __init__(self, num_rounds: int, num_clients: int, model_type: str):
-        self.num_rounds = num_rounds
-        self.num_clients = num_clients 
-        self.model_manager = ModelManager(model_type)
+    def __init__(self):
+        self.num_rounds = None
+        self.num_clients = None 
+        self.model_manager = Model()
+
+    """Parse and Set Values from Handler"""
+    def set_num_rounds(self, rounds: int) -> None:
+        self.num_rounds = rounds
+    def set_num_clients(self, clients: int) -> None:
+        self.num_clients = clients
+    def set_model_hyperparameters(self, params) -> None:
+        pass
+        # model_manager.set_model_hyperparameters(params)
+    def model_config(self,) -> None:
+        pass
 
     def start_server(self):
         """Start the Flower server."""
