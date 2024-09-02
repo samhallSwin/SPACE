@@ -149,6 +149,17 @@ def read_cli(options):
     # Input file ready to be used by entry module
     return single_module_key, input_file
     
+def build_modules(options):
+    sat_sim_module = module_factory.create_sat_sim_module()
+    sat_sim_module.config.read_options(options["sat_sim"])
+        
+    algorithm_module = module_factory.create_algorithm_module()
+    algorithm_module.config.read_options(options["algorithm"])
+
+    fl_module = module_factory.create_fl_module()
+    fl_module.config.read_options(options["federated_learning"])
+
+    return sat_sim_module, algorithm_module, fl_module
 
 if __name__ == "__main__":
     options = read_options_file()
@@ -161,8 +172,18 @@ if __name__ == "__main__":
     else:
         # Run as simulation pipeline
 
+        # Check if user would like to run an ML performance test or use existing settings
+        # (Model runtime accounted for in algorithm process)
 
-        pass
+        # Create Modules
+        sat_sim_module, algorithm_module, fl_module = build_modules(options)
+        
+        # Simulation Process
+        sat_sim_module.handler.parse_input(input_file)
+        sat_sim_module.handler.run_module()
+        matrices = sat_sim_module.output.matrices
+            
+
 
     # Argparse
 
@@ -179,19 +200,13 @@ if __name__ == "__main__":
     #                on its own without FL overhead)
 
     # Create Modules
-    # sat_sim_module = module_factory.create_sat_sim_module()
-    # sat_sim_module.config.read_options(options["sat_sim"])
-    
 
-    # algorithm_module = module_factory.create_algorithm_module()
-    # algorithm_module.config.read_options(options["algorithm"])
-
-    # fl_module = module_factory.create_fl_module()
-    # fl_module.config.read_options(options["federated_learning"])
 
     # Simulation Process
     # sat_sim_module.handler.parse_input('TLEs/leoSatelliteConstellation4.tle')
-    # matrices = sat_sim_module.handler.run_module()
+    # sat_sim_module.handler.run_module()
+    # matrices = sat_sim_module.output.matrices
+
     # print(matrices)
 
     # algorithm_module.handler.parse_input(matrices)
