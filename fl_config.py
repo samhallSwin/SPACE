@@ -29,7 +29,7 @@ class FLConfig(Config):
 
     # Constructor, accepts core module
     def __init__(self, federated_learning):
-        self.fl_core = FederatedLearning()
+        self.fl_core = federated_learning
         self.model = Model()
         self.options = None
         self.model_options = None
@@ -44,8 +44,8 @@ class FLConfig(Config):
         return super().read_options_from_file()
 
     def set_federated_learning(self) -> None:
-        self.fl_core.set_num_rounds(self.options["Num_rounds"])
-        self.fl_core.set_num_clients(self.options["Num_rounds"])
+        self.fl_core.set_num_rounds(self.options["num_rounds"])
+        self.fl_core.set_num_clients(self.options["num_clients"])
 
     def set_federated_learning_model(self) -> None:
-        self.model.
+        pass

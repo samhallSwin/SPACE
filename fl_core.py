@@ -64,6 +64,8 @@ class FederatedLearning:
         self.num_rounds = None
         self.num_clients = None 
         self.model_manager = Model()
+        self.output = FLOutput()
+
 
     """Parse and Set Values from Handler"""
     def set_num_rounds(self, rounds: int) -> None:

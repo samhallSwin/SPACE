@@ -20,7 +20,7 @@ from sat_sim.sat_sim_config import SatSimConfig
 from sat_sim.sat_sim_handler import SatSimHandler
 from sat_sim.sat_sim_output import SatSimOutput
 
-from algorithm import Algorithm
+from algorithm_core import Algorithm
 from algorithm_config import AlgorithmConfig
 from algorithm_handler import AlgorithmHandler
 from algorithm_output import AlgorithmOutput
@@ -38,8 +38,8 @@ class ModuleKey(Enum):
 
 # Instantiate relevant classes
 
-# Instantiate Handlers, Configs and Concretes
-# (Outputs get instantiated within Concretes)
+# Instantiate Handlers, Configs and Cores
+# (Outputs are instantiated within Cores)
 class SatSimModule(NamedTuple):
     config: SatSimConfig
     handler: SatSimHandler
@@ -88,5 +88,5 @@ def create_fl_module() -> FLModule:
     fl_config = FLConfig(fl)
     fl_handler = FLHandler(fl)
 
-    return FLModule(fl_handler, fl_config, fl.output)
+    return FLModule(fl_config, fl_handler, fl.output)
 
