@@ -8,17 +8,27 @@ Python Version:
 
 Changelog:
 - 2024-08-02: Initial creation.
+- 2024-01-31: Core Integration Setup for fed avg 
 
+Todo/notes:
+- Model Intergration +
 Usage: 
 
 """
 from interfaces.handler import Handler
+from fl_core import FederatedLearning
+# algorithm input
+
 
 class FLHandler(Handler):
 
     # Constructor
-    def __init__(self, federated_learning):
-        self.federated_learning = federated_learning
+    def __init__(self, fl_core: FederatedLearning, model):
+        self.federated_learning = fl_core
 
+    # for external file support
     def parse_input(file):
         return super().parse_input()
+
+    def run_module(self):
+        self.federated_learning.run()

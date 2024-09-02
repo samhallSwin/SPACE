@@ -25,7 +25,7 @@ from algorithm_config import AlgorithmConfig
 from algorithm_handler import AlgorithmHandler
 from algorithm_output import AlgorithmOutput
 
-from federated_learning import FederatedLearning
+from fl_core import FederatedLearning
 from fl_config import FLConfig
 from fl_handler import FLHandler
 from fl_output import FLOutput
