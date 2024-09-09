@@ -23,7 +23,7 @@ from fl_core import FederatedLearning
 class FLHandler(Handler):
 
     # Constructor
-    def __init__(self, fl_core: FederatedLearning, model):
+    def __init__(self, fl_core: FederatedLearning):
         self.federated_learning = fl_core
 
     # for external file support
