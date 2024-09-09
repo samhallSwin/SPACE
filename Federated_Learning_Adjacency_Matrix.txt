@@ -18,10 +18,10 @@ Federated Learning Adjacency Matrix:
 
 Timestamp: 2024-08-24 06:59:25
 satellite_count: 4
-selected_satellite: None (Aggregator Flag: None)
+selected_satellite: Sat1 (Aggregator Flag: True)
 Federated Learning Adjacency Matrix:
-0,0,0,0
-0,0,0,0
+0,1,0,0
+1,0,0,0
 0,0,0,0
 0,0,0,0
 
