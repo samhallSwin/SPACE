@@ -1,43 +1,42 @@
 """
 Filename: algorithm_handler.py
 Description: Reads satellite link data to perform preprocessing before satellite communication algorithm execution. 
-Author:
+Initial Creator: Elysia Guglielmo (System Architect)
+Author: Yuganya Perumal
 Date: 2024-06-29
 Version: 1.0
 Python Version: 
 
 Changelog:
 - 2024-06-29: Initial creation.
+- 2024-08-24: getters and setters for satellite names by Yuganya Perumal
+- 2024-09-09: setting output instead of return and algorithm core to handle algorithm steps by Yuganya Perumal
 
 Usage: 
 Instantiate AlgorithmHandler and assign Algorithm. 
 Then run start_algorithm() with adjacency matrices. 
 """
 from interfaces.handler import Handler
+from algorithm_core import Algorithm
 import numpy as npy
 class AlgorithmHandler(Handler):
 
     # Constructor
     def __init__(self, algorithm):
         self.algorithm = algorithm
-
-    '''
-    def read_adjacency_matrix():
-        pass    
-    '''
-
+        self.adjacency_matrices = []
     @staticmethod 
-    def read_adjacency_matrices(self, filename):
-        adjacencymatrices = []
-        with open(filename, 'r') as file:
+    def read_adjacency_matrices(file_name):
+        adjacency_matrices = []
+        with open(file_name, 'r') as file:
             while True:
                 line = file.readline().strip()
                 if not line:
                     break
 
-                # Extract the timestamp from a line that starts with "Time: "
+                # Extract the timestamp from line starting with "Time: "
                 if line.startswith("Time: "):
-                    timestamp = line.split("Time: ")[1]
+                    time_stamp = line.split("Time: ")[1]
                 else:
                     continue
 
@@ -50,84 +49,15 @@ class AlgorithmHandler(Handler):
                             file.seek(file.tell() - len(line) - 1)
                         break
                     matrix.append(list(map(int, line.split())))
-                adjacencymatrices.append((timestamp, npy.array(matrix)))
-        return adjacencymatrices
-    '''
-    def parse_input(file):
-        return super().parse_input()
-    '''
-     # Start algorithm
-    def select_satellite_with_max_connections(self, eachmatrix):
-        satellite_connections = npy.sum(eachmatrix, axis=1)
-        maxconnections = npy.max(satellite_connections)
-        satelliteindex = npy.argmax(satellite_connections)
-        return satelliteindex, maxconnections
-    
-    def get_selected_satellite_name(self, satelliteindex):
-        satellite_names = self.algorithm.get_satellite_names()
-        if 0 <= satelliteindex < len(satellite_names):
-            return satellite_names[satelliteindex]
-        else:
-            raise IndexError("Satellite does not exist for selection.")
-        
-    
-    def parse_input(self, adjacencymatrices):
-        algorithmoutput = {}
+                adjacency_matrices.append((time_stamp, npy.array(matrix)))
+        return adjacency_matrices
+      
+    def parse_input(self,file_name):
+        adjacency_matrices = self.read_adjacency_matrices(file_name)
+        self.send_adjmatrices(adjacency_matrices)
 
-        # Initialize aggregator flags for all satellite to False
-        aggregator_flags = {node_name: False for node_name in self.algorithm.get_satellite_names()}
+    def send_adjmatrices(self, adj_matrices):
+        self.algorithm.set_adjacency_matrices(adj_matrices)
 
-        for timestamp, eachmatrix in adjacencymatrices:
-            nrows, mcolumns = eachmatrix.shape
-            # get matrix size
-            if(nrows == mcolumns):
-                satellite_count = nrows
-            # Check if there are no connections (all zeros)
-            if npy.all(eachmatrix == 0):
-                # If no connections, output the matrix as it is
-                algorithmoutput[timestamp] = {
-                    'satellite_count': satellite_count,
-                    'selected_satellite': None,
-                    'federatedlearning_adjacencymatrix': eachmatrix.copy(),
-                    'aggregator_flag': None
-                }
-                continue  # Skip to the next iteration
-
-            satelliteconnections = npy.sum(eachmatrix, axis=1)
-            maxconnections = npy.max(satelliteconnections)
-
-            # Find all satellite with the maximum number of connections
-            max_connected_satellite = [i for i, conn in enumerate(satelliteconnections) if conn == maxconnections]
-
-            # Choose the first satellite in case of a tie
-            selected_satellite_index = max_connected_satellite[0]
-            selected_satellite = self.get_selected_satellite_name(selected_satellite_index)
-
-            # Set the aggregator flag for the selected satellite
-            aggregator_flags[selected_satellite] = True
-
-            # Create a copy of the matrix to modify
-            fl_am = eachmatrix.copy()
-
-            # Retain connections (1s) for the selected node and its connections
-            for i, node_name in enumerate(self.algorithm.get_satellite_names()):
-                if i != selected_satellite_index:
-                    # Remove connections to/from non-selected nodes that are not connected to the selected node
-                    if eachmatrix[selected_satellite_index, i] == 0 and eachmatrix[i, selected_satellite_index] == 0:
-                        fl_am[i, :] = 0  # Remove all connections from this node
-                        fl_am[:, i] = 0  # Remove all connections to this node
-
-            # Store in the prepared algorithm output as a dictionary data structure.
-            algorithmoutput[timestamp] = {
-                'satellite_count': satellite_count,
-                'selected_satellite': selected_satellite,
-                'federatedlearning_adjacencymatrix': fl_am,
-                'aggregator_flag': aggregator_flags[selected_satellite]
-            }
-
-        return algorithmoutput
-
-
-
-
-   
+    def run_module(self):
+        self.algorithm.start_algorithm_steps()

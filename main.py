@@ -1,9 +1,7 @@
-import sys
 import argparse
 import json
 
 import module_factory
-from module_factory import ModuleKey
 import cli_args
 
 def set_config_file(file):
@@ -160,29 +158,8 @@ def read_flomps_cli(options, args):
     args_for_config = {k: v for k, v in args.__dict__.items() if v is not None and v is not False}
     print(args_for_config)
 
-    # Check whether user wishes to run a module standalone
-    single_module_key = check_standalone_config(parser, args_for_config)
-
     updated_options = update_options_with_args(parser, args_for_config, options)
     write_options_file(updated_options)
-
-    # Get input file
-    input_file = args.input_file
-
-    # Input file ready to be used by entry module
-    return single_module_key, input_file
-    
-def build_modules(options):
-    sat_sim_module = module_factory.create_sat_sim_module()
-    sat_sim_module.config.read_options(options["sat_sim"])
-        
-    algorithm_module = module_factory.create_algorithm_module()
-    algorithm_module.config.read_options(options["algorithm"])
-
-    fl_module = module_factory.create_fl_module()
-    fl_module.config.read_options(options["federated_learning"])
-
-    return sat_sim_module, algorithm_module, fl_module
 
 if __name__ == "__main__":
     options = read_options_file()
