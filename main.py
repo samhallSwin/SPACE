@@ -6,6 +6,20 @@ import module_factory
 from module_factory import ModuleKey
 import cli_args
 
+def set_config_file(file):
+    with open('settings.json') as f:
+        options = json.load(f)
+        options['config_file'] = file
+        json.dump(options, f, indent=4)
+    
+def get_config_file():
+    config_file = ''
+    with open('settings.json') as f:
+        options = json.load(f)
+        config_file = options['config_file']
+
+    return config_file
+
 def read_options_file():
     with open('options.json') as f:
         options = json.load(f)
@@ -19,19 +33,27 @@ def write_options_file(options):
 def setup_parser():
     parser = argparse.ArgumentParser(description='Run FLOMPS Simulation Suite')
 
+    subparsers = parser.add_subparsers(dest='command', help="Available commands")
+
+    settings_parser = subparsers.add_parser('settings', help="System settings")
+    cli_args.setup_settings_parser(settings_parser)
+
+    flomps_parser = subparsers.add_parser('flomps', help="Run a FLOMPS simulation")
+    cli_args.setup_flomps_parser(flomps_parser)
+
     # Add positional args to positional args parser group
-    cli_args.add_positional_args(parser)
+    # cli_args.add_positional_args(parser)
 
-    # Add options args to optiona parser group
-    cli_args.add_options_args(parser)
+    # # Add options args to optiona parser group
+    # cli_args.add_options_args(parser)
 
-    # Add general args to general parser group
-    # cli_args.add_general_args(parser)
+    # # Add general args to general parser group
+    # # cli_args.add_general_args(parser)
 
-    # Add args to respective parser groups for each module, such that group titles match JSON module keys for configuration
-    cli_args.add_sat_sim_args(parser)
-    cli_args.add_algorithm_args(parser)
-    cli_args.add_fl_args(parser)
+    # # Add args to respective parser groups for each module, such that group titles match JSON module keys for configuration
+    # cli_args.add_sat_sim_args(parser)
+    # cli_args.add_algorithm_args(parser)
+    # cli_args.add_fl_args(parser)
 
     return parser
 
@@ -120,12 +142,7 @@ def log_options(options):
     # TODO: Make this pretty later...
     print(options)
 
-def read_cli(options):
-    parser = setup_parser()
-
-    # Only get arg keys with specified values
-    args = parser.parse_args()
-
+def read_settings_cli(options, args):
     # Check if user would like to read JSON options
     # TODO: IN PROGRESS - We need a root command e.g. "run" for all simulation related stuff
     # Anything without "run" would be for meta functions, e.g. show JSON options for a particular module
@@ -133,6 +150,12 @@ def read_cli(options):
     if show_options_flag:
         log_options(options)
         return
+
+def read_flomps_cli(options, args):
+    # parser = setup_parser()
+
+    # # Only get arg keys with specified values
+    # args = parser.parse_args()
 
     args_for_config = {k: v for k, v in args.__dict__.items() if v is not None and v is not False}
     print(args_for_config)
@@ -163,63 +186,36 @@ def build_modules(options):
 
 if __name__ == "__main__":
     options = read_options_file()
-    single_module_key, input_file = read_cli(options)
+    parser = setup_parser()
 
-    # Check which module was selected
-    if single_module_key is not None:
-        # Run standalone module
-        run_standalone_module(single_module_key, input_file)
-    else:
-        # Run as simulation pipeline
+    # Only get arg keys with specified values
+    args = parser.parse_args()
 
-        # Check if user would like to run an ML performance test or use existing settings
-        # (Model runtime accounted for in algorithm process)
+    if args.command == 'settings':
+        read_settings_cli(options, args)
+    elif args.command == 'flomps':
+        single_module_key, input_file = read_flomps_cli(options, args)
 
-        # Create Modules
-        sat_sim_module, algorithm_module, fl_module = build_modules(options)
-        
-        # Simulation Process
-        sat_sim_module.handler.parse_input(input_file)
-        sat_sim_module.handler.run_module()
-        matrices = sat_sim_module.output.matrices
+        # Check which module was selected
+        if single_module_key is not None:
+            # Run standalone module
+            run_standalone_module(single_module_key, input_file)
+        else:
+            # Run as simulation pipeline
+            pass
+            # Check if user would like to run an ML performance test or use existing settings
+            # (Model runtime accounted for in algorithm process)
+
+            # Create Modules
+            # sat_sim_module, algorithm_module, fl_module = build_modules(options)
             
-
-
-    # Argparse
-
-    # 1) End-to-End Simulation
-
-    # 2) SatSim only (can execute either from this file or run independent sat_sim.py file)
-
-    # 3) Algorithm only (requires adjacency matrices file)
-
-    # 4) FL only (requires parametric matrices file)
-
-    # 5) Model only (for testing purposes, 
-    #                run either MNIST or ResNet
-    #                on its own without FL overhead)
-
-    # Create Modules
-
-
-    # Simulation Process
-    # sat_sim_module.handler.parse_input('TLEs/leoSatelliteConstellation4.tle')
-    # sat_sim_module.handler.run_module()
-    # matrices = sat_sim_module.output.matrices
-
-    # print(matrices)
-
-    # algorithm_module.handler.parse_input(matrices)
-
-    # Algorithm Output -> FL Input
-    # algorithm_output.set_fl_input(fl_handler)
-
-    # fl_handler.federated_learning.start_server()
-
-    # Run Sat Sim
-    
-
-    # Pass input to Algorithm
+            # # Simulation Process
+            # sat_sim_module.handler.parse_input(input_file)
+            # sat_sim_module.handler.run_module()
+            # matrices = sat_sim_module.output.matrices
+                
+            # algorithm_module.handler.parse_input(matrices)
+            # algorithm_module.handler.run_module()
 
    
 

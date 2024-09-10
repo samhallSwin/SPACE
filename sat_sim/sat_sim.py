@@ -95,6 +95,8 @@ class SatSim():
         # Write to file - TO GO IN OUTPUT CLASS - get matrices there though
         self.output.write_to_file("adjacency_matrices.txt", matrices)
 
+        print(matrices)
+
         # with open("adjacency_matrices.txt", "w") as f:
             # for timestamp, matrix in matrices:
             #     f.write(f"Time: {timestamp}\n")
