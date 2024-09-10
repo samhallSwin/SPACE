@@ -1,7 +1,7 @@
 """
 Filename: federated_learning.py
 Description: Manage FLOWER Federated Learning epochs.
-Author: Elysia Guglielmo
+Author: Elysia Guglielmo, Connor Bett
 Date: 2024-08-02
 Version: 1.0
 Python Version: 
@@ -10,9 +10,11 @@ Changelog:
 - 2024-08-02: Initial creation.
 - 2024-08-11: Added a Model Manager Class, exposed variables in standalone execution for: round count, client count and model/data set.
 - 2024-08-11: Refactored to adhere to OOP principals
+- 2024-08-22: added setters for pipeline integration 
 
 Usage: 
 Run this file directly to start a Multithreading instance of Flower FL with the chosen number of clients rounds and model.
+if ran from main, setters are required in config for module.
 
 """
 import numpy as np
