@@ -6,12 +6,10 @@ import argparse
 from datetime import datetime, timedelta
 from skyfield.api import load, EarthSatellite
 import numpy as np
-import networkx as nx
 
 from sat_sim_config import SatSimConfig
 from sat_sim_handler import SatSimHandler
 from sat_sim_output import SatSimOutput
-
 
 class SatSim:
     """Main class handling operations and simulations of satellite orbits."""
@@ -55,7 +53,7 @@ class SatSim:
         """Calculate the distance between two positions."""
         return np.linalg.norm(np.array(pos1) - np.array(pos2))
 
-    def run_with_adj_matrix(self):
+    def run_with_adj_matrix(self, output_txt=None, output_csv=None):
         """Generates adjacency matrices over the set duration and timestep."""
         current_time = self.start_time
         matrices = []
@@ -64,7 +62,7 @@ class SatSim:
             positions = self.get_satellite_positions(self.tle_data, current_time)
             keys = list(positions.keys())
             size = len(keys)
-            adj_matrix = np.zeros((size, size))
+            adj_matrix = np.zeros((size, size), dtype=int)
 
             for i in range(size):
                 for j in range(i + 1, size):
@@ -74,7 +72,10 @@ class SatSim:
             matrices.append((current_time.utc_strftime('%Y-%m-%d %H:%M:%S'), adj_matrix))
             current_time += timedelta(seconds=self.timestep)
 
-        self.output.write_to_file("adjacency_matrices.txt", matrices)
+        if output_txt:
+            self.output.write_to_file(output_txt, matrices)
+        if output_csv:
+            self.output.write_to_csv(output_csv, matrices)
 
 def parse_args():
     """Parse command line arguments."""
@@ -83,7 +84,8 @@ def parse_args():
     parser.add_argument("--start", required=True, type=lambda s: datetime.strptime(s, '%Y-%m-%d %H:%M:%S'), help="Start time (YYYY-MM-DD HH:MM:SS).")
     parser.add_argument("--end", required=True, type=lambda s: datetime.strptime(s, '%Y-%m-%d %H:%M:%S'), help="End time (YYYY-MM-DD HH:MM:SS).")
     parser.add_argument("--timeframe", required=True, type=int, help="Timeframe in seconds between steps.")
-    parser.add_argument("--output_txt", default="adjacency_matrices.txt", help="Output text file for adjacency matrices.")
+    parser.add_argument("--output_txt", help="Output text file for adjacency matrices.")
+    parser.add_argument("--output_csv", help="Output CSV file for adjacency matrices.")
     return parser.parse_args()
 
 def main():
@@ -102,7 +104,8 @@ def main():
     simulation.set_timestep(args.timeframe)
     simulation.set_start_end_times(args.start, args.end)
 
-    simulation.run_with_adj_matrix()
+    simulation.run_with_adj_matrix(output_txt=args.output_txt, output_csv=args.output_csv)
 
 if __name__ == "__main__":
     main()
+
