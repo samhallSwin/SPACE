@@ -20,7 +20,6 @@ class SatSimOutput(Output):
     # Constructor
     def __init__(self):
         self.fl_input = None
-        self.matrices = []
 
     def write_to_file(self, file, matrices):
         with open(file, "w") as f:

@@ -12,7 +12,6 @@ Changelog:
 Usage: Access a module and its I/O interfaces by calling the relevant create function
 
 """
-from enum import Enum
 from typing import NamedTuple
 
 from sat_sim.sat_sim import SatSim
@@ -29,12 +28,6 @@ from fl_core import FederatedLearning
 from fl_config import FLConfig
 from fl_handler import FLHandler
 from fl_output import FLOutput
-
-class ModuleKey(Enum):
-    SAT_SIM = "sat_sim"
-    ALGORITHM = "algorithm"
-    FL = "federated_learning"
-    MODEL = "model"
 
 # Instantiate relevant classes
 
@@ -54,20 +47,6 @@ class FLModule(NamedTuple):
     config: FLConfig
     handler: FLHandler
     output: FLOutput
-
-def create_single_instance(module_key: ModuleKey):
-    if module_key == ModuleKey.SAT_SIM:
-        return create_sat_sim_module()
-    elif module_key == ModuleKey.ALGORITHM:
-        return create_algorithm_module()
-    elif module_key == ModuleKey.FL:
-        return create_fl_module()
-    elif module_key == ModuleKey.MODEL:
-        # TODO: Model class
-        pass
-    else:
-        raise ValueError("Invalid ModuleKey")
-
 
 def create_sat_sim_module() -> SatSimModule:
     sat_sim = SatSim()
