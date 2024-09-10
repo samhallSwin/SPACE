@@ -27,44 +27,17 @@ from typing import Tuple, List
 import multiprocessing
 import time
 
-## To Be Replaced by algorithm module
-class ModelManager:
-    """Handles model creation and dataset loading."""
-
-    def __init__(self, model_type: str):
-        self.model_type = model_type
-
-    def create_model(self) -> tf.keras.Model:
-        """Create and return a model based on the selected type."""
-        if self.model_type == "mnist":
-            return tf.keras.Sequential([
-                tf.keras.layers.Input(shape=(28, 28, 1)),
-                tf.keras.layers.Conv2D(32, kernel_size=(3, 3), activation="relu"),
-                tf.keras.layers.MaxPooling2D(pool_size=(2, 2)),
-                tf.keras.layers.Flatten(),
-                tf.keras.layers.Dense(128, activation="relu"),
-                tf.keras.layers.Dense(10, activation="softmax"),
-            ])
-        # Future expansion for other models like ResNet
-        raise ValueError(f"Model type '{self.model_type}' is not supported.")
-
-    def load_data(self, test: bool = False) -> Tuple[np.ndarray, np.ndarray]:
-        """Load and preprocess the dataset."""
-        if self.model_type == "mnist": 
-            (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
-            x_train, x_test = x_train / 255.0, x_test / 255.0
-            x_train, x_test = x_train[..., np.newaxis], x_test[..., np.newaxis]
-            return (x_test, y_test) if test else (x_train, y_train) 
-        raise ValueError(f"Dataset for model type '{self.model_type}' is not supported.")
-
 class FederatedLearning:
     """Manages the Flower FL server and clients."""
 
     def __init__(self):
         self.num_rounds = None
         self.num_clients = None 
-        self.model_manager = ModelManager("mnist")
         self.output = FLOutput()
+        #self.model_manager = ModelManager("mnist")
+        self.model_manager = Model()
+        self.model_manager.set_model_type("ResNet50")
+        self.model_manager.set_data_set("MNIST")
 
 
     """Parse and Set Values from Handler"""
@@ -130,10 +103,9 @@ class FederatedLearning:
 class FlowerClient(fl.client.NumPyClient):
     """Flower client implementation for federated learning."""
 
-    def __init__(self, model_manager: ModelManager):
+    def __init__(self, model_manager: Model):
         self.model = model_manager.create_model()
-        self.x_train, self.y_train = model_manager.load_data()  
-
+        (self.x_train, self.y_train) = model_manager.load_data()
     def get_parameters(self, config: dict) -> List[np.ndarray]:
         return self.model.get_weights() 
 
