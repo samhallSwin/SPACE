@@ -22,8 +22,26 @@
         ]
     },
     "federated_learning": {
-        "num_rounds": 3,
+        "num_rounds": 1,
         "num_clients": 4,
-        "model_type": "mnist"
+        "model_type": "ResNet50",
+        "data_set": "MNIST",
+        "tick": {
+            "tick_configuration": {
+                "tick_behavior": "Adaptive",
+                "tick_overflow": 0.2,
+                "tick_underflow": 0.1
+            },
+            "round_configuration": {
+                "expected_round_time": 15,
+                "expected_training_time": 10,
+                "expected_aggregation_time": 5
+            }
+        },
+        "client_aging": {
+            "maximal_client_age": "Undefined",
+            "maximal_ticks_age": "Undefined",
+            "maximal_rounds_age": "Undefined"
+        }
     }
 }
