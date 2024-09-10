@@ -38,14 +38,15 @@ class FLConfig(Config):
     def read_options(self, options):
         self.options = options
         self.set_federated_learning()
-        self.set_federated_learning_model()
+        #self.set_federated_learning_model()
 
     def read_options_from_file(file):
         return super().read_options_from_file()
 
     def set_federated_learning(self) -> None:
-        self.fl_core.set_num_rounds(self.options["Num_rounds"])
-        self.fl_core.set_num_clients(self.options["Num_rounds"])
+        self.fl_core.set_num_rounds(self.options["num_rounds"])
+        self.fl_core.set_num_clients(self.options["num_clients"])
+        print ("setters called")
 
     def set_federated_learning_model(self) -> None:
-        self.model.
+        pass

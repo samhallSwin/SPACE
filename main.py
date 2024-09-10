@@ -72,8 +72,9 @@ if __name__ == "__main__":
     # algorithm_module = module_factory.create_algorithm_module()
     # algorithm_module.config.read_options(options["algorithm"])
 
-    # fl_module = module_factory.create_fl_module()
-    # fl_module.config.read_options(options["federated_learning"])
+    fl_module = module_factory.create_fl_module()
+    fl_module.config.read_options(options["federated_learning"])
+    fl_module.handler.run_module()
 
     # Simulation Process
     # sat_sim_module.handler.parse_input('TLEs/leoSatelliteConstellation4.tle')
