@@ -18,8 +18,8 @@ Run this file directly to start a Multithreading instance of Flower FL with the 
 import numpy as np
 import tensorflow as tf
 import flwr as fl
-
 from flwr.server.driver.grpc_driver import GrpcDriver as p2p
+
 from model import Model
 from fl_output import FLOutput
 
@@ -63,13 +63,18 @@ class FederatedLearning:
     def __init__(self):
         self.num_rounds = None
         self.num_clients = None 
-        self.model_manager = Model()
+        self.model_manager = ModelManager("mnist")
+        self.output = FLOutput()
+
 
     """Parse and Set Values from Handler"""
     def set_num_rounds(self, rounds: int) -> None:
         self.num_rounds = rounds
+        print(f"round count set to{self.num_rounds}")
     def set_num_clients(self, clients: int) -> None:
         self.num_clients = clients
+        print(f"client count set to{self.num_clients}")
+
     def set_model_hyperparameters(self, params) -> None:
         pass
         # model_manager.set_model_hyperparameters(params)
@@ -80,6 +85,9 @@ class FederatedLearning:
         """Start the Flower server."""
         model = self.model_manager.create_model()
         model.compile(optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"])
+
+        print(f"CLIENT count set to{self.num_clients}")
+        print(self.num_clients)
 
         strategy = fl.server.strategy.FedAvg(
             fraction_fit=1.0, 
@@ -160,5 +168,7 @@ if __name__ == "__main__":
     model_type = "mnist"  # Options: "mnist", "ResNet" (Future implementation)
 
     # Initialise and run the FederatedLearning instance
-    fl_instance = FederatedLearning(num_rounds, num_clients, model_type)
+    fl_instance = FederatedLearning()
+    fl_instance.set_num_rounds(num_rounds)
+    fl_instance.set_num_clients(num_clients)
     fl_instance.run()
