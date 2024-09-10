@@ -16,20 +16,31 @@ Usage:
 import tensorflow as tf
 import numpy as np
 
+from typing import Tuple
+
 class Model():
 
-    def __init__(self, model_type: str, data_set: str):
+    def __init__(self):
+        self.model_type = ""
+        self.data_set = ""
+
+    def set_model_type(self, model_type: str):
         self.model_type = model_type
-        self.data_set = data_set
+    def get_model_type(self) -> str:
+        return self.model_type
+    def set_data_set(self, model_type: str):
+        self.data_set = model_type
+    def get_data_set(self) -> str:
+        return self.data_set
 
     # Function to load and preprocess the MNIST dataset
-    def load_data(self):
+    def load_data(self, test: bool = False) -> Tuple[np.ndarray, np.ndarray]:
         if self.model_type == "SimpleCNN":
             if self.data_set == "MNIST":
                 (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
-                # Normalize the data
-                x_train, x_test = x_train / 255.0, x_test / 255.0  
-                return (x_train, y_train), (x_test, y_test)
+                x_train, x_test = x_train / 255.0, x_test / 255.0
+                x_train, x_test = x_train[..., np.newaxis], x_test[..., np.newaxis]
+                return (x_test, y_test) if test else (x_train, y_train)
             if self.data_set == "BigEarthNet":
                 pass
         if self.model_type == "ResNet50":
@@ -47,7 +58,7 @@ class Model():
                 # Normalize the data
                 x_train, x_test = x_train / 255.0, x_test / 255.0
 
-                return (x_train, y_train), (x_test, y_test)
+                return (x_test, y_test) if test else (x_train, y_train)
             if self.data_set == "BigEarthNet":
                 pass
     # Create model based on 
