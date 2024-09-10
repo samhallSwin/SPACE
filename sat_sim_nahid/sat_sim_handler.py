@@ -1,6 +1,7 @@
 """
 Filename: sat_sim_handler.py
 Author: Md Nahid Tanjum"""
+
 import os
 import logging
 from interfaces.handler import Handler
@@ -58,3 +59,4 @@ class SatSimHandler(Handler):
                 tle_line2 = lines[i+2].strip()
                 tle_data[name] = [tle_line1, tle_line2]
         return tle_data
+
