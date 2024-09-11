@@ -48,4 +48,4 @@ class FLConfig(Config):
         self.fl_core.set_num_clients(self.options["Num_rounds"])
 
     def set_federated_learning_model(self) -> None:
-        self.model.
+        pass

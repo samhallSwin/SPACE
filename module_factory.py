@@ -12,6 +12,7 @@ Changelog:
 Usage: Access a module and its I/O interfaces by calling the relevant create function
 
 """
+from enum import Enum
 from typing import NamedTuple
 
 from sat_sim.sat_sim import SatSim
@@ -19,7 +20,7 @@ from sat_sim.sat_sim_config import SatSimConfig
 from sat_sim.sat_sim_handler import SatSimHandler
 from sat_sim.sat_sim_output import SatSimOutput
 
-from algorithm import Algorithm
+from algorithm_core import Algorithm
 from algorithm_config import AlgorithmConfig
 from algorithm_handler import AlgorithmHandler
 from algorithm_output import AlgorithmOutput
@@ -29,10 +30,16 @@ from fl_config import FLConfig
 from fl_handler import FLHandler
 from fl_output import FLOutput
 
+class ModuleKey(Enum):
+    SAT_SIM = "sat_sim"
+    ALGORITHM = "algorithm"
+    FL = "federated_learning"
+    MODEL = "model"
+
 # Instantiate relevant classes
 
-# Instantiate Handlers, Configs and Concretes
-# (Outputs get instantiated within Concretes)
+# Instantiate Handlers, Configs and Cores
+# (Outputs are instantiated within Cores)
 class SatSimModule(NamedTuple):
     config: SatSimConfig
     handler: SatSimHandler
@@ -47,6 +54,20 @@ class FLModule(NamedTuple):
     config: FLConfig
     handler: FLHandler
     output: FLOutput
+
+def create_single_instance(module_key: ModuleKey):
+    if module_key == ModuleKey.SAT_SIM:
+        return create_sat_sim_module()
+    elif module_key == ModuleKey.ALGORITHM:
+        return create_algorithm_module()
+    elif module_key == ModuleKey.FL:
+        return create_fl_module()
+    elif module_key == ModuleKey.MODEL:
+        # TODO: Model class
+        pass
+    else:
+        raise ValueError("Invalid ModuleKey")
+
 
 def create_sat_sim_module() -> SatSimModule:
     sat_sim = SatSim()
@@ -67,5 +88,4 @@ def create_fl_module() -> FLModule:
     fl_config = FLConfig(fl)
     fl_handler = FLHandler(fl)
 
-    return FLModule(fl_handler, fl_config, fl.output)
-
+    return FLModule(fl_config, fl_handler, fl.output)

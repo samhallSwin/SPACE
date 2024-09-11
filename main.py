@@ -1,7 +1,9 @@
+import sys
 import argparse
 import json
 
 import module_factory
+from module_factory import ModuleKey
 import cli_args
 
 def set_config_file(file):
@@ -39,23 +41,13 @@ def setup_parser():
     flomps_parser = subparsers.add_parser('flomps', help="Run a FLOMPS simulation")
     cli_args.setup_flomps_parser(flomps_parser)
 
-    # Add positional args to positional args parser group
-    # cli_args.add_positional_args(parser)
-
-    # # Add options args to optiona parser group
-    # cli_args.add_options_args(parser)
-
-    # # Add general args to general parser group
-    # # cli_args.add_general_args(parser)
-
-    # # Add args to respective parser groups for each module, such that group titles match JSON module keys for configuration
-    # cli_args.add_sat_sim_args(parser)
-    # cli_args.add_algorithm_args(parser)
-    # cli_args.add_fl_args(parser)
-
     return parser
 
 def separate_args(parser, args_for_config):
+    for group in parser._action_groups:
+        print(f"Group: {group.title}")
+        for action in group._group_actions:
+            print(f" - {action.dest}")
 
     def get_group_arg_keys(parser, group_title):
         group = next(group for group in parser._action_groups if group.title == group_title)
@@ -87,10 +79,14 @@ def check_standalone_module_flag(args):
         raise ValueError(f"Invalid module specified for standalone operation: {single_module}")
 
 def check_args_match_module(parser, args_for_config, module_key: ModuleKey):
-    print(module_key.value)
     group = next(g for g in parser._action_groups if g.title == module_key)
 
-    mismatch = any(a not in group._group_actions for a in args_for_config)
+    # Get dest (names) for all actions for comparison
+    group_actions_keys = []
+    for action in group._group_actions:
+        group_actions_keys.append(action.dest)
+
+    mismatch = any(a not in group_actions_keys for a in args_for_config.keys())
 
     if mismatch:
         raise ValueError(f"Invalid command found for module: {module_key.value}")
@@ -99,10 +95,16 @@ def check_args_match_module(parser, args_for_config, module_key: ModuleKey):
 def check_standalone_config(parser, args_for_config):
     try:
         options_args, module_args = separate_args(parser, args_for_config)
+        print("OPTIONS ARGS")
+        print(options_args)
+        print("MODULE ARGS")
+        print(module_args)
+
         single_module_key = check_standalone_module_flag(options_args)
         # Ensure only options for that module were selected
         if single_module_key:
-            check_args_match_module(parser, module_args, single_module_key)
+            if module_args:
+                check_args_match_module(parser, module_args, single_module_key)
             return single_module_key
         else:
             return None
@@ -149,17 +151,35 @@ def read_settings_cli(options, args):
         log_options(options)
         return
 
-def read_flomps_cli(options, args):
-    # parser = setup_parser()
-
-    # # Only get arg keys with specified values
-    # args = parser.parse_args()
-
+def read_flomps_cli(parser, args, options):
     args_for_config = {k: v for k, v in args.__dict__.items() if v is not None and v is not False}
+    args_for_config.pop("command")
     print(args_for_config)
+
+    # Check whether user wishes to run a module standalone
+    single_module_key = check_standalone_config(parser, args_for_config)
+    print(single_module_key)
 
     updated_options = update_options_with_args(parser, args_for_config, options)
     write_options_file(updated_options)
+
+    # Get input file
+    input_file = args.input_file
+
+    # Input file ready to be used by entry module
+    return single_module_key, input_file
+    
+def build_modules(options):
+    sat_sim_module = module_factory.create_sat_sim_module()
+    sat_sim_module.config.read_options(options["sat_sim"])
+        
+    algorithm_module = module_factory.create_algorithm_module()
+    algorithm_module.config.read_options(options["algorithm"])
+
+    fl_module = module_factory.create_fl_module()
+    fl_module.config.read_options(options["federated_learning"])
+
+    return sat_sim_module, algorithm_module, fl_module
 
 if __name__ == "__main__":
     options = read_options_file()
@@ -168,14 +188,22 @@ if __name__ == "__main__":
     # Only get arg keys with specified values
     args = parser.parse_args()
 
+    subparsers_action = parser._subparsers._group_actions[0]
+    
+    # Access the 'flomps' subparser
+    flomps_parser = subparsers_action.choices['flomps']
+    # print(parser._subparsers._group_actions.)
+
     if args.command == 'settings':
         read_settings_cli(options, args)
     elif args.command == 'flomps':
-        single_module_key, input_file = read_flomps_cli(options, args)
+        flomps_parser = subparsers_action.choices['flomps']
+        single_module_key, input_file = read_flomps_cli(flomps_parser, args, options)
 
         # Check which module was selected
         if single_module_key is not None:
             # Run standalone module
+            # print("going to run standalone module")
             run_standalone_module(single_module_key, input_file)
         else:
             # Run as simulation pipeline
@@ -195,4 +223,3 @@ if __name__ == "__main__":
             # algorithm_module.handler.run_module()
 
    
-

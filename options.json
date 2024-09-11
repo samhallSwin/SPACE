@@ -1,6 +1,6 @@
 {
     "sat_sim": {
-        "start_time": 2,
+        "start_time": 5,
         "end_time": 16,
         "satellite_count": 5,
         "constellation_type": "delta",
@@ -13,8 +13,13 @@
         "duration": 24,
         "timestep": 620
     },
-   "algorithm": {
-        "satellite_names": ["Sat1","Sat2","Sat3","Sat4"]
+    "algorithm": {
+        "satellite_names": [
+            "Sat1",
+            "Sat2",
+            "Sat3",
+            "Sat4"
+        ]
     },
     "federated_learning": {
         "num_rounds": 3,

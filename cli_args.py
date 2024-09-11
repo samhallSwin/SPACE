@@ -1,5 +1,4 @@
-import argparse
-from enum import Enum
+from module_factory import ModuleKey
 
 def setup_settings_parser(parser):
     parser.add_argument('--options-file', type=str, help="Set JSON Options File")
@@ -12,12 +11,16 @@ def setup_flomps_parser(parser):
 
     def add_options_args(parser):
         # Standalone module execution
+        print("Adding optional args")
+        # options_group = parser.add_argument_group("optional")
+
         parser.add_argument('--sat-sim-only', action='store_true', help="Run the Satellite Simulator standalone. Requires a TLE file.")
         parser.add_argument('--algorithm-only', action='store_true', help="Run the Algorithm standalone. Requires an Adjacency Matrices (.am) file.")
         parser.add_argument('--fl-only', action='store_true', help="Run the Federated Learning standalone. Requires a Federated Learning Adjacency Matrices (.flam) file.")
         parser.add_argument('--model-only', action='store_true', help="Run the ML model standalone.")
 
     def add_sat_sim_args(parser):
+        print("Adding SAT_SIM args")
         sat_sim_group = parser.add_argument_group(ModuleKey.SAT_SIM)
 
         # Add args here
@@ -25,11 +28,13 @@ def setup_flomps_parser(parser):
         sat_sim_group.add_argument('--end-time', type=int, help='The end date/time for the satellite simulation')
 
     def add_algorithm_args(parser):
+        print("Adding ALGORITHM args")
         algorithm_group = parser.add_argument_group(ModuleKey.ALGORITHM)
 
         # Add args here
 
     def add_fl_args(parser):
+        print("Adding FL args")
         fl_group = parser.add_argument_group(ModuleKey.FL)
 
         # Add args here
@@ -56,4 +61,3 @@ def setup_flomps_parser(parser):
 #     add_sat_sim_args(flomps_parser)
 #     add_algorithm_args(flomps_parser)
 #     add_fl_args(flomps_parser)
-
