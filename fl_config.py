@@ -1,13 +1,14 @@
 """
 Filename: fl_config.py
 Description: Converts Federated Learning JSON options to local data types and configures core Federated Learning module via setters. 
-Author: Elysia Guglielmo
+Author: Elysia Guglielmo and Connor Bett
 Date: 2024-08-02
 Version: 1.0
 Python Version: 
 
 Changelog:
 - 2024-08-02: Initial creation.
+- 2024-09-16: Supported standalone execution, refactored Model Setters
 
 Usage: 
 
@@ -37,8 +38,8 @@ class FLConfig(Config):
     # Traverse JSON options to check for nested objects?
     def read_options(self, options):
         self.options = options
-        self.set_federated_learning()
         self.set_federated_learning_model()
+        self.set_federated_learning()
 
     def read_options_from_file(file):
         return super().read_options_from_file()
@@ -46,8 +47,11 @@ class FLConfig(Config):
     def set_federated_learning(self) -> None:
         self.fl_core.set_num_rounds(self.options["num_rounds"])
         self.fl_core.set_num_clients(self.options["num_clients"])
-        print ("setters called")
+        print ("FL setters called")
 
     def set_federated_learning_model(self) -> None:
-                self.model.set_model_type(self.options["model_type"])
-                self.model.set_data_set(self.options["data_set"])
+        self.model.set_model_type(self.options["model_type"])
+        self.model.set_data_set(self.options["data_set"])
+        self.fl_core.set_model(self.model)
+        print ("MODEL setters called")
+

@@ -1,7 +1,7 @@
 """
 Filename: fl_handler.py
 Description: Reads algorithm data to perform preprocessing before running federated learning round. 
-Author: Elysia Guglielmo
+Author: Elysia Guglielmo and Connor Bett
 Date: 2024-08-02
 Version: 1.0
 Python Version: 

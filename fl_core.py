@@ -1,7 +1,7 @@
 """
 Filename: federated_learning.py
 Description: Manage FLOWER Federated Learning epochs.
-Author: Elysia Guglielmo
+Author: Elysia Guglielmo and Connor Bett
 Date: 2024-08-02
 Version: 1.0
 Python Version: 
@@ -10,6 +10,7 @@ Changelog:
 - 2024-08-02: Initial creation.
 - 2024-08-11: Added a Model Manager Class, exposed variables in standalone execution for: round count, client count and model/data set.
 - 2024-08-11: Refactored to adhere to OOP principals
+- 2024-09-16: Offloaded Model Manger to model.py, Refactored Standalone
 
 Usage: 
 Run this file directly to start a Multithreading instance of Flower FL with the chosen number of clients rounds and model.
@@ -35,24 +36,22 @@ class FederatedLearning:
         self.num_clients = None 
         self.output = FLOutput()
         #self.model_manager = ModelManager("mnist")
-        self.model_manager = Model()
-        self.model_manager.set_model_type("ResNet50")
-        self.model_manager.set_data_set("MNIST")
+        self.model_manager = None
 
 
     """Parse and Set Values from Handler"""
     def set_num_rounds(self, rounds: int) -> None:
         self.num_rounds = rounds
-        print(f"round count set to{self.num_rounds}")
+        print(f"round count set to: {self.num_rounds}")
     def set_num_clients(self, clients: int) -> None:
         self.num_clients = clients
-        print(f"client count set to{self.num_clients}")
+        print(f"client count set to: {self.num_clients}")
 
     def set_model_hyperparameters(self, params) -> None:
         pass
         # model_manager.set_model_hyperparameters(params)
-    def model_config(self,) -> None:
-        pass
+    def set_model(self, model: Model) -> None:
+        self.model_manager = model
 
     def start_server(self):
         """Start the Flower server."""
@@ -137,10 +136,13 @@ if __name__ == "__main__":
     # Default customisation values
     num_rounds = 5
     num_clients = 3
-    model_type = "mnist"  # Options: "mnist", "ResNet" (Future implementation)
+    model_type = "ResNet50" # ResNet50 or SimpleCNN
+    data_set = "MNIST" # MNIST or BigEarthNet(WIP)
 
     # Initialise and run the FederatedLearning instance
     fl_instance = FederatedLearning()
     fl_instance.set_num_rounds(num_rounds)
     fl_instance.set_num_clients(num_clients)
+    fl_instance.model_manager.set_model_type(model_type)
+    fl_instance.model_manager.set_data_set(data_set)
     fl_instance.run()
