@@ -12,6 +12,10 @@ def add_sat_sim_args(parser):
     # Add args here
     sat_sim_group.add_argument('--start-time', type=int, help='The start date/time for the satellite simulation')
     sat_sim_group.add_argument('--end-time', type=int, help='The end date/time for the satellite simulation')
+    sat_sim_group.add_argument('--satellite-count', type=int, help='Number of satellites in the constellation')
+    sat_sim_group.add_argument('--constellation-type', type=str, help='Type of satellite constellation (e.g., delta)')
+    sat_sim_group.add_argument('--ground-station-lat', type=float, help='Ground station latitude')
+    sat_sim_group.add_argument('--ground-station-long', type=float, help='Ground station longitude')
     sat_sim_group.add_argument('--duration', type=int, help='Duration of the simulation (in hours)')
     sat_sim_group.add_argument('--timestep', type=int, help='Timestep for the simulation')
 
