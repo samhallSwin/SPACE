@@ -2,8 +2,10 @@
 Filename: sat_sim_handler.py
 Author: Md Nahid Tanjum"""
 
+import sys
 import os
 import logging
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from interfaces.handler import Handler
 
 class SatSimHandler(Handler):
