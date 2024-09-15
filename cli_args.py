@@ -12,6 +12,8 @@ def add_sat_sim_args(parser):
     # Add args here
     sat_sim_group.add_argument('--start-time', type=int, help='The start date/time for the satellite simulation')
     sat_sim_group.add_argument('--end-time', type=int, help='The end date/time for the satellite simulation')
+    sat_sim_group.add_argument('--duration', type=int, help='Duration of the simulation (in hours)')
+    sat_sim_group.add_argument('--timestep', type=int, help='Timestep for the simulation')
 
 def add_algorithm_args(parser):
     algorithm_group = parser.add_argument_group(ModuleKeys.ALGORITHM)
