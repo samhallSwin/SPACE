@@ -27,7 +27,7 @@ class FLHandler(Handler):
         self.federated_learning = fl_core
 
     # for external file support
-    def parse_input(file):
+    def parse_input(self,file):
         return super().parse_input()
 
     def run_module(self):

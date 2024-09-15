@@ -28,8 +28,8 @@ class AlgorithmOptions:
 class FLConfig(Config):
 
     # Constructor, accepts core module
-    def __init__(self, federated_learning):
-        self.fl_core = FederatedLearning()
+    def __init__(self, federated_learning: FederatedLearning):
+        self.fl_core = federated_learning
         self.model = Model()
         self.options = None
         self.model_options = None
@@ -38,7 +38,7 @@ class FLConfig(Config):
     def read_options(self, options):
         self.options = options
         self.set_federated_learning()
-        #self.set_federated_learning_model()
+        self.set_federated_learning_model()
 
     def read_options_from_file(file):
         return super().read_options_from_file()
@@ -49,4 +49,5 @@ class FLConfig(Config):
         print ("setters called")
 
     def set_federated_learning_model(self) -> None:
-        pass
+                self.model.set_model_type(self.options["model_type"])
+                self.model.set_data_set(self.options["data_set"])

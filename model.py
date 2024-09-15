@@ -18,10 +18,15 @@ import numpy as np
 
 class Model():
 
-    def __init__(self, model_type: str, data_set: str):
-        self.model_type = model_type
-        self.data_set = data_set
+    def __init__(self):
+        self.model_type = None
+        self.data_set = None
 
+
+    def set_model_type(self, model_type: str) -> None:
+        self.model = model_type
+    def set_data_set(self, data_set: str) -> None:
+        self.data_set = data_set
     # Function to load and preprocess the MNIST dataset
     def load_data(self):
         if self.model_type == "SimpleCNN":
