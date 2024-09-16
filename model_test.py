@@ -20,7 +20,6 @@ import pytest
 
 @pytest.fixture
 def model():
-    """Fixture to create a Model instance for reuse."""
     return Model()
 
 # Test model initialisation
@@ -43,3 +42,27 @@ def test_set_get_data_set(model):
 
     model.set_data_set("BigEarthNet")
     assert model.get_data_set() == "BigEarthNet"   
+
+# Test for load_data
+def test_load_simplecnn_mnist(model):
+    model.set_model_type("SimpleCNN")
+    model.set_data_set("MNIST")
+    # further elaborate wip
+
+def test_load_simplecnn_mnist(model):
+    model.set_model_type("RestNet50")
+    model.set_data_set("MNIST")
+    # further elaborate wip
+
+# note: bigearthnet under models need to be implemented once it actually starts working
+
+# Test for create_model, still a WIP
+def test_create_model_simplecnn(model):
+    model.set_model_type("SimpleCNN")
+    simplecnn = model.create_model()
+    assert simplecnn.input_shape == (None, 28, 28, 1) # None = batch_size, unsure if need to specify - need clarification
+
+def test_create_model_resnet50(model):
+    model.set_model_type("ResNet50")
+    resnet50 = model.create_model()
+    assert resnet50.input_shape == (None, 32, 32, 3)
