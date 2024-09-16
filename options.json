@@ -1,18 +1,12 @@
 {
     "sat_sim": {
-        "start_time": 5,
-        "end_time": 16,
-        "satellite_count": 5,
-        "constellation_type": "delta",
-        "ground_station": {
-            "location": {
-                "lat": 350.23,
-                "long": 508.23
-            }
-        },
+        "start_time": "2024-01-01 00:00:00",
+        "end_time": "2024-01-01 16:00:00",
         "duration": 24,
         "timestep": 620
     },
+    ...
+}
     "algorithm": {
         "no_of_nodes": 4,
         "node_names": [
