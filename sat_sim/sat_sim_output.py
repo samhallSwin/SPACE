@@ -14,6 +14,10 @@ class SatSimOutput:
 
     def __init__(self):
         self.fl_input = None
+        self.matrices = None
+
+    def write_to_property(self, matrices):
+        self.matrices = matrices
 
     def write_to_file(self, file, matrices):
         """
