@@ -27,3 +27,19 @@ def model():
 def test_init(model):
     assert model.get_model_type() == ""
     assert model.get_data_set() == ""
+
+# Test model type setters and getters
+def test_set_get_model_type(model):
+    model.set_model_type("SimpleCNN")
+    assert model.get_model_type() == "SimpleCNN"
+
+    model.set_model_type("RestNet50")
+    assert model.get_model_type() == "RestNet50"
+
+# Test dataset setters and getters
+def test_set_get_data_set(model):
+    model.set_data_set("MNIST")
+    assert model.get_data_set() == "MNIST"  
+
+    model.set_data_set("BigEarthNet")
+    assert model.get_data_set() == "BigEarthNet"   
