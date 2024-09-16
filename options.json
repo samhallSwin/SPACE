@@ -11,7 +11,10 @@
             }
         },
         "duration": 24,
-        "timestep": 620
+        "timestep": 620,
+        "module_settings": {
+            "output_to_file": false
+        }
     },
     "algorithm": {
         "satellite_names": [
@@ -19,7 +22,10 @@
             "Sat2",
             "Sat3",
             "Sat4"
-        ]
+        ],
+        "module_settings": {
+            "output_to_file": false
+        }
     },
     "federated_learning": {
         "num_rounds": 1,
@@ -42,6 +48,9 @@
             "maximal_client_age": "Undefined",
             "maximal_ticks_age": "Undefined",
             "maximal_rounds_age": "Undefined"
+        },
+        "module_settings": {
+            "output_to_file": false
         }
     }
 }
