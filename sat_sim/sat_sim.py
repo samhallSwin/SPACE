@@ -7,9 +7,9 @@ from datetime import datetime, timedelta
 from skyfield.api import load, EarthSatellite
 import numpy as np
 
-from sat_sim_config import SatSimConfig
-from sat_sim_handler import SatSimHandler
-from sat_sim_output import SatSimOutput
+from sat_sim.sat_sim_config import SatSimConfig
+from sat_sim.sat_sim_handler import SatSimHandler
+from sat_sim.sat_sim_output import SatSimOutput
 
 class SatSim:
     """Main class handling operations and simulations of satellite orbits."""
@@ -76,6 +76,8 @@ class SatSim:
             self.output.write_to_file(output_txt, matrices)
         if output_csv:
             self.output.write_to_csv(output_csv, matrices)
+
+        # return matrices
 
 def parse_args():
     """Parse command line arguments."""
