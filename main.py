@@ -199,6 +199,7 @@ if __name__ == "__main__":
     elif args.command == 'flomps':
         flomps_parser = subparsers_action.choices['flomps']
         single_module_key, input_file = read_flomps_cli(flomps_parser, args, options)
+<<<<<<< HEAD
 
         # Check which module was selected
         if single_module_key is not None:
@@ -223,3 +224,29 @@ if __name__ == "__main__":
             # algorithm_module.handler.run_module()
 
    
+=======
+
+        # Check which module was selected
+        if single_module_key is not None:
+            # Run standalone module
+            # print("going to run standalone module")
+            run_standalone_module(single_module_key, input_file)
+        else:
+            # Run as simulation pipeline
+            pass
+            # Check if user would like to run an ML performance test or use existing settings
+            # (Model runtime accounted for in algorithm process)
+
+            # Create Modules
+            # sat_sim_module, algorithm_module, fl_module = build_modules(options)
+            
+            # # Simulation Process
+            # sat_sim_module.handler.parse_input(input_file)
+            # sat_sim_module.handler.run_module()
+            # matrices = sat_sim_module.output.matrices
+                
+            # algorithm_module.handler.parse_input(matrices)
+            # algorithm_module.handler.run_module()
+
+   
+>>>>>>> 9718008e0c36316a846053ee304b9b031ecde282
