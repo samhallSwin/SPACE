@@ -65,6 +65,7 @@ PyQt5==5.15.11
 PyQt5-Qt5==5.15.14
 PyQt5_sip==12.15.0
 python-dateutil==2.9.0.post0
+pytest==8.3.3
 pytz==2024.1
 PyYAML==6.0.1
 ray==2.34.0
