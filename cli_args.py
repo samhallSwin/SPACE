@@ -5,21 +5,9 @@ def setup_settings_parser(parser):
     parser.add_argument('--show-options', action='store_true', help="Display JSON options for module configuration")
 
 
-<<<<<<< HEAD
 def setup_flomps_parser(parser):
     def add_positional_args(parser):
         parser.add_argument('input_file', type=str, help="Provide relative path to input file")
-=======
-    # Add args here
-    sat_sim_group.add_argument('--start-time', type=int, help='The start date/time for the satellite simulation')
-    sat_sim_group.add_argument('--end-time', type=int, help='The end date/time for the satellite simulation')
-    sat_sim_group.add_argument('--satellite-count', type=int, help='Number of satellites in the constellation')
-    sat_sim_group.add_argument('--constellation-type', type=str, help='Type of satellite constellation (e.g., delta)')
-    sat_sim_group.add_argument('--ground-station-lat', type=float, help='Ground station latitude')
-    sat_sim_group.add_argument('--ground-station-long', type=float, help='Ground station longitude')
-    sat_sim_group.add_argument('--duration', type=int, help='Duration of the simulation (in hours)')
-    sat_sim_group.add_argument('--timestep', type=int, help='Timestep for the simulation')
->>>>>>> 9718008e0c36316a846053ee304b9b031ecde282
 
     def add_options_args(parser):
         # Standalone module execution
