@@ -73,8 +73,19 @@ def check_standalone_module_flag(args):
     
     single_module = flags[0]
 
+    # Module mapping for fl -> federated_learning, cli takes "fl" rather than "federated_learning"
+    module_mapping = {
+        'sat_sim': 'sat_sim',
+        'algorithm': 'algorithm',
+        'fl': 'federated_learning',
+        'model': 'model'
+    }
+    # error for mapping failure
+    if single_module not in module_mapping:
+        raise ValueError(f"Invalid module specified for standalone operation: {single_module}")
+
     try:
-        return ModuleKey(single_module)
+        return ModuleKey(module_mapping[single_module])
     except ValueError:
         raise ValueError(f"Invalid module specified for standalone operation: {single_module}")
 

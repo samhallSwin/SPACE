@@ -1,7 +1,7 @@
 """
 Filename: fl_handler.py
 Description: Reads algorithm data to perform preprocessing before running federated learning round. 
-Author: Elysia Guglielmo
+Author: Elysia Guglielmo and Connor Bett
 Date: 2024-08-02
 Version: 1.0
 Python Version: 
@@ -23,11 +23,11 @@ from fl_core import FederatedLearning
 class FLHandler(Handler):
 
     # Constructor
-    def __init__(self, fl_core: FederatedLearning, model):
+    def __init__(self, fl_core: FederatedLearning):
         self.federated_learning = fl_core
 
     # for external file support
-    def parse_input(file):
+    def parse_input(self,file):
         return super().parse_input()
 
     def run_module(self):

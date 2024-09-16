@@ -1,7 +1,7 @@
 """
 Filename: federated_learning.py
 Description: Manage FLOWER Federated Learning epochs.
-Author: Elysia Guglielmo
+Author: Elysia Guglielmo and Connor Bett
 Date: 2024-08-02
 Version: 1.0
 Python Version: 
@@ -10,6 +10,7 @@ Changelog:
 - 2024-08-02: Initial creation.
 - 2024-08-11: Added a Model Manager Class, exposed variables in standalone execution for: round count, client count and model/data set.
 - 2024-08-11: Refactored to adhere to OOP principals
+- 2024-09-16: Offloaded Model Manger to model.py, Refactored Standalone
 
 Usage: 
 Run this file directly to start a Multithreading instance of Flower FL with the chosen number of clients rounds and model.
@@ -18,8 +19,8 @@ Run this file directly to start a Multithreading instance of Flower FL with the 
 import numpy as np
 import tensorflow as tf
 import flwr as fl
-
 from flwr.server.driver.grpc_driver import GrpcDriver as p2p
+
 from model import Model
 from fl_output import FLOutput
 
@@ -27,59 +28,38 @@ from typing import Tuple, List
 import multiprocessing
 import time
 
-## To Be Replaced by algorithm module
-class ModelManager:
-    """Handles model creation and dataset loading."""
-
-    def __init__(self, model_type: str):
-        self.model_type = model_type
-
-    def create_model(self) -> tf.keras.Model:
-        """Create and return a model based on the selected type."""
-        if self.model_type == "mnist":
-            return tf.keras.Sequential([
-                tf.keras.layers.Input(shape=(28, 28, 1)),
-                tf.keras.layers.Conv2D(32, kernel_size=(3, 3), activation="relu"),
-                tf.keras.layers.MaxPooling2D(pool_size=(2, 2)),
-                tf.keras.layers.Flatten(),
-                tf.keras.layers.Dense(128, activation="relu"),
-                tf.keras.layers.Dense(10, activation="softmax"),
-            ])
-        # Future expansion for other models like ResNet
-        raise ValueError(f"Model type '{self.model_type}' is not supported.")
-
-    def load_data(self, test: bool = False) -> Tuple[np.ndarray, np.ndarray]:
-        """Load and preprocess the dataset."""
-        if self.model_type == "mnist": 
-            (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
-            x_train, x_test = x_train / 255.0, x_test / 255.0
-            x_train, x_test = x_train[..., np.newaxis], x_test[..., np.newaxis]
-            return (x_test, y_test) if test else (x_train, y_train) 
-        raise ValueError(f"Dataset for model type '{self.model_type}' is not supported.")
-
 class FederatedLearning:
     """Manages the Flower FL server and clients."""
 
     def __init__(self):
         self.num_rounds = None
         self.num_clients = None 
-        self.model_manager = Model()
+        self.output = FLOutput()
+        #self.model_manager = ModelManager("mnist")
+        self.model_manager = None
+
 
     """Parse and Set Values from Handler"""
     def set_num_rounds(self, rounds: int) -> None:
         self.num_rounds = rounds
+        print(f"round count set to: {self.num_rounds}")
     def set_num_clients(self, clients: int) -> None:
         self.num_clients = clients
+        print(f"client count set to: {self.num_clients}")
+
     def set_model_hyperparameters(self, params) -> None:
         pass
         # model_manager.set_model_hyperparameters(params)
-    def model_config(self,) -> None:
-        pass
+    def set_model(self, model: Model) -> None:
+        self.model_manager = model
 
     def start_server(self):
         """Start the Flower server."""
         model = self.model_manager.create_model()
         model.compile(optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"])
+
+        print(f"CLIENT count set to{self.num_clients}")
+        print(self.num_clients)
 
         strategy = fl.server.strategy.FedAvg(
             fraction_fit=1.0, 
@@ -122,10 +102,9 @@ class FederatedLearning:
 class FlowerClient(fl.client.NumPyClient):
     """Flower client implementation for federated learning."""
 
-    def __init__(self, model_manager: ModelManager):
+    def __init__(self, model_manager: Model):
         self.model = model_manager.create_model()
-        self.x_train, self.y_train = model_manager.load_data()  
-
+        (self.x_train, self.y_train) = model_manager.load_data()
     def get_parameters(self, config: dict) -> List[np.ndarray]:
         return self.model.get_weights() 
 
@@ -157,8 +136,13 @@ if __name__ == "__main__":
     # Default customisation values
     num_rounds = 5
     num_clients = 3
-    model_type = "mnist"  # Options: "mnist", "ResNet" (Future implementation)
+    model_type = "ResNet50" # ResNet50 or SimpleCNN
+    data_set = "MNIST" # MNIST or BigEarthNet(WIP)
 
     # Initialise and run the FederatedLearning instance
-    fl_instance = FederatedLearning(num_rounds, num_clients, model_type)
+    fl_instance = FederatedLearning()
+    fl_instance.set_num_rounds(num_rounds)
+    fl_instance.set_num_clients(num_clients)
+    fl_instance.model_manager.set_model_type(model_type)
+    fl_instance.model_manager.set_data_set(data_set)
     fl_instance.run()
