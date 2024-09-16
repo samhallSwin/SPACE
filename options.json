@@ -2,7 +2,6 @@
     "sat_sim": {
         "start_time": "2024-01-01 00:00:00",
         "end_time": "2024-01-01 16:00:00",
-        "duration": 24,
         "timestep": 620
     },
     "algorithm": {
