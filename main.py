@@ -146,7 +146,8 @@ def run_standalone_module(single_module_key, input_file):
         module = module_factory.create_single_instance(single_module_key)
         module.config.read_options(options[single_module_key.value])
         module.handler.parse_input(input_file)
-        output = module.handler.run_module()
+        module.handler.run_module()
+        output = module.output.get_result()
         print(output)
 
 def log_options(options):

@@ -20,6 +20,7 @@ class SatSimOutput(Output):
     # Constructor
     def __init__(self):
         self.fl_input = None
+        self.matrices = None
 
     def write_to_file(self, file, matrices):
         with open(file, "w") as f:
@@ -28,8 +29,11 @@ class SatSimOutput(Output):
                 np.savetxt(f, matrix, fmt='%d')
                 f.write("\n")
     
-    def set_result():
-        pass
+    def set_result(self, matrices):
+        self.matrices = matrices
+
+    def get_result(self):
+        return self.matrices
 
     def set_fl_input(self, fl_input):
         self.fl_input = fl_input

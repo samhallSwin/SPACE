@@ -31,3 +31,7 @@ class Output(abc.ABC):
     @abc.abstractmethod
     def set_result():
         pass
+
+    @abc.abstractmethod
+    def get_result():
+        pass

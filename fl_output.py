@@ -26,4 +26,7 @@ class FLOutput(Output):
     def set_result():
         pass
 
+    def get_result():
+        pass
+
     # Start algorithm

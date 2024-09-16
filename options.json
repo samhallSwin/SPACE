@@ -1,7 +1,7 @@
 {
     "sat_sim": {
-        "start_time": 5,
-        "end_time": 16,
+        "start_time": 2,
+        "end_time": 4,
         "satellite_count": 5,
         "constellation_type": "delta",
         "ground_station": {
