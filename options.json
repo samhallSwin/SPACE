@@ -1,6 +1,6 @@
 {
     "sat_sim": {
-        "start_time": 2,
+        "start_time": 1,
         "end_time": 4,
         "satellite_count": 5,
         "constellation_type": "delta",
@@ -13,7 +13,7 @@
         "duration": 24,
         "timestep": 620,
         "module_settings": {
-            "output_to_file": false
+            "output_to_file": true
         }
     },
     "algorithm": {

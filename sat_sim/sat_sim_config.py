@@ -33,4 +33,5 @@ class SatSimConfig(Config):
     def set_sat_sim(self):
         self.sat_sim.set_duration(self.options["duration"])
         self.sat_sim.set_timestep(self.options["timestep"])
+        self.sat_sim.set_output_file_flag(self.options["module_settings"]["output_to_file"])
         

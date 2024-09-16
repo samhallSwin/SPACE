@@ -39,6 +39,7 @@ class SatSim():
         self.timestep = None
         self.sf_timescale = load.timescale()
         self.output = SatSimOutput()
+        self.output_file_flag = True
 
     # INPUT
     def set_tle_data(self, tle_data):
@@ -50,6 +51,9 @@ class SatSim():
 
     def set_timestep(self, timestep):
         self.timestep = timestep
+
+    def set_output_file_flag(self, output_to_file):
+        self.output_file_flag = output_to_file
     
     # CORE METHODS
     def get_satellite_positions(self, tle_data, time):
@@ -92,20 +96,13 @@ class SatSim():
             matrices.append((current_time.utc_strftime('%Y-%m-%d %H:%M:%S'), adj_matrix))
             current_time += timedelta(seconds=timestep)
         
-        # Write to file - TO GO IN OUTPUT CLASS - get matrices there though
-        self.output.write_to_file("adjacency_matrices.txt", matrices)
+        if self.output_file_flag:
+            # Write to file - TO GO IN OUTPUT CLASS - get matrices there though
+            self.output.write_to_file("adjacency_matrices.txt", matrices)
 
-        print(matrices)
-
-        # with open("adjacency_matrices.txt", "w") as f:
-            # for timestamp, matrix in matrices:
-            #     f.write(f"Time: {timestamp}\n")
-            #     np.savetxt(f, matrix, fmt='%d')
-            #     f.write("\n")
-
-        # Return adjacency matrices
+        # Set adjacency matrices to output
         self.output.set_result(matrices)
-        return matrices
+        # return matrices
     
     # Pass TLE data to MainWindow
     # SatSim as composite of MainWindow and OrbitManager ??
