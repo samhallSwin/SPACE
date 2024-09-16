@@ -61,4 +61,3 @@ class SatSimHandler(Handler):
                 tle_line2 = lines[i+2].strip()
                 tle_data[name] = [tle_line1, tle_line2]
         return tle_data
-

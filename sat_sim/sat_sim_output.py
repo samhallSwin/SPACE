@@ -16,9 +16,6 @@ class SatSimOutput:
         self.fl_input = None
         self.matrices = None
 
-    def write_to_property(self, matrices):
-        self.matrices = matrices
-
     def write_to_file(self, file, matrices):
         """
         Writes matrices to the specified file with timestamps.
@@ -46,11 +43,11 @@ class SatSimOutput:
                     writer.writerow(row)
                 writer.writerow([])  # Add a blank line between matrices for readability
 
-    def set_result(self):
+    def set_result(self, matrices):
         """
         Placeholder for setting results, potentially integrating with a learning module.
         """
-        pass
+        self.matrices = matrices
 
     def set_fl_input(self, fl_input):
         """
