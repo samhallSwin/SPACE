@@ -104,6 +104,7 @@ class SatSim():
             #     f.write("\n")
 
         # Return adjacency matrices
+        self.output.set_result(matrices)
         return matrices
     
     # Pass TLE data to MainWindow

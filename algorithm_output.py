@@ -25,6 +25,9 @@ class AlgorithmOutput(Output):
     def __init__(self):
         self.flam_output = None
 
+    def get_result(self):
+        return self.flam_output
+
     def set_flam(self, algo_output):
         self.flam_output = algo_output
 
