@@ -73,8 +73,19 @@ def check_standalone_module_flag(args):
     
     single_module = flags[0]
 
+    # Module mapping for fl -> federated_learning, cli takes "fl" rather than "federated_learning"
+    module_mapping = {
+        'sat_sim': 'sat_sim',
+        'algorithm': 'algorithm',
+        'fl': 'federated_learning',
+        'model': 'model'
+    }
+    # error for mapping failure
+    if single_module not in module_mapping:
+        raise ValueError(f"Invalid module specified for standalone operation: {single_module}")
+
     try:
-        return ModuleKey(single_module)
+        return ModuleKey(module_mapping[single_module])
     except ValueError:
         raise ValueError(f"Invalid module specified for standalone operation: {single_module}")
 
@@ -199,7 +210,6 @@ if __name__ == "__main__":
     elif args.command == 'flomps':
         flomps_parser = subparsers_action.choices['flomps']
         single_module_key, input_file = read_flomps_cli(flomps_parser, args, options)
-<<<<<<< HEAD
 
         # Check which module was selected
         if single_module_key is not None:
@@ -224,29 +234,3 @@ if __name__ == "__main__":
             # algorithm_module.handler.run_module()
 
    
-=======
-
-        # Check which module was selected
-        if single_module_key is not None:
-            # Run standalone module
-            # print("going to run standalone module")
-            run_standalone_module(single_module_key, input_file)
-        else:
-            # Run as simulation pipeline
-            pass
-            # Check if user would like to run an ML performance test or use existing settings
-            # (Model runtime accounted for in algorithm process)
-
-            # Create Modules
-            # sat_sim_module, algorithm_module, fl_module = build_modules(options)
-            
-            # # Simulation Process
-            # sat_sim_module.handler.parse_input(input_file)
-            # sat_sim_module.handler.run_module()
-            # matrices = sat_sim_module.output.matrices
-                
-            # algorithm_module.handler.parse_input(matrices)
-            # algorithm_module.handler.run_module()
-
-   
->>>>>>> 9718008e0c36316a846053ee304b9b031ecde282
