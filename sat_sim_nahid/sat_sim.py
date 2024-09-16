@@ -1,35 +1,32 @@
 """
 Filename: sat_sim.py
-Author: Md Nahid Tanjum"""
+Author: Md Nahid Tanjum
+"""
 
 import argparse
 from datetime import datetime, timedelta
 from skyfield.api import load, EarthSatellite
 import numpy as np
 
-from sat_sim_config import SatSimConfig
-from sat_sim_handler import SatSimHandler
-from sat_sim_output import SatSimOutput
+from sat_sim.sat_sim_config import SatSimConfig
+from sat_sim.sat_sim_handler import SatSimHandler
+from sat_sim.sat_sim_output import SatSimOutput
 
 class SatSim:
     """Main class handling operations and simulations of satellite orbits."""
 
     def __init__(self):
         self.tle_data = None
-        self.duration = None
         self.timestep = None
         self.sf_timescale = load.timescale()
         self.output = SatSimOutput()
         self.start_time = None
         self.end_time = None
+        self.output_file_type = "txt"  # Default output file type
 
     def set_tle_data(self, tle_data):
         """Sets TLE data for the simulation."""
         self.tle_data = tle_data
-
-    def set_duration(self, duration):
-        """Sets the duration for the simulation."""
-        self.duration = duration
 
     def set_timestep(self, timestep):
         """Sets the timestep for simulation updates."""
@@ -37,8 +34,13 @@ class SatSim:
 
     def set_start_end_times(self, start, end):
         """Sets the start and end times for the simulation."""
-        self.start_time = self.sf_timescale.utc(start.year, start.month, start.day, start.hour, start.minute, start.second)
-        self.end_time = self.sf_timescale.utc(end.year, end.month, end.day, end.hour, end.minute, end.second)
+        self.start_time = start
+        self.end_time = end
+
+
+    def set_output_file_type(self, file_type):
+        """Sets the output file type, either txt or csv."""
+        self.output_file_type = file_type
 
     def get_satellite_positions(self, tle_data, time):
         """Retrieve satellite positions at a given time."""
@@ -53,7 +55,7 @@ class SatSim:
         """Calculate the distance between two positions."""
         return np.linalg.norm(np.array(pos1) - np.array(pos2))
 
-    def run_with_adj_matrix(self, output_txt=None, output_csv=None):
+    def run_with_adj_matrix(self):
         """Generates adjacency matrices over the set duration and timestep."""
         current_time = self.start_time
         matrices = []
@@ -72,10 +74,13 @@ class SatSim:
             matrices.append((current_time.utc_strftime('%Y-%m-%d %H:%M:%S'), adj_matrix))
             current_time += timedelta(seconds=self.timestep)
 
-        if output_txt:
-            self.output.write_to_file(output_txt, matrices)
-        if output_csv:
-            self.output.write_to_csv(output_csv, matrices)
+        # Determine output format and save
+        if self.output_file_type == "txt":
+            self.output.write_to_file("output.txt", matrices)
+        elif self.output_file_type == "csv":
+            self.output.write_to_csv("output.csv", matrices)
+
+        return matrices  # Return the generated matrices
 
 def parse_args():
     """Parse command line arguments."""
@@ -84,13 +89,10 @@ def parse_args():
     parser.add_argument("--start", required=True, type=lambda s: datetime.strptime(s, '%Y-%m-%d %H:%M:%S'), help="Start time (YYYY-MM-DD HH:MM:SS).")
     parser.add_argument("--end", required=True, type=lambda s: datetime.strptime(s, '%Y-%m-%d %H:%M:%S'), help="End time (YYYY-MM-DD HH:MM:SS).")
     parser.add_argument("--timeframe", required=True, type=int, help="Timeframe in seconds between steps.")
-    parser.add_argument("--output_txt", help="Output text file for adjacency matrices.")
-    parser.add_argument("--output_csv", help="Output CSV file for adjacency matrices.")
     return parser.parse_args()
 
 def main():
     args = parse_args()
-    config = SatSimConfig()
     simulation = SatSim()
     handler = SatSimHandler(simulation)
 
@@ -100,12 +102,13 @@ def main():
         return
 
     simulation.set_tle_data(tle_data)
-    simulation.set_duration((args.end - args.start).total_seconds() / 3600.0)  # Duration in hours
     simulation.set_timestep(args.timeframe)
     simulation.set_start_end_times(args.start, args.end)
 
-    simulation.run_with_adj_matrix(output_txt=args.output_txt, output_csv=args.output_csv)
+    result = simulation.run_with_adj_matrix()
+
+    # Print or handle the result if needed
+    print(result)
 
 if __name__ == "__main__":
     main()
-
