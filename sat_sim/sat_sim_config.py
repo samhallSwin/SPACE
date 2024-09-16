@@ -25,12 +25,10 @@ class SatSimConfig:
         """Apply externally provided configuration options."""
         self.options = options
         if self.sat_sim:
-            if 'start_time' in options:
+            if 'start_time' and 'end_time' in options:
                 start_time = self._convert_to_timestamp(options['start_time'])
-                self.sat_sim.set_start_end_times(start=start_time)
-            if 'end_time' in options:
                 end_time = self._convert_to_timestamp(options['end_time'])
-                self.sat_sim.set_start_end_times(end=end_time)
+                self.sat_sim.set_start_end_times(start_time, end_time)
             if 'duration' in options:
                 self.sat_sim.set_duration(options['duration'])
             if 'timestep' in options:
