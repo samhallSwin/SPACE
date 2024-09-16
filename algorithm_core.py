@@ -110,5 +110,6 @@ class Algorithm():
                 'aggregator_flag': aggregator_flags[selected_satellite]
             }
         self.output.write_to_file(algorithm_output) # write to file.
-        self.output.set_result(algorithm_output) # set result to AlgorithmOutput
+        #self.output.set_result(algorithm_output) # set result to AlgorithmOutput (#commented to return output on 13/09/2024)
+        return self.output.set_result(algorithm_output) # return for standalone execution. (temporary)
     
