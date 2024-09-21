@@ -2,6 +2,8 @@ import sys
 import argparse
 import json
 
+from PyQt5.QtWidgets import QApplication
+from sat_sim.sat_sim import MainWindow
 import module_factory
 from module_factory import ModuleKey
 import cli_args
@@ -34,6 +36,8 @@ def setup_parser():
     parser = argparse.ArgumentParser(description='Run FLOMPS Simulation Suite')
 
     subparsers = parser.add_subparsers(dest='command', help="Available commands")
+
+    parser.add_argument('--gui', action='store_true', help="Run the GUI version")
 
     settings_parser = subparsers.add_parser('settings', help="System settings")
     cli_args.setup_settings_parser(settings_parser)
@@ -204,6 +208,14 @@ if __name__ == "__main__":
     # Access the 'flomps' subparser
     flomps_parser = subparsers_action.choices['flomps']
     # print(parser._subparsers._group_actions.)
+
+    if args.gui:
+        app = QAppilication(sys.argv)
+        main_window = MainWindow()
+        main_window.show()
+        sys.exit(app.exec_())
+    else:
+        subparsers_action = parser._subparsers._group_actions[0]
 
     if args.command == 'settings':
         read_settings_cli(options, args)
