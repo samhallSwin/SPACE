@@ -1,29 +1,17 @@
-"""
-Filename: sat_sim.py
-Author: Md Nahid Tanjum
-"""
-
 import argparse
-import os
 from datetime import datetime, timedelta
 from skyfield.api import load, EarthSatellite
 import numpy as np
-import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QLabel, QLineEdit, QPushButton, QMessageBox
-from PyQt5.QtCore import QTimer
-from matplotlib.backends.backend_pdf import PdfPages
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-import networkx as nx
+import os
+import tkinter as tk
+from tkinter import filedialog, messagebox
 
-from sat_sim.sat_sim_config import SatSimConfig
-from sat_sim.sat_sim_handler import SatSimHandler
-from sat_sim.sat_sim_output import SatSimOutput
-
+from .sat_sim_config import SatSimConfig
+from .sat_sim_handler import SatSimHandler
+from .sat_sim_output import SatSimOutput
 
 class SatSim:
-    #Main class handling operations and simulations of satellite orbits.
-
+    # Main class handling operations and simulations of satellite orbits.
     def __init__(self):
         self.tle_data = None
         self.timestep = None
@@ -34,210 +22,175 @@ class SatSim:
         self.output_file_type = "txt"
 
     def set_tle_data(self, tle_data):
-        #Sets TLE data for the simulation.
         self.tle_data = tle_data
 
     def set_timestep(self, timestep):
-        #Sets the timestep for simulation updates.
         self.timestep = timedelta(minutes=timestep)
 
     def set_start_end_times(self, start, end):
-        #Sets the start and end times for the simulation.
         self.start_time = start
         self.end_time = end
 
-
     def set_output_file_type(self, file_type):
-        #Sets the output file type, either txt or csv.
         self.output_file_type = file_type
 
-    def get_satellite_positions(self, tle_data, time):
-        #Retrieve satellite positions at a given time.
+    def get_satellite_positions(self, tle_data, current_time):
+
+        try:
+            sky_time = current_time
+            _ = sky_time.tt
+
+        except AttributeError:
+            # Fallback if current_time is not a Skyfield Time object, convert from datetime
+            sky_time = self.sf_timescale.utc(current_time.year, current_time.month, current_time.day,
+                                         current_time.hour, current_time.minute, current_time.second)
         positions = {}
         for name, tle in tle_data.items():
             satellite = EarthSatellite(tle[0], tle[1], name)
-            geocentric = satellite.at(time)
+            geocentric = satellite.at(sky_time)
             positions[name] = geocentric.position.km
         return positions
 
     def calculate_distance(self, pos1, pos2):
-        #Calculate the distance between two positions.
         return np.linalg.norm(np.array(pos1) - np.array(pos2))
 
     def run_with_adj_matrix(self):
-        #Generates adjacency matrices over the set duration and timestep.
         current_time = self.start_time
         matrices = []
 
         while current_time < self.end_time:
             positions = self.get_satellite_positions(self.tle_data, current_time)
-            keys = list(positions.keys())
-            size = len(keys)
-            adj_matrix = np.zeros((size, size), dtype=int)
+            if positions:
+                keys = list(positions.keys())
+                size = len(keys)
+                adj_matrix = np.zeros((size, size), dtype=int)
 
             for i in range(size):
                 for j in range(i + 1, size):
                     dist = self.calculate_distance(positions[keys[i]], positions[keys[j]])
                     adj_matrix[i, j] = adj_matrix[j, i] = 1 if dist < 10000 else 0
 
+            # Handle current_time formatting based on its type
+            if hasattr(current_time, 'utc_strftime'):  # Skyfield Time object
+                formatted_time = current_time.utc_strftime('%Y-%m-%d %H:%M:%S')
+            else:  # Python datetime object
+                formatted_time = current_time.strftime('%Y-%m-%d %H:%M:%S')
+
             matrices.append((current_time.utc_strftime('%Y-%m-%d %H:%M:%S'), adj_matrix))
             current_time += self.timestep
+
+        if not matrices:
+            print("No matrices generated. Exiting.")  # Handle no data generated
+            return []
+        
+        if matrices:
+            max_size = max(len(matrix) for _, matrix in matrices)  # Safe to call max
+            print("Max matrix size:", max_size)
 
         # Determine output format and save
         if self.output_file_type == "txt":
             self.output.write_to_file("output.txt", matrices)
         elif self.output_file_type == "csv":
             self.output.write_to_csv("output.csv", matrices)
-        return matrices  
+        return matrices
 
-
-class MainWindow(QMainWindow):
+# GUI class
+class SatSimGUI(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle('Satellite Visualization Over Time')
-        self.setGeometry(100, 100, 1200, 900)
-        self.centralWidget = QWidget()
-        self.setCentralWidget(self.centralWidget)
-        self.layout = QVBoxLayout(self.centralWidget)
+        self.title("Satellite Simulation")
+        self.geometry("500x400")
         self.simulation = SatSim()
+        # Create input fields
+        self.create_widgets()
 
-        self.initUI()
+    def create_widgets(self):
+        # TLE File
+        self.tle_label = tk.Label(self, text="TLE File:")
+        self.tle_label.pack()
+        self.tle_entry = tk.Entry(self, width=50)
+        self.tle_entry.pack()
+        self.tle_button = tk.Button(self, text="Browse", command=self.browse_tle_file)
+        self.tle_button.pack()
 
-    def initUI(self):
-        self.tle_path_input = QLineEdit()
-        self.tle_path_input.setPlaceholderText("Enter path to TLE file")
-        self.layout.addWidget(self.tle_path_input)
+        # Start Time
+        self.start_label = tk.Label(self, text="Start Time (YYYY-MM-DD HH:MM:SS):")
+        self.start_label.pack()
+        self.start_entry = tk.Entry(self, width=50)
+        self.start_entry.pack()
 
-        self.start_time_input = QLineEdit()
-        self.start_time_input.setPlaceholderText("Enter start time (YYYY-MM-DD HH:MM:SS)")
-        self.layout.addWidget(self.start_time_input)
+        # End Time
+        self.end_label = tk.Label(self, text="End Time (YYYY-MM-DD HH:MM:SS):")
+        self.end_label.pack()
+        self.end_entry = tk.Entry(self, width=50)
+        self.end_entry.pack()
 
-        self.end_time_input = QLineEdit()
-        self.end_time_input.setPlaceholderText("Enter end time (YYYY-MM-DD HH:MM:SS)")
-        self.layout.addWidget(self.end_time_input)
+        # Timestep
+        self.timestep_label = tk.Label(self, text="Timestep (in minutes):")
+        self.timestep_label.pack()
+        self.timestep_entry = tk.Entry(self, width=50)
+        self.timestep_entry.pack()
 
-        self.timestep_input = QLineEdit()
-        self.timestep_input.setPlaceholderText("Enter timestep in minutes")
-        self.layout.addWidget(self.timestep_input)
+        # Run button
+        self.run_button = tk.Button(self, text="Run Simulation", command=self.run_simulation)
+        self.run_button.pack()
 
-        btn_run_simulation = QPushButton("Run Simulation and Generate Files")
-        btn_run_simulation.clicked.connect(self.run_simulation)
-        self.layout.addWidget(btn_run_simulation)
+        # Output display
+        self.output_text = tk.Text(self, height=10, width=60)
+        self.output_text.pack()
 
-        self.figure, self.axes = plt.subplots(nrows=1, ncols=2, figsize=(10, 5))
-        self.canvas = FigureCanvas(self.figure)
-        self.layout.addWidget(self.canvas)
+    def browse_tle_file(self):
+        tle_file = filedialog.askopenfilename(filetypes=[("TLE files", "*.tle"), ("All files", "*.*")])
+        self.tle_entry.delete(0, tk.END)
+        self.tle_entry.insert(0, tle_file)
 
     def run_simulation(self):
-        tle_file = self.tle_path_input.text()
-        start_time_str = self.start_time_input.text()
-        end_time_str = self.end_time_input.text()
-        timestep = int(self.timestep_input.text())
+        tle_file = self.tle_entry.get()
+        start_time_str = self.start_entry.get()
+        end_time_str = self.end_entry.get()
+        timestep_str = self.timestep_entry.get()
 
-        # Read TLE file
-        try:
-            with open(tle_file, 'r') as f:
-                tle_data = {}
-                lines = f.readlines()
-                for i in range(0, len(lines), 3):
-                    name = lines[i].strip()
-                    tle_line1 = lines[i + 1].strip()
-                    tle_line2 = lines[i + 2].strip()
-                    tle_data[name] = [tle_line1, tle_line2]
-            self.simulation.set_tle_data(tle_data)
-        except FileNotFoundError:
-            QMessageBox.critical(self, "Error", "TLE file not found.")
+        start_time = None
+        end_time = None
+
+        if not tle_file or not start_time or not end_time or not timestep:
+            messagebox.showerror("Error", "All fields must be filled.")
             return
 
-        # Set simulation parameters
+        # Validation and parsing
         try:
-            start_time = datetime.strptime(start_time_str, "%Y-%m-%d %H:%M:%S")
-            end_time = datetime.strptime(end_time_str, "%Y-%m-%d %H:%M:%S")
-        except ValueError:
-            QMessageBox.critical(self, "Error", "Invalid date format. Please use YYYY-MM-DD HH:MM:SS.")
+            timestep = int(timestep)
+            start_time = datetime.strptime(start_time, '%Y-%m-%d %H:%M:%S')
+            end_time = datetime.strptime(end_time, '%Y-%m-%d %H:%M:%S')
+            start_time = self.simulation.sf_timescale.utc(start_time.year, start_time.month, start_time.day,
+                                                      start_time.hour, start_time.minute, start_time.second)
+            end_time = self.simulation.sf_timescale.utc(end_time.year, end_time.month, end_time.day,
+                                                    end_time.hour, end_time.minute, end_time.second)
+        except ValueError as e:
+            messagebox.showerror("Error", str(e))
             return
+        
+        self.simulation.set_output_file_type("csv")
+        tle_data = SatSimHandler(self.simulation).read_tle_file(tle_file)
 
-        self.simulation.set_start_end_times(start_time, end_time)
+        self.simulation.set_tle_data(SatSimHandler(self.simulation).read_tle_file(tle_file))
         self.simulation.set_timestep(timestep)
+        self.simulation.set_start_end_times(start_time, end_time)
 
-        # Run simulation
-        matrices = self.simulation.run_with_adj_matrix()
+        result = self.simulation.run_with_adj_matrix()
 
-        # Display results
-        self.update_graphs(matrices)
-
-    def update_graphs(self, matrices):
-        keys = list(self.simulation.tle_data.keys())
-        size = len(keys)
-
-        for timestamp, adj_matrix in matrices:
-            self.axes[0].cla()
-            self.axes[1].cla()
-
-            # Plot adjacency matrix
-            self.axes[0].imshow(adj_matrix, cmap='Blues', interpolation='none')
-            self.axes[0].set_title(f'Adjacency Matrix at {timestamp}')
-            self.axes[0].set_xticks(np.arange(size))
-            self.axes[0].set_yticks(np.arange(size))
-            self.axes[0].set_xticklabels(keys)
-            self.axes[0].set_yticklabels(keys)
-
-            # Plot network graph
-            G = nx.from_numpy_array(adj_matrix)
-            pos = nx.spring_layout(G)
-            nx.draw(G, pos, ax=self.axes[1], with_labels=True, node_color='skyblue')
-            self.axes[1].set_title(f'Network Graph at {timestamp}')
-
-            # Draw on canvas
-            self.canvas.draw()
+        if result:
+            self.output_text.delete(1.0, tk.END)
+            self.output_text.insert(tk.END, "Simulation completed successfully. Check the CSV file.")
+        else:
+            messagebox.showerror("Error", "No data generated from simulation. Check input parameters and TLE data.")
 
 
-
-# --- CLI Implementation ---
-def parse_args():
-    #Parse command line arguments.
-    parser = argparse.ArgumentParser(description="Run the satellite simulation.")
-    parser.add_argument("--tle_file", required=True, help="Path to the TLE file.")
-    parser.add_argument("--start", required=True, type=lambda s: datetime.strptime(s, '%Y-%m-%d %H:%M:%S'), help="Start time (YYYY-MM-DD HH:MM:SS).")
-    parser.add_argument("--end", required=True, type=lambda s: datetime.strptime(s, '%Y-%m-%d %H:%M:%S'), help="End time (YYYY-MM-DD HH:MM:SS).")
-    parser.add_argument("--timestep", required=True, type=int, help="Timeframe in minutes between steps.")
-    return parser.parse_args()
-
-def run_cli_simulation():
-    """Run the satellite simulation via CLI."""
-    args = parse_args()
-    simulation = SatSim()
-
-    # Read the TLE file
-    try:
-        with open(args.tle_file, 'r') as f:
-            tle_data = {}
-            lines = f.readlines()
-            for i in range(0, len(lines), 3):
-                name = lines[i].strip()
-                tle_line1 = lines[i + 1].strip()
-                tle_line2 = lines[i + 2].strip()
-                tle_data[name] = [tle_line1, tle_line2]
-    except FileNotFoundError:
-        print("Error: TLE file not found.")
-        return
-
-    simulation.set_tle_data(tle_data)
-    simulation.set_timestep(args.timestep)
-    simulation.set_start_end_times(args.start, args.end)
-
-    result = simulation.run_with_adj_matrix()
-    print(result)
+def main():
+    # Launch the GUI
+    app = SatSimGUI()
+    app.mainloop()
 
 
-# --- MAIN SWITCH BETWEEN CLI AND GUI ---
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        # Run CLI version
-        run_cli_simulation()
-    else:
-        # Run GUI version
-        app = QApplication(sys.argv)
-        window = MainWindow()
-        window.show()
-        sys.exit(app.exec_())
+    main()
