@@ -60,5 +60,5 @@ class AlgorithmHandler(Handler):
         self.algorithm.set_adjacency_matrices(adj_matrices)
 
     def run_module(self):
-        #self.algorithm.start_algorithm_steps() # commented on 13/09/2024 so standalone module execution returns output
-        return self.algorithm.start_algorithm_steps() # standalone module execution returns output
+        self.algorithm.start_algorithm_steps() 
+        

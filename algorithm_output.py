@@ -69,6 +69,5 @@ class AlgorithmOutput(Output):
             })
        
         # Convert the list of algorithm output rows to a DataFrame for easy processing and manipulation
-        # algo_op_df = pds.DataFrame(algo_op_rows)
         self.set_flam(pds.DataFrame(algo_op_rows))
         return self.get_flam()
