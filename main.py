@@ -2,11 +2,10 @@ import sys
 import argparse
 import json
 
-from PyQt5.QtWidgets import QApplication
-from sat_sim.sat_sim import MainWindow
 import module_factory
 from module_factory import ModuleKey
 import cli_args
+from sat_sim.sat_sim_gui import main as run_sat_sim_gui
 
 def set_config_file(file):
     with open('settings.json') as f:
@@ -37,13 +36,14 @@ def setup_parser():
 
     subparsers = parser.add_subparsers(dest='command', help="Available commands")
 
-    parser.add_argument('--gui', action='store_true', help="Run the GUI version")
-
     settings_parser = subparsers.add_parser('settings', help="System settings")
     cli_args.setup_settings_parser(settings_parser)
 
     flomps_parser = subparsers.add_parser('flomps', help="Run a FLOMPS simulation")
     cli_args.setup_flomps_parser(flomps_parser)
+
+    # Add the --sat_sim_gui flag to the flomps subparser
+    flomps_parser.add_argument('--sat_sim_gui', action='store_true', help="Run Satellite Simulation with GUI")
 
     return parser
 
@@ -146,12 +146,13 @@ def update_options_with_args(parser, args_for_config, options):
     return options
 
 def run_standalone_module(single_module_key, input_file):
-        # Temporary structure
-        module = module_factory.create_single_instance(single_module_key)
-        module.config.read_options(options[single_module_key.value])
-        module.handler.parse_input(input_file)
-        output = module.handler.run_module()
-        print(output)
+    # Temporary structure
+    module = module_factory.create_single_instance(single_module_key)
+    module.config.read_options(options[single_module_key.value])
+    module.handler.parse_input(input_file)
+    module.handler.run_module()
+    output = module.output.get_result()
+    print(output)
 
 def log_options(options):
     # TODO: Make this pretty later...
@@ -159,8 +160,6 @@ def log_options(options):
 
 def read_settings_cli(options, args):
     # Check if user would like to read JSON options
-    # TODO: IN PROGRESS - We need a root command e.g. "run" for all simulation related stuff
-    # Anything without "run" would be for meta functions, e.g. show JSON options for a particular module
     show_options_flag = args.show_options
     if show_options_flag:
         log_options(options)
@@ -207,42 +206,21 @@ if __name__ == "__main__":
     
     # Access the 'flomps' subparser
     flomps_parser = subparsers_action.choices['flomps']
-    # print(parser._subparsers._group_actions.)
-
-    if args.gui:
-        app = QAppilication(sys.argv)
-        main_window = MainWindow()
-        main_window.show()
-        sys.exit(app.exec_())
-    else:
-        subparsers_action = parser._subparsers._group_actions[0]
 
     if args.command == 'settings':
         read_settings_cli(options, args)
     elif args.command == 'flomps':
-        flomps_parser = subparsers_action.choices['flomps']
-        single_module_key, input_file = read_flomps_cli(flomps_parser, args, options)
-
-        # Check which module was selected
-        if single_module_key is not None:
-            # Run standalone module
-            # print("going to run standalone module")
-            run_standalone_module(single_module_key, input_file)
+        # Check if --sat_sim_gui flag is present
+        if args.sat_sim_gui:
+            # Launch the GUI for sat_sim with TLE file
+            run_sat_sim_gui(tle_file=args.input_file)
         else:
-            # Run as simulation pipeline
-            pass
-            # Check if user would like to run an ML performance test or use existing settings
-            # (Model runtime accounted for in algorithm process)
+            single_module_key, input_file = read_flomps_cli(flomps_parser, args, options)
 
-            # Create Modules
-            # sat_sim_module, algorithm_module, fl_module = build_modules(options)
-            
-            # # Simulation Process
-            # sat_sim_module.handler.parse_input(input_file)
-            # sat_sim_module.handler.run_module()
-            # matrices = sat_sim_module.output.matrices
-                
-            # algorithm_module.handler.parse_input(matrices)
-            # algorithm_module.handler.run_module()
-
-   
+            # Check which module was selected
+            if single_module_key is not None:
+               # Run standalone module
+               run_standalone_module(single_module_key, input_file)
+            else:
+                # Run as simulation pipeline
+                pass
