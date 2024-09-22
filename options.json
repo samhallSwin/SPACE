@@ -1,17 +1,17 @@
 {
     "sat_sim": {
-        "start_time": 2,
-        "end_time": 4,
-        "satellite_count": 5,
+        "start_time": "2024-01-01 12:00:00",
+        "end_time": "2024-01-01 16:00:00",
+        "timestep": 600,
+        "output_file_type": "csv",
+        "satellite_count": 4,
         "constellation_type": "delta",
         "ground_station": {
             "location": {
-                "lat": 350.23,
-                "long": 508.23
+                "lat": 35.6895,
+                "long": 139.6917
             }
         },
-        "duration": 24,
-        "timestep": 620,
         "module_settings": {
             "output_to_file": false
         }
