@@ -1,53 +1,63 @@
 """
 Filename: sat_sim_handler.py
-Description: Reads in TLE file for Satellite Simulation
-Authors: Elysia Guglielmo, Md Nahid Tanjum
-Date: 2024-08-11
-Version: 1.0
-Python Version: 
+Author: Md Nahid Tanjum"""
 
-Changelog:
-- 2024-08-11: Initial creation.
-
-Usage: 
-Instantiate SatSimHandler and assign SatSim. 
-"""
+import sys
 import os
-
+import logging
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from interfaces.handler import Handler
-from sat_sim.sat_sim import SatSim
 
 class SatSimHandler(Handler):
-
     '''
-            Satellite 4
-        1    -4U 20004A   20125.77352221  .00000000  00000-0  10261-3 0    11
-        2    -4  55.9989 356.8090 0009545 256.3910 255.5351 14.11692457   441
+    Handles the input of TLE data for satellite simulation processes.
     '''
 
-    def __init__(self, sat_sim: SatSim):
+    def __init__(self, sat_sim):
         self.sat_sim = sat_sim
         self.tle_data = None
+        logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
     def parse_input(self, file):
-        tle_data = self.read_tle_file(file)
-        self.send_data(tle_data)
+        """Reads TLE data from a file, ensuring path correctness and data integrity."""
+        try:
+            tle_data = self.read_tle_file(file)
+            if tle_data:
+                self.send_data(tle_data)
+            else:
+                logging.error("No TLE data found or data is incorrect.")
+        except Exception as e:
+            logging.error(f"Failed to read or process TLE data: {e}")
 
     def send_data(self, data):
-        self.sat_sim.set_tle_data(data)
+        """Sends parsed TLE data to the SatSim module."""
+        if data:
+            self.sat_sim.set_tle_data(data)
+        else:
+            logging.error("Attempted to send empty or invalid TLE data.")
 
     def run_module(self):
-        matrices = self.sat_sim.run_with_adj_matrix()
-        return matrices
+        """Runs the simulation module after setting TLE data."""
+        if self.sat_sim.tle_data:
+            return self.sat_sim.run_with_adj_matrix()
+        else:
+            logging.error("TLE data not set before running simulation.")
+            return None
 
     def read_tle_file(self, file_path):
+        """Reads TLE data from the specified file path."""
+        if not os.path.exists(file_path):
+            logging.error(f"File not found: {file_path}")
+            raise FileNotFoundError(f"No such file or directory: '{file_path}'")
         tle_data = {}
         with open(file_path, 'r') as f:
             lines = f.readlines()
+            if len(lines) % 3 != 0:
+                logging.error("TLE file format error: Each entry should consist of three lines.")
+                return {}
             for i in range(0, len(lines), 3):
                 name = lines[i].strip()
-                tle_line1 = lines[i + 1].strip()
-                tle_line2 = lines[i + 2].strip()
+                tle_line1 = lines[i+1].strip()
+                tle_line2 = lines[i+2].strip()
                 tle_data[name] = [tle_line1, tle_line2]
         return tle_data
-    
