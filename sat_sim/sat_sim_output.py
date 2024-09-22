@@ -49,6 +49,9 @@ class SatSimOutput:
         """
         self.matrices = matrices
 
+    def get_result(self):
+        return self.matrices
+
     def set_fl_input(self, fl_input):
         """
         Sets the input for the Federated Learning module, if applicable.
