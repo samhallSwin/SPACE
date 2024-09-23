@@ -29,4 +29,7 @@ class FLOutput(Output):
     def get_result():
         pass
 
+    def log_result():
+        pass
+
     # Start algorithm
