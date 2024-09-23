@@ -92,7 +92,13 @@ class AlgorithmHandler(Handler):
                 raise ValueError(f"Adjacency Matrix at time '{timestamp}' is not symmetric.") 
 
         return True
-    def parse_input(self,file_name):
+    
+    def parse_data(self, data):
+        self.adjacency_matrices = data
+        if self.validate_adjacency_matrices(self.adjacency_matrices):
+            self.send_adjmatrices(self.adjacency_matrices)
+
+    def parse_file(self,file_name):
         adjacency_matrices = self.read_adjacency_matrices(file_name)
         if self.validate_adjacency_matrices(adjacency_matrices):
             self.send_adjmatrices(adjacency_matrices)

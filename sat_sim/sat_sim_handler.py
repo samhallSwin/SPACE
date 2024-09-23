@@ -18,7 +18,10 @@ class SatSimHandler(Handler):
         self.tle_data = None
         logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
-    def parse_input(self, file):
+    def parse_data(self, data):
+        return super().parse_data()
+
+    def parse_file(self, file):
         """Reads TLE data from a file, ensuring path correctness and data integrity."""
         try:
             tle_data = self.read_tle_file(file)

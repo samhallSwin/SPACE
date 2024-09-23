@@ -145,7 +145,7 @@ def run_standalone_module(single_module_key, input_file):
         # Temporary structure
         module = module_factory.create_single_instance(single_module_key)
         module.config.read_options(options[single_module_key.value])
-        module.handler.parse_input(input_file)
+        module.handler.parse_file(input_file)
         module.handler.run_module()
         output = module.output.get_result()
         print(output)
@@ -224,14 +224,19 @@ if __name__ == "__main__":
             # (Model runtime accounted for in algorithm process)
 
             # Create Modules
-            # sat_sim_module, algorithm_module, fl_module = build_modules(options)
+            sat_sim_module, algorithm_module, fl_module = build_modules(options)
             
             # # Simulation Process
-            # sat_sim_module.handler.parse_input(input_file)
-            # sat_sim_module.handler.run_module()
-            # matrices = sat_sim_module.output.matrices
+            sat_sim_module.handler.parse_file(input_file)
+            sat_sim_module.handler.run_module()
+            matrices = sat_sim_module.output.get_result()
+            print(matrices)
                 
-            # algorithm_module.handler.parse_input(matrices)
-            # algorithm_module.handler.run_module()
+            algorithm_module.handler.parse_data(matrices)
+            algorithm_module.handler.run_module()
+            flam = algorithm_module.output.get_result()
+            print(flam)
+
+            fl_module.handler.run_module()
 
    

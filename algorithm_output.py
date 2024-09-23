@@ -67,7 +67,6 @@ class AlgorithmOutput(Output):
     # Data structure that can be passed to Federated Learning (FL) Component 
     def set_result(self, algorithm_output):
         self.process_algorithm_output(algorithm_output)
-        return self.get_flam()
     
      # Write the Federated Learning Adjacency Matrix (FLAM) to the file.
     def write_to_file(self, algorithm_output):
