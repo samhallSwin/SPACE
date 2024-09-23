@@ -31,6 +31,9 @@ class AlgorithmOutput(Output):
 
     def set_flam(self, algo_output):
         self.flam_output = algo_output
+    
+    def get_flam(self):
+        return self.flam_output
 
     # Pass Federated Learning Adjacency Matrix (FLAM) to Federated Learning Component
     # Aggregator Flag has three values true, false, None
@@ -64,11 +67,11 @@ class AlgorithmOutput(Output):
     # Data structure that can be passed to Federated Learning (FL) Component 
     def set_result(self, algorithm_output):
         self.process_algorithm_output(algorithm_output)
-        return self.get_result()
+        return self.get_flam()
     
      # Write the Federated Learning Adjacency Matrix (FLAM) to the file.
     def write_to_file(self, algorithm_output):
         file_name = 'Federated_Learning_Adjacency_Matrix.txt'
         self.process_algorithm_output(algorithm_output)
         with open(file_name, 'w') as file:
-            file.write(self.get_result().to_string(index=False)) 
+            file.write(self.get_flam().to_string(index=False)) 
