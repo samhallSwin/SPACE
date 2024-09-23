@@ -13,7 +13,7 @@
             }
         },
         "module_settings": {
-            "output_to_file": false
+            "output_to_file": true
         }
     },
     "algorithm": {

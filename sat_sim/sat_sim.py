@@ -20,7 +20,7 @@ class SatSim:
         self.timestep = None
         self.sf_timescale = load.timescale()
         self.output = SatSimOutput()
-        self.output_file_flag = True
+        self.output_to_file = True
         self.start_time = None
         self.end_time = None
         self.output_file_type = "txt"  # Default output file type
@@ -34,14 +34,13 @@ class SatSim:
         self.timestep = timestep
 
     def set_output_file_flag(self, output_to_file):
-        self.output_file_flag = output_to_file
+        self.output_to_file = output_to_file
     
     # CORE METHODS
     def set_start_end_times(self, start, end):
         """Sets the start and end times for the simulation."""
         self.start_time = start
         self.end_time = end
-
 
     def set_output_file_type(self, file_type):
         """Sets the output file type, either txt or csv."""
@@ -80,12 +79,14 @@ class SatSim:
             current_time += timedelta(seconds=self.timestep)
 
         # Determine output format and save
-        if self.output_file_type == "txt":
-            self.output.write_to_file("output.txt", matrices)
-        elif self.output_file_type == "csv":
-            self.output.write_to_csv("output.csv", matrices)
+        if self.output_to_file:
+            if self.output_file_type == "txt":
+                self.output.write_to_file("output.txt", matrices)
+            elif self.output_file_type == "csv":
+                self.output.write_to_csv("output.csv", matrices)
 
-        return matrices  # Return the generated matrices
+        self.output.set_result(matrices)
+
 
 def parse_args():
     """Parse command line arguments."""
