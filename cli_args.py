@@ -24,9 +24,8 @@ def setup_flomps_parser(parser):
         sat_sim_group = parser.add_argument_group(ModuleKey.SAT_SIM)
 
         # Add args here
-        sat_sim_group.add_argument('--start-time', type=int, help='The start date/time for the satellite simulation')
-        sat_sim_group.add_argument('--end-time', type=int, help='The end date/time for the satellite simulation')
-        sat_sim_group.add_argument('--duration', type=int, help='Duration of the simulation (in hours)')
+        sat_sim_group.add_argument('--start-time', type=str, help='The start date/time for the satellite simulation')
+        sat_sim_group.add_argument('--end-time', type=str, help='The end date/time for the satellite simulation')
         sat_sim_group.add_argument('--timestep', type=int, help='Timestep for the simulation')
 
     def add_algorithm_args(parser):

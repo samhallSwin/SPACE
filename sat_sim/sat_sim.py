@@ -80,7 +80,9 @@ class SatSim:
         elif self.output_file_type == "csv":
             self.output.write_to_csv("output.csv", matrices)
 
-        return matrices  # Return the generated matrices
+        # Set output of generated matrices
+        self.output.set_result(matrices)
+        
 
 def parse_args():
     """Parse command line arguments."""
