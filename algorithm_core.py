@@ -11,6 +11,7 @@ Changelog:
 - 2024-07-31: Initial creation.
 - 2024-08-24: getters and setters for satellite names by Yuganya Perumal
 - 2024-09-09: Move Algorithm Steps from Algorithm Handler to Algorithm Core by Yuganya Perrumal
+- 2024-09-21: Implemented Load Balancing based on past selection of the satellite when there more than one satellite with max no. of connectivity.
 
 Usage: 
 Instantiate to setup Algorithmhandler and AlgorithmConfig.
@@ -24,25 +25,37 @@ class Algorithm():
         self.satellite_names = []
         self.adjacency_matrices = None
         self.output = AlgorithmOutput()
+        self.selection_counts = None  
+
     def set_satellite_names(self, satellite_names):
+        if satellite_names is None or len(satellite_names) == 0:
+            raise ValueError("Provide Satellite Names for identification purposes.")
         self.satellite_names = satellite_names
+        self.selection_counts = npy.zeros(len(satellite_names))  
 
     def get_satellite_names(self):
         return self.satellite_names
     
-    def set_adjacency_matrices(self, adjacency_matrices):
-        
+    def set_adjacency_matrices(self, adjacency_matrices):       
         self.adjacency_matrices = adjacency_matrices
     
     def get_adjacency_matrices(self):
         return self.adjacency_matrices
-
-    # chooses the satellite with maximum number of connections
+    
     def select_satellite_with_max_connections(self, each_matrix):
         satellite_connections = npy.sum(each_matrix, axis=1)
         max_connections = npy.max(satellite_connections)
-        satellite_index = npy.argmax(satellite_connections)
-        return satellite_index, max_connections
+        max_connected_satellites = [i for i, conn in enumerate(satellite_connections) if conn == max_connections]
+        
+        if len(max_connected_satellites) > 1:
+            # Select satellite with the fewest past selections in case there is more than one satellite with max no.of connectivity.
+            selected_satellite_index = min(max_connected_satellites, key=lambda index: self.selection_counts[index])
+        else:
+            selected_satellite_index = max_connected_satellites[0]
+
+        # Update the selection count for the chosen satellite.
+        self.selection_counts[selected_satellite_index] += 1
+        return selected_satellite_index, max_connections
     
     def get_selected_satellite_name(self, satellite_index):
         satellite_names = self.get_satellite_names()
@@ -80,21 +93,18 @@ class Algorithm():
             satellite_connections = npy.sum(each_matrix, axis=1)
         # Step 5: Find the maximum number of connections in that particular timestamp.
             max_connections = npy.max(satellite_connections)
-
-        # Step 6: Find all satellite with the maximum number of connections in that particular timestamp.
-            max_connected_satellite = [i for i, conn in enumerate(satellite_connections) if conn == max_connections]
-
-        # Step 7: Choose the first satellite in case there are more than one satellites with max number of connectivity.
-            selected_satellite_index = max_connected_satellite[0]
+  
+        # Step 6: Choose the satellite with fewest selection in case there are more than one satellites with maximum number of connectivity.
+            selected_satellite_index, max_connections = self.select_satellite_with_max_connections(each_matrix)
             selected_satellite = self.get_selected_satellite_name(selected_satellite_index)
-
-        # Step 8: Set the aggregator flag to true for the selected satellite for that particular timestamp.
+            
+        # Step 7: Set the aggregator flag to true for the selected satellite for that particular timestamp.
             aggregator_flags[selected_satellite] = True
 
-        # Step 9: Create a copy of the Adjacency Matrix to trim down the connectivity for non-selected satellites.
+        # Step 8: Create a copy of the Adjacency Matrix to trim down the connectivity for non-selected satellites.
             fl_am = each_matrix.copy()
 
-        # Step 10: Retain connections (1s) for the selected node
+        # Step 9: Retain connections (1s) for the selected node
             for i, satellite_name in enumerate(self.get_satellite_names()):
                 if i != selected_satellite_index:
                     # Remove connections to/from non-selected nodes that are not connected to the selected node
@@ -102,7 +112,7 @@ class Algorithm():
                         fl_am[i, :] = 0  # Remove all connections from this node
                         fl_am[:, i] = 0  # Remove all connections to this node
 
-        # Step 11: Store algorithm output (Federated Learning Adjacency Matrix (FLAM)) as a dictionary data structure.
+        # Step 10: Store algorithm output (Federated Learning Adjacency Matrix (FLAM)) as a dictionary data structure.
             algorithm_output[time_stamp] = {
                 'satellite_count': satellite_count,
                 'selected_satellite': selected_satellite,
@@ -110,6 +120,6 @@ class Algorithm():
                 'aggregator_flag': aggregator_flags[selected_satellite]
             }
         self.output.write_to_file(algorithm_output) # write to file.
-        #self.output.set_result(algorithm_output) # set result to AlgorithmOutput (#commented to return output on 13/09/2024)
-        return self.output.set_result(algorithm_output) # return for standalone execution. (temporary)
+        self.output.set_result(algorithm_output) # set result to AlgorithmOutput 
+       
     
