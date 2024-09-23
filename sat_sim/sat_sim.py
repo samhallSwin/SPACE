@@ -22,7 +22,11 @@ class SatSim:
         self.output = SatSimOutput()
         self.start_time = None
         self.end_time = None
+        self.output_to_file = True
         self.output_file_type = "txt"  # Default output file type
+
+    def set_output_to_file(self, output_to_file):
+        self.output_to_file = output_to_file
 
     def set_tle_data(self, tle_data):
         """Sets TLE data for the simulation."""
@@ -75,10 +79,11 @@ class SatSim:
             current_time += timedelta(seconds=self.timestep)
 
         # Determine output format and save
-        if self.output_file_type == "txt":
-            self.output.write_to_file("output.txt", matrices)
-        elif self.output_file_type == "csv":
-            self.output.write_to_csv("output.csv", matrices)
+        if self.output_to_file:
+            if self.output_file_type == "txt":
+                self.output.write_to_file("output.txt", matrices)
+            elif self.output_file_type == "csv":
+                self.output.write_to_csv("output.csv", matrices)
 
         # Set output of generated matrices
         self.output.set_result(matrices)

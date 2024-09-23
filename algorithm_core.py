@@ -25,7 +25,8 @@ class Algorithm():
         self.satellite_names = []
         self.adjacency_matrices = None
         self.output = AlgorithmOutput()
-        self.selection_counts = None  
+        self.selection_counts = None
+        self.output_to_file = True 
 
     def set_satellite_names(self, satellite_names):
         if satellite_names is None or len(satellite_names) == 0:
@@ -41,6 +42,9 @@ class Algorithm():
     
     def get_adjacency_matrices(self):
         return self.adjacency_matrices
+    
+    def set_output_to_file(self, output_to_file):
+        self.output_to_file = output_to_file
     
     def select_satellite_with_max_connections(self, each_matrix):
         satellite_connections = npy.sum(each_matrix, axis=1)
@@ -119,7 +123,10 @@ class Algorithm():
                 'federatedlearning_adjacencymatrix': fl_am,
                 'aggregator_flag': aggregator_flags[selected_satellite]
             }
-        self.output.write_to_file(algorithm_output) # write to file.
+        
+        if self.output_to_file:
+            self.output.write_to_file(algorithm_output) # write to file.
+            
         self.output.set_result(algorithm_output) # set result to AlgorithmOutput 
        
     

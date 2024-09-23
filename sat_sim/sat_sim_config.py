@@ -68,6 +68,9 @@ class SatSimConfig:
         if 'output_file_type' in options:
             self.sat_sim.set_output_file_type(options['output_file_type'])
 
+        # TODO: Check keys exist
+        self.sat_sim.set_output_to_file(self.options["module_settings"]["output_to_file"])
+
     def read_options_from_file(self, file_path):
         """
         Read and apply options from a JSON configuration file.
