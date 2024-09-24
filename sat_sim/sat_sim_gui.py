@@ -1,49 +1,49 @@
+"""
+Filename: sat_sim_gui.py
+Author: Nahid Tanjum
+
+"""
 import sys
 import os
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_pdf import PdfPages
-from PyQt5.QtWidgets import QMainWindow, QPushButton, QVBoxLayout, QWidget, QLabel, QLineEdit, QMessageBox, QFileDialog
-from PyQt5.QtCore import QTimer
+from PyQt5.QtWidgets import QMainWindow, QPushButton, QVBoxLayout, QWidget, QLabel, QLineEdit, QMessageBox, QFileDialog, QSlider
+from PyQt5.QtCore import Qt
 from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 import vtk
 import networkx as nx
-from datetime import datetime, timedelta
+from skyfield.api import load, utc
+from datetime import datetime, timedelta, timezone
 from .sat_sim import SatSim
 
 class SatSimGUI(QMainWindow):
-    gui_initialized = False  # Class variable to check if GUI is already initialized
+    gui_initialized = False
 
-    def __init__(self, tle_file=None, config_file="options.json"):
+    def __init__(self, tle_file=None):
         super().__init__()
 
         if SatSimGUI.gui_initialized:
-            return  # Prevent multiple GUI instances if already initialized
+            return 
 
         self.setWindowTitle('Satellite Visualization Over Time')
         self.setGeometry(100, 100, 1200, 900)
         self.centralWidget = QWidget()
         self.setCentralWidget(self.centralWidget)
         self.layout = QVBoxLayout(self.centralWidget)
+        self.simulation = SatSim()
+        self.tle_file = tle_file
 
-        # Initialize the SatSim instance
-        self.simulation = SatSim(config_file=config_file)
-        self.tle_file = tle_file  # If a TLE file is passed directly
+        self.start_time = None
+        self.end_time = None
 
         self.initUI()
 
-        # Timer to update satellite positions periodically based on timestep
-        self.timer = QTimer(self)
-        self.timer.setInterval(1000)  # Update every second (can be adjusted)
-        self.timer.timeout.connect(self.update_orbit)
-        self.timer.start()
-
-        SatSimGUI.gui_initialized = True  # Set the flag to True after initialization
-
+        SatSimGUI.gui_initialized = True
 
     def initUI(self):
-        """Sets up the user interface including buttons, input fields, and labels."""
+        #Sets up the user interface including buttons, input fields, and labels.
         # Setup VTK widget for 3D visualization
         self.vtkWidget = QVTKRenderWindowInteractor(self.centralWidget)
         self.renderer = vtk.vtkRenderer()
@@ -85,6 +85,12 @@ class SatSimGUI(QMainWindow):
         self.timeframe_input.setPlaceholderText("Enter timestep in minutes")
         self.layout.addWidget(self.timeframe_input)
 
+        # Slider to control time between start and end time
+        self.time_slider = QSlider(Qt.Horizontal)
+        self.time_slider.setMinimum(0)
+        self.time_slider.valueChanged.connect(self.on_slider_change)
+        self.layout.addWidget(self.time_slider)
+
         # Button to trigger orbit update
         btn_update = QPushButton("Update Orbit")
         btn_update.clicked.connect(self.update_orbit)
@@ -96,51 +102,77 @@ class SatSimGUI(QMainWindow):
         self.layout.addWidget(btn_save_adj_matrix)
 
     def browse_tle_file(self):
-        """Opens a file dialog to select the TLE file."""
+        #Opens a file dialog to select the TLE file."""
         tle_file, _ = QFileDialog.getOpenFileName(self, "Select TLE File", "", "TLE Files (*.tle);;All Files (*)")
         if tle_file:
             self.tle_file_input.setText(tle_file)
             tle_data = self.simulation.read_tle_file(tle_file)
             self.simulation.set_tle_data(tle_data)
 
+    def on_slider_change(self, value):
+        #Handle the slider change event to update visualization time.
+        if self.start_time is not None and self.end_time is not None:
+            # Calculate time based on slider value
+            slider_time = self.start_time + (value * self.simulation.timestep)
+            self.update_visualization(slider_time.utc_datetime())
+
     def update_orbit(self):
-        """Fetches satellite positions, updates the visualization, and recalculates distances."""
+        #Fetches satellite positions, updates the visualization, and recalculates distances.
         try:
-            # Ensure the TLE data is loaded
             if self.simulation.tle_data is None:
                 QMessageBox.warning(self, "TLE Data Missing", "Please load a TLE file first.")
                 return
 
-            # Convert timestep to minutes (from GUI input)
-            if self.timeframe_input.text():
-                try:
-                    timestep = int(self.timeframe_input.text())
-                    self.simulation.set_timestep(timestep)  # Set timestep in minutes
-                except ValueError:
-                    QMessageBox.warning(self, "Invalid Input", "Timestep must be a valid number.")
-                    return
+            start_time_str = self.start_time_input.text()
+            end_time_str = self.end_time_input.text()
+            timestep_str = self.timeframe_input.text()
 
-            # Update simulation with current time
-            t = self.simulation.sf_timescale.now()  # Use Skyfield timescale
-            positions = self.simulation.get_satellite_positions(t)  # Get satellite positions
+            if not start_time_str or not end_time_str or not timestep_str:
+                QMessageBox.warning(self, "Input Missing", "Please provide start time, end time, and timestep.")
+                return
 
-            # Clear previous visualization
-            self.renderer.Clear()
+            # Ensure the times are passed as Skyfield Time objects
+            ts = load.timescale()
+            start_time = ts.utc(datetime.strptime(start_time_str, '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc))
+            end_time = ts.utc(datetime.strptime(end_time_str, '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc))
+            timestep = int(timestep_str)
 
-            # Plot the orbits and update the display
-            self.plot_orbits(positions)
-            self.vtkWidget.GetRenderWindow().Render()
+            self.simulation.set_timestep(timestep)
+            self.simulation.set_start_end_times(start_time, end_time)
 
-            # Update positions, distances, and graphs in the UI
-            self.update_positions(positions)
-            self.update_distances(positions)  # This will now show distances
-            self.update_graphs(positions)
+            self.start_time = start_time
+            self.end_time = end_time
+
+            total_steps = int((end_time.utc_datetime() - start_time.utc_datetime()) / timedelta(minutes=timestep))
+            self.time_slider.setMaximum(total_steps)
+
+            # Update the visualization for the first time
+            self.update_visualization(start_time.utc_datetime())
 
         except Exception as e:
             QMessageBox.critical(self, "Error", f"An error occurred: {e}")
 
+    def update_visualization(self, time):
+        #Updates satellite positions, distances, adjacency matrix, and network graph based on the given time.S
+        positions = self.simulation.get_satellite_positions(time)
+
+        if not positions:
+            QMessageBox.warning(self, "No Positions", "No satellite positions were calculated.")
+            return
+
+        self.plot_orbits(positions)
+        self.vtkWidget.GetRenderWindow().Render()
+
+        self.update_positions(positions)
+        self.update_distances(positions)
+        self.update_graphs(positions)
+
+        self.position_label.setText(f"Visualization Time: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+
     def plot_orbits(self, positions):
-        """Plots the satellites as spheres at their current positions."""
+        #Plots the satellites as spheres at their current positions.
+        self.renderer.Clear()
+
         for name, pos in positions.items():
             sphereSource = vtk.vtkSphereSource()
             sphereSource.SetCenter(pos[0], pos[1], pos[2])
@@ -152,33 +184,29 @@ class SatSimGUI(QMainWindow):
             self.renderer.AddActor(actor)
 
     def update_positions(self, positions):
-        """Updates the position label with the current positions of the satellites."""
+        #Updates the position label with the current positions of the satellites.
         pos_text = " | ".join([f"{name}: ({pos[0]:.2f}, {pos[1]:.2f}, {pos[2]:.2f}) km" for name, pos in positions.items()])
         self.position_label.setText("Current Positions: " + pos_text)
 
     def update_distances(self, positions):
-        """Updates the distance calculations between satellites."""
+        #Updates the distance calculations between satellites.
         distances = []
         keys = list(positions.keys())
 
-        # Calculate distances between satellites
         for i in range(len(keys)):
             for j in range(i + 1, len(keys)):
                 dist = self.simulation.calculate_distance(positions[keys[i]], positions[keys[j]])
                 distances.append(f"{keys[i]} to {keys[j]}: {dist:.2f} km")
 
-        # Update the distance label with distances
         self.distance_label.setText("Distance Calculations: " + " | ".join(distances))
 
     def update_graphs(self, positions):
-        """Generates and updates the adjacency matrix and network graph."""
+        #Generates and updates the adjacency matrix and network graph.
         adj_matrix, keys = self.simulation.generate_adjacency_matrix(positions)
 
-        # Clear previous plots
         self.axes[0].cla()
         self.axes[1].cla()
 
-        # Plot adjacency matrix
         self.axes[0].imshow(adj_matrix, cmap='Blues', interpolation='none')
         self.axes[0].set_title('Adjacency Matrix')
         self.axes[0].set_xticks(np.arange(len(keys)))
@@ -186,59 +214,41 @@ class SatSimGUI(QMainWindow):
         self.axes[0].set_xticklabels(keys)
         self.axes[0].set_yticklabels(keys)
 
-        # Plot network graph
         G = nx.from_numpy_array(adj_matrix)
         pos = nx.spring_layout(G)
         nx.draw(G, pos, ax=self.axes[1], with_labels=True, node_color='skyblue')
         self.axes[1].set_title('Network Graph')
 
-        # Refresh the canvas
         self.canvas.draw()
 
     def save_adj_matrix_for_specified_timeframe(self):
-        """Saves adjacency matrices and network graphs for a user-specified timeframe."""
+        #Saves adjacency matrices and network graphs for a user-specified timeframe.
         try:
-            # Ensure start, end times, and timestep are provided
-            start_time_str = self.start_time_input.text() or self.simulation.start_time.strftime('%Y-%m-%d %H:%M:%S')
-            end_time_str = self.end_time_input.text() or self.simulation.end_time.strftime('%Y-%m-%d %H:%M:%S')
-            timestep_str = self.timeframe_input.text() or str(self.simulation.timestep.seconds // 60)
-
-            if not start_time_str or not end_time_str or not timestep_str:
-                QMessageBox.warning(self, "Input Missing", "Please provide start time, end time, and timestep.")
-                return
-
-            # Convert inputs to appropriate data types
-            start_time = datetime.strptime(start_time_str, '%Y-%m-%d %H:%M:%S')
-            end_time = datetime.strptime(end_time_str, '%Y-%m-%d %H:%M:%S')
-            timestep = int(timestep_str)
-
-            # Set up simulation parameters
-            self.simulation.set_start_end_times(start_time, end_time)
-            self.simulation.set_timestep(timestep)
-
-            # Run the simulation and get the adjacency matrices
-            result = self.simulation.run_with_adj_matrix()
-
-            # Prompt the user to choose where to save the output file
             output_file, _ = QFileDialog.getSaveFileName(self, "Save Adjacency Matrix", "", "Text Files (*.txt);;All Files (*)")
             pdf_file, _ = QFileDialog.getSaveFileName(self, "Save Network Graphs PDF", "", "PDF Files (*.pdf);;All Files (*)")
 
             if output_file and pdf_file:
-                # Write the result to a file
+                # Loop over the range of the timeframe and save the matrices and graphs
+                matrices = self.simulation.run_with_adj_matrix()
+                if not matrices:
+                    QMessageBox.warning(self, "No Data", "No data was generated to save.")
+                    return
+
                 with open(output_file, 'w') as f:
-                    for timestamp, matrix in result:
-                        f.write(f"Time: {timestamp}\n")
+                    for timestamp, matrix in matrices:
+                        formatted_timestamp = timestamp if isinstance(timestamp, str) else timestamp.utc_iso()
+                        f.write(f"Time: {formatted_timestamp}\n")
                         np.savetxt(f, matrix, fmt='%d')
                         f.write("\n")
 
-                # Save network graphs to a PDF
                 with PdfPages(pdf_file) as pdf:
-                    for timestamp, matrix in result:
+                    for timestamp, matrix in matrices:
+                        formatted_timestamp = timestamp if isinstance(timestamp, str) else timestamp.utc_iso()
                         G = nx.from_numpy_array(matrix)
                         pos = nx.spring_layout(G)
                         plt.figure()
                         nx.draw(G, pos, with_labels=True, node_color='skyblue')
-                        plt.title(f"Network Graph at {timestamp}")
+                        plt.title(f"Network Graph at {formatted_timestamp}")
                         pdf.savefig()
                         plt.close()
 
@@ -248,6 +258,6 @@ class SatSimGUI(QMainWindow):
             QMessageBox.critical(self, "Error", f"An error occurred while saving the matrix: {e}")
 
     def show_gui(self):
-        """Display the GUI."""
+        #Display the GUI.
         self.show()
-        self.iren.Initialize()  # For VTK rendering
+        self.iren.Initialize()
