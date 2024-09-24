@@ -19,6 +19,7 @@ from sat_sim.sat_sim import SatSim
 from sat_sim.sat_sim_config import SatSimConfig
 from sat_sim.sat_sim_handler import SatSimHandler
 from sat_sim.sat_sim_output import SatSimOutput
+from sat_sim.sat_sim_gui import SatSimGUI
 
 from algorithm_core import Algorithm
 from algorithm_config import AlgorithmConfig
