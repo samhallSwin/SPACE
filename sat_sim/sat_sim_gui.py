@@ -1,28 +1,26 @@
-"""
-Filename: sat_sim_gui.py
-Author: Md Nahid Tanjum
-"""
-
-
 import sys
 import os
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_pdf import PdfPages
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QLabel, QLineEdit, QMessageBox, QFileDialog
+from PyQt5.QtWidgets import QMainWindow, QPushButton, QVBoxLayout, QWidget, QLabel, QLineEdit, QMessageBox, QFileDialog
 from PyQt5.QtCore import QTimer
 from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 import vtk
 import networkx as nx
 from datetime import datetime, timedelta
 from .sat_sim import SatSim
-from skyfield.api import Topos
-
 
 class SatSimGUI(QMainWindow):
-    def __init__(self, tle_file=None):
+    gui_initialized = False  # Class variable to check if GUI is already initialized
+
+    def __init__(self, tle_file=None, config_file="options.json"):
         super().__init__()
+
+        if SatSimGUI.gui_initialized:
+            return  # Prevent multiple GUI instances if already initialized
+
         self.setWindowTitle('Satellite Visualization Over Time')
         self.setGeometry(100, 100, 1200, 900)
         self.centralWidget = QWidget()
@@ -30,18 +28,19 @@ class SatSimGUI(QMainWindow):
         self.layout = QVBoxLayout(self.centralWidget)
 
         # Initialize the SatSim instance
-        self.simulation = SatSim()
+        self.simulation = SatSim(config_file=config_file)
+        self.tle_file = tle_file  # If a TLE file is passed directly
+
         self.initUI()
 
-        if tle_file:
-            tle_data = self.simulation.read_tle_file(tle_file)
-            self.simulation.set_tle_data(tle_data)
-
-        # Timer to update satellite positions periodically
+        # Timer to update satellite positions periodically based on timestep
         self.timer = QTimer(self)
         self.timer.setInterval(1000)  # Update every second (can be adjusted)
         self.timer.timeout.connect(self.update_orbit)
         self.timer.start()
+
+        SatSimGUI.gui_initialized = True  # Set the flag to True after initialization
+
 
     def initUI(self):
         """Sets up the user interface including buttons, input fields, and labels."""
@@ -200,9 +199,9 @@ class SatSimGUI(QMainWindow):
         """Saves adjacency matrices and network graphs for a user-specified timeframe."""
         try:
             # Ensure start, end times, and timestep are provided
-            start_time_str = self.start_time_input.text()
-            end_time_str = self.end_time_input.text()
-            timestep_str = self.timeframe_input.text()
+            start_time_str = self.start_time_input.text() or self.simulation.start_time.strftime('%Y-%m-%d %H:%M:%S')
+            end_time_str = self.end_time_input.text() or self.simulation.end_time.strftime('%Y-%m-%d %H:%M:%S')
+            timestep_str = self.timeframe_input.text() or str(self.simulation.timestep.seconds // 60)
 
             if not start_time_str or not end_time_str or not timestep_str:
                 QMessageBox.warning(self, "Input Missing", "Please provide start time, end time, and timestep.")
@@ -248,15 +247,7 @@ class SatSimGUI(QMainWindow):
         except Exception as e:
             QMessageBox.critical(self, "Error", f"An error occurred while saving the matrix: {e}")
 
-
-def main(tle_file=None):
-    """Main entry point for the GUI."""
-    app = QApplication(sys.argv)
-    window = SatSimGUI(tle_file=tle_file)
-    window.show()
-    window.iren.Initialize()  # For VTK rendering
-    sys.exit(app.exec_())
-
-
-if __name__ == '__main__':
-    main()
+    def show_gui(self):
+        """Display the GUI."""
+        self.show()
+        self.iren.Initialize()  # For VTK rendering
