@@ -22,5 +22,9 @@ import abc
 class Handler(abc.ABC):
 
     @abc.abstractmethod
-    def parse_input(file):
+    def parse_file(file):
+        pass
+
+    @abc.abstractmethod
+    def parse_data(data):
         pass

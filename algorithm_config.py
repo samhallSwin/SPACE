@@ -43,6 +43,7 @@ class AlgorithmConfig(Config):
 
     def set_algorithm(self):
         self.algorithm.set_satellite_names(self.options["satellite_names"])
+        self.algorithm.set_output_to_file(self.options["module_settings"]["output_to_file"])
 
     def get_satellite_names(self):
         return self.algorithm.get_satellite_names() 

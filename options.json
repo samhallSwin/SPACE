@@ -1,17 +1,20 @@
 {
     "sat_sim": {
-        "start_time": 5,
-        "end_time": 16,
-        "satellite_count": 5,
+        "start_time": "2024-09-24 12:00:00",
+        "end_time": "2024-09-24 14:00:00",
+        "timestep": 600,
+        "output_file_type": "txt",
+        "satellite_count": 4,
         "constellation_type": "delta",
         "ground_station": {
             "location": {
-                "lat": 350.23,
-                "long": 508.23
+                "lat": 35.6895,
+                "long": 139.6917
             }
         },
-        "duration": 24,
-        "timestep": 620
+        "module_settings": {
+            "output_to_file": false
+        }
     },
     "algorithm": {
         "satellite_names": [
@@ -19,7 +22,10 @@
             "Sat2",
             "Sat3",
             "Sat4"
-        ]
+        ],
+        "module_settings": {
+            "output_to_file": true
+        }
     },
     "federated_learning": {
         "num_rounds": 1,
@@ -42,6 +48,9 @@
             "maximal_client_age": "Undefined",
             "maximal_ticks_age": "Undefined",
             "maximal_rounds_age": "Undefined"
+        },
+        "module_settings": {
+            "output_to_file": true
         }
     }
 }
