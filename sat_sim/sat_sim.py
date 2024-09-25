@@ -12,15 +12,17 @@ from skyfield.api import load, EarthSatellite
 import numpy as np
 import os
 from .sat_sim_output import SatSimOutput
-from .sat_sim_config import SatSimConfig
-from .sat_sim_handler import SatSimHandler
 from PyQt5.QtWidgets import QApplication
 
+from .sat_sim_output import SatSimOutput
+from .sat_sim_config import SatSimConfig
+from .sat_sim_handler import SatSimHandler
+
 class SatSim:
-    #SatSim class manages satellite simulation based on TLE data and handles both GUI and CLI modes.
-    def __init__(self, start_time=None, end_time=None, timestep=30, output_file_type="csv", gui_enabled=False):
-        #Initialize the SatSim instance with optional parameters for start and end times, timestep, output file type, and GUI mode.
-        self.tle_data = None
+    # SatSim class manages satellite simulation based on TLE data and handles both GUI and CLI modes.
+    def __init__(self, start_time=None, end_time=None, timestep=30, output_file_type="csv", gui_enabled=False, tle_data=None):
+        # Initialize the SatSim instance with optional parameters for start and end times, timestep, output file type, and GUI mode.
+        self.tle_data = tle_data if tle_data else None
         self.timestep = timedelta(minutes=timestep)
         self.sf_timescale = load.timescale()
         self.output = SatSimOutput()
@@ -29,48 +31,46 @@ class SatSim:
         self.output_file_type = output_file_type
         self.output_path = ""
         self.gui_enabled = gui_enabled
-        self.config_loaded = False 
-        self.config = SatSimConfig(sat_sim=self)
 
     def set_gui_enabled(self, enabled):
-        #Enable or disable GUI mode.
+        # Enable or disable GUI mode.
         self.gui_enabled = enabled
 
     def set_tle_data(self, tle_data):
-        #Set the TLE data used in the simulation.
+        # Set the TLE data used in the simulation.
         self.tle_data = tle_data if tle_data else None
 
     def set_timestep(self, timestep):
-        #Set the simulation timestep (in minutes).
+        # Set the simulation timestep (in minutes).
         self.timestep = timedelta(minutes=timestep)
 
     def set_start_end_times(self, start, end):
-        #Set the start and end times for the simulation.
+        # Set the start and end times for the simulation.
         self.start_time = start
         self.end_time = end
 
     def set_output_file_type(self, file_type):
-        #Set the output file format (csv or txt).
+        # Set the output file format (csv or txt).
         self.output_file_type = file_type
 
     def run_gui(self):
-        #Launch the satellite simulation GUI.
+        # Launch the satellite simulation GUI.
         from .sat_sim_gui import SatSimGUI
         import sys
-        app = QApplication(sys.argv)  
-        gui = SatSimGUI(tle_file=None)  
-        gui.show() 
+        app = QApplication(sys.argv)
+        gui = SatSimGUI(self)  # Pass the current instance of SatSim to the GUI
+        gui.show()
         sys.exit(app.exec_())
 
     def read_tle_file(self, file_path):
-        #Read TLE data from a specified file."""
+        # Read TLE data from a specified file.
         try:
             tle_data = {}
             with open(file_path, 'r') as f:
                 lines = f.readlines()
                 for i in range(0, len(lines), 3):
                     name = lines[i].strip()
-                    tle_line1 = lines[i + 1].strip() 
+                    tle_line1 = lines[i + 1].strip()
                     tle_line2 = lines[i + 2].strip()
                     tle_data[name] = [tle_line1, tle_line2]
             return tle_data
@@ -79,7 +79,7 @@ class SatSim:
             return None
 
     def get_satellite_positions(self, time):
-        #Get satellite positions at a given time.
+        # Get satellite positions at a given time.
         if isinstance(time, datetime):
             # Convert Python datetime object to Skyfield time object
             time = self.sf_timescale.utc(time.year, time.month, time.day, time.hour, time.minute, time.second)
@@ -88,20 +88,20 @@ class SatSim:
         # Calculate satellite positions using TLE data
         for name, tle in self.tle_data.items():
             tle_line1, tle_line2 = tle
-            satellite = EarthSatellite(tle_line1, tle_line2, name)  
-            geocentric = satellite.at(time)  
-            positions[name] = geocentric.position.km  
+            satellite = EarthSatellite(tle_line1, tle_line2, name)
+            geocentric = satellite.at(time)
+            positions[name] = geocentric.position.km
         return positions
 
     def calculate_distance(self, pos1, pos2):
-        #Calculate the Euclidean distance between two satellite positions.
+        # Calculate the Euclidean distance between two satellite positions.
         return np.linalg.norm(np.array(pos1) - np.array(pos2))
 
     def generate_adjacency_matrix(self, positions, distance_threshold=10000):
-        #Generate an adjacency matrix based on the distances between satellites.
+        # Generate an adjacency matrix based on the distances between satellites.
         keys = list(positions.keys())
         size = len(keys)
-        adj_matrix = np.zeros((size, size), dtype=int) 
+        adj_matrix = np.zeros((size, size), dtype=int)
 
         # Compute distances between all satellite pairs and populate the adjacency matrix
         for i in range(size):
@@ -112,7 +112,7 @@ class SatSim:
         return adj_matrix, keys
 
     def run_with_adj_matrix(self):
-        #Run the simulation in CLI mode and generate adjacency matrices.
+        # Run the simulation in CLI mode and generate adjacency matrices.
         if not self.tle_data:
             print("No TLE data loaded. Please provide valid TLE data.")
             return []
@@ -168,7 +168,7 @@ class SatSim:
         return matrices
 
     def run(self):
-        #Run the simulation based on the mode (CLI or GUI).
+        # Run the simulation based on the mode (CLI or GUI).
         if self.gui_enabled:
             self.run_gui()  # Run in GUI mode
         else:
