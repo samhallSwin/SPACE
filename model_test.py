@@ -44,19 +44,6 @@ def test_set_get_data_set(model):
     model.set_data_set("BigEarthNet")
     assert model.get_data_set() == "BigEarthNet"   
 
-# Test for load_data
-def test_load_simplecnn_mnist(model):
-    model.set_model_type("SimpleCNN")
-    model.set_data_set("MNIST")
-    # further elaborate wip
-
-def test_load_simplecnn_mnist(model):
-    model.set_model_type("RestNet50")
-    model.set_data_set("MNIST")
-    # further elaborate wip
-
-# note: bigearthnet under models need to be implemented once it actually starts working
-
 # Test loading MNIST data for SimpleCNN
 @patch('tensorflow.keras.datasets.mnist.load_data')
 def test_load_data_simplecnn_mnist(mock_load_data, model):
