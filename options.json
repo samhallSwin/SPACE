@@ -9,10 +9,8 @@
                 "lat": 35.6895,
                 "long": 139.6917
             }
-        }
-    },
-    "gui": {
-        "enabled": true
+        },
+        "gui": true
     },
     "algorithm": {
         "no_of_nodes": 4,
