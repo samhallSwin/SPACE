@@ -1,5 +1,5 @@
 """
-Filename: model_test.py
+Filename: test_model.py
 Description: Test file for model.py
 Author: Ahmed Mubeenul Azim & Michelle Abrigo
 Date: 2024-09-16
@@ -7,9 +7,9 @@ Version: 1.0
 Python Version: 
 
 Changelog:
-- 2024-08-02: Initial creation, setup & test case creation.
+- 2024-09-16: Initial creation, setup & test case creation.
 
-Usage: Do 'pytest model_test.py' to run the test session
+Usage: Do 'pytest test_model.py' to run the test session
 
 """
 
