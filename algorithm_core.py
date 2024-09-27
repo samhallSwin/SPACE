@@ -82,6 +82,9 @@ class Algorithm():
             # get matrix size to know number of satellites involved.
             if(nrows == mcolumns):
                 satellite_count = nrows
+            # check if satellite count from Adjacency Matrix is equal to satellite names provided.
+            if(satellite_count!= len(self.get_satellite_names())):
+                raise IndexError("All satellites should have a name for identification purposes.")  
             # Check if there are no connections (all zeros)
             if npy.all(each_matrix == 0):
                 # If no connectivity between them, set algorithm output (Federated Learning Adjacency Matrix (FLAM)) without changes.

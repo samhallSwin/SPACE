@@ -94,9 +94,12 @@ class AlgorithmHandler(Handler):
         return True
     
     def parse_data(self, data):
-        self.adjacency_matrices = data
-        if self.validate_adjacency_matrices(self.adjacency_matrices):
-            self.send_adjmatrices(self.adjacency_matrices)
+        if data is None:
+            raise ValueError("No incoming Adjacency Martix, unable to proceed.")
+        else:
+            self.adjacency_matrices = data
+            if self.validate_adjacency_matrices(self.adjacency_matrices):
+                self.send_adjmatrices(self.adjacency_matrices)
 
     def parse_file(self,file_name):
         adjacency_matrices = self.read_adjacency_matrices(file_name)
