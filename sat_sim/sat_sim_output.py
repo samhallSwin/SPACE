@@ -2,6 +2,8 @@
 Filename: sat_sim_output.py
 Author: Nahid Tanjum
 
+This module manages the output processes for the Satellite Simulator, including writing data
+to text and CSV files.
 """
 
 import numpy as np
@@ -53,10 +55,8 @@ class SatSimOutput:
 
             with open(csv_file, mode='w', newline='') as f:
                 writer = csv.writer(f)
-
                 # Write header row
                 writer.writerow(['Time', 'Matrix Size'])
-
                 # Iterate through matrices and timestamps
                 for timestamp, matrix in matrices:
                     if matrix.size == 0:
