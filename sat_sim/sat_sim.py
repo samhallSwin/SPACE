@@ -6,7 +6,6 @@ Description: This script handles satellite simulations using TLE data and provid
              both GUI and CLI operations.
 """
 
-import argparse
 from datetime import datetime, timedelta
 from skyfield.api import load, EarthSatellite
 import numpy as np
@@ -14,9 +13,6 @@ import os
 from .sat_sim_output import SatSimOutput
 from PyQt5.QtWidgets import QApplication
 
-from .sat_sim_output import SatSimOutput
-from .sat_sim_config import SatSimConfig
-from .sat_sim_handler import SatSimHandler
 
 class SatSim:
     # SatSim class manages satellite simulation based on TLE data and handles both GUI and CLI modes.
@@ -28,9 +24,15 @@ class SatSim:
         self.output = SatSimOutput()
         self.start_time = start_time
         self.end_time = end_time
-        self.output_file_type = output_file_type
+        self.output_file_type = output_file_type if output_file_type in ["csv", "txt"] else "csv"
         self.output_path = ""
         self.gui_enabled = gui_enabled
+
+        if self.start_time and self.end_time:
+            if not isinstance(self.start_time, datetime) or not isinstance(self.end_time, datetime):
+                raise ValueError("Start time and end time must be datetime objects")
+            if self.start_time >= self.end_time:
+                raise ValueError("Start time must be before end time")
 
     def set_gui_enabled(self, enabled):
         # Enable or disable GUI mode.
@@ -62,24 +64,12 @@ class SatSim:
         gui.show()
         sys.exit(app.exec_())
 
-    def read_tle_file(self, file_path):
-        # Read TLE data from a specified file.
-        try:
-            tle_data = {}
-            with open(file_path, 'r') as f:
-                lines = f.readlines()
-                for i in range(0, len(lines), 3):
-                    name = lines[i].strip()
-                    tle_line1 = lines[i + 1].strip()
-                    tle_line2 = lines[i + 2].strip()
-                    tle_data[name] = [tle_line1, tle_line2]
-            return tle_data
-        except Exception as e:
-            print(f"Error reading TLE file: {e}")
-            return None
 
     def get_satellite_positions(self, time):
         # Get satellite positions at a given time.
+        if self.tle_data is None or len(self.tle_data) == 0:
+           print("No TLE data provided. Cannot calculate satellite positions.")
+           return {}
         if isinstance(time, datetime):
             # Convert Python datetime object to Skyfield time object
             time = self.sf_timescale.utc(time.year, time.month, time.day, time.hour, time.minute, time.second)
@@ -87,11 +77,20 @@ class SatSim:
         positions = {}
         # Calculate satellite positions using TLE data
         for name, tle in self.tle_data.items():
-            tle_line1, tle_line2 = tle
-            satellite = EarthSatellite(tle_line1, tle_line2, name)
-            geocentric = satellite.at(time)
-            positions[name] = geocentric.position.km
+            if len(tle) < 2:
+                print(f"Warning: Incomplete TLE data for {name}. Skipping this entry.")
+                continue  # Skip the incomplete TLE entry
+        
+            try:
+                tle_line1, tle_line2 = tle
+                satellite = EarthSatellite(tle_line1, tle_line2, name)
+                geocentric = satellite.at(time)
+                positions[name] = geocentric.position.km
+            except Exception as e:
+                print(f"Error processing TLE data for {name}: {e}")
+            continue  # Skip this satellite if there's an error
         return positions
+    
 
     def calculate_distance(self, pos1, pos2):
         # Calculate the Euclidean distance between two satellite positions.
@@ -117,7 +116,13 @@ class SatSim:
             print("No TLE data loaded. Please provide valid TLE data.")
             return []
 
-        current_time = self.start_time
+        # Convert start_time and end_time to Skyfield Time objects if they are not already
+        if isinstance(self.start_time, datetime):
+            current_time = self.sf_timescale.utc(self.start_time.year, self.start_time.month, self.start_time.day,
+                                                 self.start_time.hour, self.start_time.minute, self.start_time.second)
+        else:
+            current_time = self.start_time
+
         if isinstance(self.end_time, datetime):
             end_time = self.sf_timescale.utc(self.end_time.year, self.end_time.month, self.end_time.day,
                                              self.end_time.hour, self.end_time.minute, self.end_time.second)
@@ -126,26 +131,23 @@ class SatSim:
 
         matrices = []
         timestamps = []
+
         # Loop through time increments and generate adjacency matrices
         while current_time.utc < end_time.utc:
             try:
-                if isinstance(current_time, datetime):
-                    t = self.sf_timescale.utc(current_time.year, current_time.month, current_time.day,
-                                              current_time.hour, current_time.minute, current_time.second)
-                else:
-                    t = current_time
-
-                positions = self.get_satellite_positions(t)
+                positions = self.get_satellite_positions(current_time)
 
                 if not positions:
                     print(f"Skipping timestep {current_time}: No positions calculated.")
-                    current_time += self.timestep
+                    current_time = current_time + self.timestep
                     continue
 
                 # Generate adjacency matrix
                 adj_matrix, keys = self.generate_adjacency_matrix(positions)
-                matrices.append((t.utc_datetime().strftime('%Y-%m-%d %H:%M:%S'), adj_matrix))
-                current_time += self.timestep
+                matrices.append((current_time.utc_datetime().strftime('%Y-%m-%d %H:%M:%S'), adj_matrix))
+
+                # Increment the current_time by the timestep
+                current_time = current_time + timedelta(minutes=self.timestep.total_seconds() / 60)
 
             except Exception as e:
                 print(f"Error during simulation: {e}")
@@ -164,6 +166,9 @@ class SatSim:
                 self.output.write_to_csv(output_file, matrices, timestamps, keys)
         else:
             print("No data to write to output file.")
+
+        if not matrices:
+           print("Warning: No adjacency matrices generated. Check TLE data and timestep settings.")
 
         return matrices
 
