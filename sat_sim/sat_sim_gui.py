@@ -1,8 +1,9 @@
 """
 Filename: sat_sim_gui.py
 Author: Nahid Tanjum
-Description: A GUI for satellite simulation, using PyQt5 and VTK for 3D visualization, matplotlib for adjacency matrix, 
-             and networkx for network graphs.
+Description: This module provides a GUI for the Satellite Simulator using PyQt5.
+             It visualizes satellite positions using VTK, displays adjacency matrices using matplotlib,
+             and shows network graphs using networkx.
 """
 
 import sys
@@ -10,111 +11,163 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_pdf import PdfPages
-from PyQt5.QtWidgets import QMainWindow, QPushButton, QVBoxLayout, QWidget, QLabel, QLineEdit, QMessageBox, QFileDialog, QSlider
-from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QMainWindow, QPushButton, QVBoxLayout, QWidget, QLabel, QLineEdit, QMessageBox, QFileDialog, QSlider, QSizePolicy, QHBoxLayout
+from PyQt5.QtCore import Qt, QThread, pyqtSignal, QRect
 from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 import vtk
 import networkx as nx
 from datetime import datetime, timedelta, timezone
 from skyfield.api import load
 
+class WorkerThread(QThread):
+    #A worker thread that periodically updates satellite positions.
+    update_signal = pyqtSignal(object)
+
+    def __init__(self, simulation_instance, time):
+        super().__init__()
+        self.simulation = simulation_instance
+        self.time = time
+        self.running = True
+        self.timestep_ms = self.simulation.timestep.total_seconds() * 1000
+
+    def run(self):
+        while self.running:
+            start_time = datetime.now()
+            positions = self.simulation.get_satellite_positions(self.time)
+            self.update_signal.emit(positions)
+            while self.running and (datetime.now() - start_time).total_seconds() * 1000 < self.timestep_ms:
+                self.msleep(100)
+
+    def stop(self):
+        self.running = False
 
 class SatSimGUI(QMainWindow):
+    #The main GUI class for the Satellite Simulator.
     gui_initialized = False
 
     def __init__(self, sat_sim_instance):
-        """
-        Initialize the GUI with the given SatSim instance.
-        :param sat_sim_instance: A SatSim instance that manages the simulation.
-        """
         super().__init__()
-
+        # Prevent multiple instances of the GUI
         if SatSimGUI.gui_initialized:
             return
-
-        self.simulation = sat_sim_instance  # Use the provided SatSim instance
-
-        # Load initial values from the SatSim instance (which got them from the JSON config)
+        self.simulation = sat_sim_instance
+        
+        # Convert Skyfield Time objects to datetime if necessary
         self.start_time = self.simulation.start_time.utc_datetime() if hasattr(self.simulation.start_time, 'utc_datetime') else self.simulation.start_time
         self.end_time = self.simulation.end_time.utc_datetime() if hasattr(self.simulation.end_time, 'utc_datetime') else self.simulation.end_time
         self.timestep = self.simulation.timestep
 
-        # Load TLE file passed from the SatSim instance
+        # Load TLE data if not already loaded
         if self.simulation.tle_data is None and self.simulation.tle_file:
             tle_data = self.simulation.read_tle_file(self.simulation.tle_file)
             self.simulation.set_tle_data(tle_data)
 
-        # Initialize GUI components
+        # Set up the main window
         self.setWindowTitle('Satellite Visualization Over Time')
-        self.setGeometry(100, 100, 1200, 900)
-        self.centralWidget = QWidget()
+        screen_resolution = self.screen().size()
+        window_width = min(1200, screen_resolution.width())
+        window_height = min(900, screen_resolution.height())
+        self.setGeometry(QRect(100, 100, window_width, window_height))
+
+        # Set up the central widget and layout
+        self.centralWidget = QWidget(self)
         self.setCentralWidget(self.centralWidget)
         self.layout = QVBoxLayout(self.centralWidget)
+        self.centralWidget.setLayout(self.layout)
 
+        # Initialize the UI components
         self.initUI()
 
-        # Initial visualization
-        self.update_visualization(self.start_time)
+        # Start the worker thread for updating positions
+        self.worker = WorkerThread(self.simulation, self.start_time)
+        self.worker.update_signal.connect(self.on_update_positions)
+        self.worker.start()
 
+        # Mark the GUI as initialized
         SatSimGUI.gui_initialized = True
 
     def initUI(self):
-        """Sets up the user interface including buttons, input fields, and labels."""
-        # Setup VTK widget for 3D visualization
+        #Initialize the UI components.
+        
+
+        # VTK widget for 3D visualization
         self.vtkWidget = QVTKRenderWindowInteractor(self.centralWidget)
+        self.vtkWidget.Initialize()
+        self.vtkWidget.Start()
+        self.vtkWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.renderer = vtk.vtkRenderer()
         self.vtkWidget.GetRenderWindow().AddRenderer(self.renderer)
         self.renderer.SetBackground(0.1, 0.2, 0.4)
-        self.iren = self.vtkWidget.GetRenderWindow().GetInteractor()
-        self.layout.addWidget(self.vtkWidget)
+        self.vtkWidget.setMinimumHeight(400)
+        self.layout.addWidget(self.vtkWidget, stretch=10)
 
-        # Labels to show satellite positions and distances
-        self.position_label = QLabel("Current Positions:")
-        self.layout.addWidget(self.position_label)
+        # Layout for graphs and controls
+        self.graphLayout = QHBoxLayout()
+        self.layout.addLayout(self.graphLayout, stretch=5)
 
-        self.distance_label = QLabel("Distance Calculations:")
-        self.layout.addWidget(self.distance_label)
-
-        # Matplotlib for adjacency matrix and network graph
+        # Matplotlib figure and canvas for adjacency matrix and network graph
         self.figure, self.axes = plt.subplots(nrows=1, ncols=2, figsize=(10, 5))
         self.canvas = FigureCanvas(self.figure)
-        self.layout.addWidget(self.canvas)
+        self.canvas.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.graphLayout.addWidget(self.canvas, stretch=10)
 
-        # Use the config-based initial values for start time, end time, and timestep
+        # Controls layout
+        self.controlsLayout = QVBoxLayout()
+        self.graphLayout.addLayout(self.controlsLayout, stretch=2)
+
+        # Labels for positions and distances
+        self.position_label = QLabel("Current Positions:")
+        self.position_label.setWordWrap(True)
+        self.controlsLayout.addWidget(self.position_label)
+
+        self.distance_label = QLabel("Distance Calculations:")
+        self.distance_label.setWordWrap(True)
+        self.controlsLayout.addWidget(self.distance_label)
+
+        # Input fields for start time, end time, and timestep
         self.start_time_input = QLineEdit(self.start_time.strftime("%Y-%m-%d %H:%M:%S"))
-        self.layout.addWidget(self.start_time_input)
+        self.controlsLayout.addWidget(self.start_time_input)
 
         self.end_time_input = QLineEdit(self.end_time.strftime("%Y-%m-%d %H:%M:%S"))
-        self.layout.addWidget(self.end_time_input)
+        self.controlsLayout.addWidget(self.end_time_input)
 
-        self.timeframe_input = QLineEdit(str(self.timestep // timedelta(minutes=1)))  # Timestep in minutes
-        self.layout.addWidget(self.timeframe_input)
+        self.timeframe_input = QLineEdit(str(self.timestep // timedelta(minutes=1)))
+        self.controlsLayout.addWidget(self.timeframe_input)
 
-        # Slider to control time between start and end time
+        # Slider for time navigation
         self.time_slider = QSlider(Qt.Horizontal)
         self.time_slider.setMinimum(0)
+        self.time_slider.setMaximum(int((self.end_time - self.start_time) / self.timestep))
         self.time_slider.valueChanged.connect(self.on_slider_change)
-        self.layout.addWidget(self.time_slider)
+        self.controlsLayout.addWidget(self.time_slider)
 
-        # Button to trigger orbit update
+        # Buttons for updating orbit and saving data
         btn_update = QPushButton("Update Orbit")
         btn_update.clicked.connect(self.update_orbit)
-        self.layout.addWidget(btn_update)
+        self.controlsLayout.addWidget(btn_update)
 
-        # Button to save adjacency matrix and network graphs for the specified timeframe
+        # Initialize list to keep track of satellite actors
         btn_save_adj_matrix = QPushButton("Save Adjacency Matrix & Network Graphs for Specified Timeframe")
         btn_save_adj_matrix.clicked.connect(self.save_adj_matrix_for_specified_timeframe)
-        self.layout.addWidget(btn_save_adj_matrix)
+        self.controlsLayout.addWidget(btn_save_adj_matrix)
 
     def on_slider_change(self, value):
-        """Handle the slider change event to update visualization time."""
+        #Handle time slider value changes.
         if self.start_time is not None and self.end_time is not None:
-            # Calculate time based on slider value
             slider_time = self.start_time + (value * self.simulation.timestep)
             self.update_visualization(slider_time)
 
+    def on_update_positions(self, positions):
+        #Slot to receive updated positions from the worker thread.
+        if positions:
+            self.plot_orbits(positions)
+            self.update_positions(positions)
+            self.update_distances(positions)
+            self.update_graphs(positions)
+            self.vtkWidget.GetRenderWindow().Render()
+
     def update_orbit(self):
-        """Fetches satellite positions, updates the visualization, and recalculates distances."""
+        #Update the simulation parameters based on user input.
         try:
             if self.simulation.tle_data is None:
                 QMessageBox.warning(self, "TLE Data Missing", "Please load a TLE file first.")
@@ -127,8 +180,8 @@ class SatSimGUI(QMainWindow):
             if not start_time_str or not end_time_str or not timestep_str:
                 QMessageBox.warning(self, "Input Missing", "Please provide start time, end time, and timestep.")
                 return
-
-            # Ensure the times are passed as Skyfield Time objects
+            
+            # Parse user input into datetime objects
             ts = load.timescale()
             start_time = ts.utc(datetime.strptime(start_time_str, '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc))
             end_time = ts.utc(datetime.strptime(end_time_str, '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc))
@@ -143,16 +196,14 @@ class SatSimGUI(QMainWindow):
             total_steps = int((self.end_time - self.start_time) / timedelta(minutes=timestep))
             self.time_slider.setMaximum(total_steps)
 
-            # Update the visualization for the first time
             self.update_visualization(self.start_time)
 
         except Exception as e:
             QMessageBox.critical(self, "Error", f"An error occurred: {e}")
 
     def update_visualization(self, time):
-        """Updates satellite positions, distances, adjacency matrix, and network graph based on the given time."""
+        #Update the visualization for a specific time.
         positions = self.simulation.get_satellite_positions(time)
-
         if not positions:
             QMessageBox.warning(self, "No Positions", "No satellite positions were calculated.")
             return
@@ -167,59 +218,159 @@ class SatSimGUI(QMainWindow):
         self.position_label.setText(f"Visualization Time: {time.strftime('%Y-%m-%d %H:%M:%S')}")
 
     def plot_orbits(self, positions):
-        """Plots the satellites as spheres at their current positions."""
-        self.renderer.Clear()
+        #Plot the satellite orbits and connections in the VTK renderer.
+        self.renderer.RemoveAllViewProps()
+        bounds = [float('inf'), float('-inf'),  # x_min, x_max
+                  float('inf'), float('-inf'),  # y_min, y_max
+                  float('inf'), float('-inf')]
+        satellite_count = len(positions)
+        sphere_radius = 400
+
+        # Generate adjacency matrix and keys
+        adj_matrix, keys = self.simulation.generate_adjacency_matrix(positions)
+        sat_positions = {}  # Map satellite names to positions
 
         for name, pos in positions.items():
+            if len(pos) != 3 or any(isinstance(p, (float, int)) is False for p in pos):
+                continue
+            pos = [float(p) for p in pos]
+            sat_positions[name] = pos
+
             sphereSource = vtk.vtkSphereSource()
             sphereSource.SetCenter(pos[0], pos[1], pos[2])
-            sphereSource.SetRadius(50)
+            sphereSource.SetRadius(sphere_radius)
             mapper = vtk.vtkPolyDataMapper()
             mapper.SetInputConnection(sphereSource.GetOutputPort())
             actor = vtk.vtkActor()
             actor.SetMapper(mapper)
+            actor.GetProperty().SetColor(1.0, 1.0, 1.0)
             self.renderer.AddActor(actor)
 
+            # Add label to the satellite
+            labelText = vtk.vtkVectorText()
+            labelText.SetText(str(name))
+
+            labelMapper = vtk.vtkPolyDataMapper()
+            labelMapper.SetInputConnection(labelText.GetOutputPort())
+
+            labelActor = vtk.vtkFollower()
+            labelActor.SetMapper(labelMapper)
+            labelActor.SetScale(500)  # Adjust scale as necessary
+            labelActor.SetPosition(pos[0], pos[1], pos[2])
+            labelActor.GetProperty().SetColor(1.0, 1.0, 0.0)  # Yellow color
+            labelActor.SetCamera(self.renderer.GetActiveCamera())
+
+            self.renderer.AddActor(labelActor)
+
+            # Update bounds to ensure all satellites are visible
+            for i in range(3):
+                bounds[i*2] = min(bounds[i*2], pos[i])
+                bounds[i*2+1] = max(bounds[i*2+1], pos[i])
+
+        # Draw connections between satellites based on adjacency matrix
+        if adj_matrix is not None and keys is not None:
+            num_sats = len(keys)
+            for i in range(num_sats):
+                for j in range(i + 1, num_sats):
+                    if adj_matrix[i][j]:
+                        sat1_name = keys[i]
+                        sat2_name = keys[j]
+                        pos1 = sat_positions.get(sat1_name)
+                        pos2 = sat_positions.get(sat2_name)
+                        if pos1 and pos2:
+                            # Create a line between pos1 and pos2
+                            lineSource = vtk.vtkLineSource()
+                            lineSource.SetPoint1(pos1)
+                            lineSource.SetPoint2(pos2)
+                            lineMapper = vtk.vtkPolyDataMapper()
+                            lineMapper.SetInputConnection(lineSource.GetOutputPort())
+                            lineActor = vtk.vtkActor()
+                            lineActor.SetMapper(lineMapper)
+                            lineActor.GetProperty().SetColor(0.0, 1.0, 0.0)  # Green color
+                            lineActor.GetProperty().SetLineWidth(2)
+                            self.renderer.AddActor(lineActor)
+
+        # Calculate the center and range for camera positioning
+        x_center = (bounds[0] + bounds[1]) / 2
+        y_center = (bounds[2] + bounds[3]) / 2
+        z_center = (bounds[4] + bounds[5]) / 2
+
+        x_range = bounds[1] - bounds[0]
+        y_range = bounds[3] - bounds[2]
+        z_range = bounds[5] - bounds[4]
+        max_range = max(x_range, y_range, z_range)
+        if max_range == 0:
+            max_range = 1
+
+        # Set up the camera and axes
+        buffer_space = max_range * 0.5
+        camera_distance_multiplier = 2.0 if satellite_count <= 20 else 5.0
+        camera_distance = max_range * camera_distance_multiplier + buffer_space
+        axes = vtk.vtkAxesActor()
+        axes.SetTotalLength(max_range, max_range, max_range)
+        axes.AxisLabelsOff()
+        self.renderer.AddActor(axes)
+
+        camera = self.renderer.GetActiveCamera()
+        camera.SetPosition(
+            x_center,
+            y_center,
+            z_center + camera_distance
+        )
+        camera.SetFocalPoint(
+            x_center,
+            y_center,
+            z_center
+        )
+        camera.SetViewUp(0, 1, 0)
+        
+
+        camera.SetClippingRange(0.1, camera_distance + max_range * 2)
+
+        self.renderer.ResetCameraClippingRange()
+        self.renderer.ResetCamera()
+        self.vtkWidget.GetRenderWindow().Render()
+
     def update_positions(self, positions):
-        """Updates the position label with the current positions of the satellites."""
+        #Update the position label with current satellite positions.
         pos_text = " | ".join([f"{name}: ({pos[0]:.2f}, {pos[1]:.2f}, {pos[2]:.2f}) km" for name, pos in positions.items()])
         self.position_label.setText("Current Positions: " + pos_text)
 
     def update_distances(self, positions):
-        """Updates the distance calculations between satellites."""
+        #Update the distance label with calculated distances between satellites.
         distances = []
         keys = list(positions.keys())
-
         for i in range(len(keys)):
             for j in range(i + 1, len(keys)):
                 dist = self.simulation.calculate_distance(positions[keys[i]], positions[keys[j]])
                 distances.append(f"{keys[i]} to {keys[j]}: {dist:.2f} km")
-
         self.distance_label.setText("Distance Calculations: " + " | ".join(distances))
 
     def update_graphs(self, positions):
-        """Generates and updates the adjacency matrix and network graph."""
-        adj_matrix, keys = self.simulation.generate_adjacency_matrix(positions)
+        #Update the adjacency matrix and network graph plots.
+        try:
+            adj_matrix, keys = self.simulation.generate_adjacency_matrix(positions)
+            self.axes[0].cla()
+            self.axes[1].cla()
 
-        self.axes[0].cla()
-        self.axes[1].cla()
+            self.axes[0].imshow(adj_matrix, cmap='Blues', interpolation='none', aspect='equal')
+            self.axes[0].set_title('Adjacency Matrix')
+            self.axes[0].set_xticks(np.arange(len(keys)))
+            self.axes[0].set_yticks(np.arange(len(keys)))
+            self.axes[0].set_xticklabels(keys, rotation=90)
+            self.axes[0].set_yticklabels(keys)
 
-        self.axes[0].imshow(adj_matrix, cmap='Blues', interpolation='none')
-        self.axes[0].set_title('Adjacency Matrix')
-        self.axes[0].set_xticks(np.arange(len(keys)))
-        self.axes[0].set_yticks(np.arange(len(keys)))
-        self.axes[0].set_xticklabels(keys)
-        self.axes[0].set_yticklabels(keys)
+            G = nx.from_numpy_array(adj_matrix)
+            pos = nx.spring_layout(G)
+            nx.draw(G, pos, ax=self.axes[1], with_labels=True, node_color='skyblue')
+            self.axes[1].set_title('Network Graph')
 
-        G = nx.from_numpy_array(adj_matrix)
-        pos = nx.spring_layout(G)
-        nx.draw(G, pos, ax=self.axes[1], with_labels=True, node_color='skyblue')
-        self.axes[1].set_title('Network Graph')
-
-        self.canvas.draw()
+            self.canvas.draw()
+        except ValueError as e:
+            QMessageBox.critical(self, "Error", f"An error occurred during graph update: {e}")
 
     def save_adj_matrix_for_specified_timeframe(self):
-        """Saves adjacency matrices and network graphs for a user-specified timeframe."""
+        #Save the adjacency matrices and network graphs to files.
         try:
             output_file, _ = QFileDialog.getSaveFileName(self, "Save Adjacency Matrix", "", "Text Files (*.txt);;All Files (*)")
             pdf_file, _ = QFileDialog.getSaveFileName(self, "Save Network Graphs PDF", "", "PDF Files (*.pdf);;All Files (*)")
@@ -252,3 +403,10 @@ class SatSimGUI(QMainWindow):
 
         except Exception as e:
             QMessageBox.critical(self, "Error", f"An error occurred while saving the matrix: {e}")
+
+    def closeEvent(self, event):
+        #Handle the close event to properly stop the worker thread.
+        if hasattr(self, 'worker') and self.worker is not None:
+            self.worker.stop()
+            self.worker.wait()
+        event.accept()
