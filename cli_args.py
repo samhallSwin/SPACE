@@ -26,6 +26,8 @@ def add_fl_args(parser):
     # Add args here
     fl_group.add_argument('--num-rounds', type=int, help='Number of Federated Learning rounds for the simulation')
     fl_group.add_argument('--num-clients', type=int, help='Number of Federated Learning clients for the simulation')
+    fl_group.add_argument('--model-type', type=str, help='FL Model Type (currently 2 options): ResNet50, SimpleCNN')
+    fl_group.add_argument('--data-set', type=str, help='FL Data Set (currently 1 option): MNIST')
 
 def setup_flomps_parser(parser):
     def add_positional_args(parser):
