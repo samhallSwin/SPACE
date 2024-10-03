@@ -37,6 +37,7 @@ class FederatedLearning:
         self.output = FLOutput()
         #self.model_manager = ModelManager("mnist")
         self.model_manager = None
+        self.flam = None
 
 
     """Parse and Set Values from Handler"""
@@ -45,6 +46,10 @@ class FederatedLearning:
         print(f"round count set to: {self.num_rounds}")
     def set_num_clients(self, clients: int) -> None:
         self.num_clients = clients
+        print(f"client count set to: {self.num_clients}")
+    def set_flam(self, flam) -> None:
+        self.flam = flam
+        self.num_clients = flam['satellite_count'].iat[0]
         print(f"client count set to: {self.num_clients}")
 
     def set_model_hyperparameters(self, params) -> None:

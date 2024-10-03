@@ -237,6 +237,7 @@ if __name__ == "__main__":
             flam = algorithm_module.output.get_result()
             print(flam)
 
+            fl_module.handler.parse_data(flam)
             fl_module.handler.run_module()
 
    

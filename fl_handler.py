@@ -25,8 +25,14 @@ class FLHandler(Handler):
     # Constructor
     def __init__(self, fl_core: FederatedLearning):
         self.federated_learning = fl_core
+        self.flam = None
 
     def parse_data(self, data):
+        if data is not None:
+            self.flam = data
+        else:
+            raise FileNotFoundError(f"FL attempted to parse a FLAM, but was empty ")
+
         return super().parse_data()
 
     # for external file support
@@ -34,4 +40,8 @@ class FLHandler(Handler):
         return super().parse_input()
 
     def run_module(self):
-        self.federated_learning.run()
+        if self.flam is None:
+            self.federated_learning.run()
+        else:
+            self.federated_learning.set_flam(self.flam)
+            self.federated_learning.run()
