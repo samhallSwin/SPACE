@@ -12,6 +12,8 @@ Changelog:
 - 2024-08-24: getters and setters for satellite names by Yuganya Perumal
 - 2024-09-09: Move Algorithm Steps from Algorithm Handler to Algorithm Core by Yuganya Perrumal
 - 2024-09-21: Implemented Load Balancing based on past selection of the satellite when there more than one satellite with max no. of connectivity.
+- 2024-10-03: Removed validation for satellite names. auto generation of satellite names implemented if none found.
+
 
 Usage: 
 Instantiate to setup Algorithmhandler and AlgorithmConfig.
@@ -27,10 +29,8 @@ class Algorithm():
         self.output = AlgorithmOutput()
         self.selection_counts = None
         self.output_to_file = True 
-
+        
     def set_satellite_names(self, satellite_names):
-        if satellite_names is None or len(satellite_names) == 0:
-            raise ValueError("Provide Satellite Names for identification purposes.")
         self.satellite_names = satellite_names
         self.selection_counts = npy.zeros(len(satellite_names))  
 
@@ -81,7 +81,7 @@ class Algorithm():
             nrows, mcolumns = each_matrix.shape
             # get matrix size to know number of satellites involved.
             if(nrows == mcolumns):
-                satellite_count = nrows
+                satellite_count = nrows 
             # Check if there are no connections (all zeros)
             if npy.all(each_matrix == 0):
                 # If no connectivity between them, set algorithm output (Federated Learning Adjacency Matrix (FLAM)) without changes.

@@ -9,7 +9,8 @@ Python Version:
 
 Changelog:
 - 2024-07-11: Initial creation.
-- 2024-08-24: Reading JSON Options satellite_names to configure the setters by Yuganya Perumal 
+- 2024-08-24: Reading JSON Options satellite_names to configure the setters.
+- 2024-10-03: satellite_names not set by reading JSON Options.
 
 Usage: 
 
@@ -23,7 +24,7 @@ from algorithm_core import Algorithm
 @dataclass
 class AlgorithmOptions:
     key: str
-    satellite_names = []
+
 
 class AlgorithmConfig(Config):
 
@@ -40,10 +41,6 @@ class AlgorithmConfig(Config):
     def read_options_from_file(file):
          return super().read_options_from_file()
 
-
     def set_algorithm(self):
-        self.algorithm.set_satellite_names(self.options["satellite_names"])
         self.algorithm.set_output_to_file(self.options["module_settings"]["output_to_file"])
 
-    def get_satellite_names(self):
-        return self.algorithm.get_satellite_names() 

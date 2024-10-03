@@ -9,9 +9,10 @@ Python Version:
 
 Changelog:
 - 2024-06-29: Initial creation.
-- 2024-08-24: getters and setters for satellite names by Yuganya Perumal
-- 2024-09-09: setting output instead of return and algorithm core to handle algorithm steps by Yuganya Perumal
+- 2024-08-24: getters and setters for satellite names.
+- 2024-09-09: setting output instead of return and algorithm core to handle algorithm steps.
 - 2024-09-22: Implemented Input validation.
+- 2024-10-03: Implemented auto generation of satellite names if satellite simulator component does not provide one.
 
 Usage: 
 Instantiate AlgorithmHandler and assign Algorithm. 
@@ -27,6 +28,7 @@ class AlgorithmHandler(Handler):
     def __init__(self, algorithm):
         self.algorithm = algorithm
         self.adjacency_matrices = []
+        self.sat_names = []
     @staticmethod 
     def read_adjacency_matrices(file_name):
         # Check if file exist.
@@ -92,19 +94,37 @@ class AlgorithmHandler(Handler):
                 raise ValueError(f"Adjacency Matrix at time '{timestamp}' is not symmetric.") 
 
         return True
-    
-    def parse_data(self, data):
-        self.adjacency_matrices = data
-        if self.validate_adjacency_matrices(self.adjacency_matrices):
-            self.send_adjmatrices(self.adjacency_matrices)
 
-    def parse_file(self,file_name):
-        adjacency_matrices = self.read_adjacency_matrices(file_name)
-        if self.validate_adjacency_matrices(adjacency_matrices):
-            self.send_adjmatrices(adjacency_matrices)
+    # Automatically generates satellite names based on the adjacency matrix size, 
+    # if satellite names not provided by Satellite Simulator Componenet
+    def auto_generate_satellite_names(self,adjacency_matrix_size):
+        self.sat_names = [f"Satellite {k+1}" for k in range(adjacency_matrix_size)]
+        self.send_satNames(self.sat_names)
+
+    def parse_data(self, data):
+        if data is None:
+            raise ValueError("No incoming Adjacency Martix, unable to proceed.")
+        else:
+            self.adjacency_matrices = data
+            if self.validate_adjacency_matrices(self.adjacency_matrices):
+                if not self.sat_names:
+                    no_of_rows = self.adjacency_matrices[0][1].shape[0]
+                    self.auto_generate_satellite_names(no_of_rows)
+                self.send_adjmatrices(self.adjacency_matrices)
+
+    def parse_file(self, file_name):
+        self.adjacency_matrices = self.read_adjacency_matrices(file_name)
+        if self.validate_adjacency_matrices(self.adjacency_matrices):
+            if not self.sat_names:
+                    no_of_rows = self.adjacency_matrices[0][1].shape[0]
+                    self.auto_generate_satellite_names(no_of_rows)
+            self.send_adjmatrices(self.adjacency_matrices)
 
     def send_adjmatrices(self, adj_matrices):
         self.algorithm.set_adjacency_matrices(adj_matrices)
+
+    def send_satNames(self, sat_names):
+        self.algorithm.set_satellite_names(sat_names)
 
     def run_module(self):
         self.algorithm.start_algorithm_steps() 

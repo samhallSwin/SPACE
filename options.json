@@ -17,12 +17,6 @@
         }
     },
     "algorithm": {
-        "satellite_names": [
-            "Sat1",
-            "Sat2",
-            "Sat3",
-            "Sat4"
-        ],
         "module_settings": {
             "output_to_file": true
         }
