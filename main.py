@@ -219,7 +219,7 @@ if __name__ == "__main__":
             run_standalone_module(single_module_key, input_file)
         else:
             # Run as simulation pipeline
-            pass
+            
             # Check if user would like to run an ML performance test or use existing settings
             # (Model runtime accounted for in algorithm process)
 
