@@ -1,82 +1,66 @@
-"""
-Filename: sat_sim_config.py
-Author: Md Nahid Tanjum
-"""
+from module_factory import ModuleKey
 
-from skyfield.api import load, Topos
-from datetime import datetime
+def setup_settings_parser(parser):
+    parser.add_argument('--options-file', type=str, help="Set JSON Options File")
+    parser.add_argument('--show-options', action='store_true', help="Display JSON options for module configuration")
 
-class SatSimConfig:
-    def __init__(self, sat_sim=None):
-        """
-        Initialize the configuration with an optional SatSim instance.
-        If not provided, a new SatSim instance will be created.
-        """
-        self.ts = load.timescale()
-        self.sat_sim = sat_sim
-        self.options = None
 
-    def set_sat_sim(self, sat_sim):
-        """Associate this configuration with a specific satellite simulation instance."""
-        self.sat_sim = sat_sim
+def setup_flomps_parser(parser):
+    def add_positional_args(parser):
+        parser.add_argument('input_file', type=str, help="Provide relative path to input file")
 
-    def _convert_to_timestamp(self, time_str):
-        """
-        Helper function to convert a DateTime string to a Skyfield timestamp.
-        Accepts the time string in the format "YYYY-MM-DD HH:MM:SS".
-        """
-        dt_obj = datetime.strptime(time_str, "%Y-%m-%d %H:%M:%S")
-        return self.ts.utc(dt_obj.year, dt_obj.month, dt_obj.day, dt_obj.hour, dt_obj.minute, dt_obj.second)
+    def add_options_args(parser):
+        # Standalone module execution
+        print("Adding optional args")
+        # options_group = parser.add_argument_group("optional")
 
-    def read_options(self, options):
-        """
-        Apply externally provided configuration options to the satellite simulation.
-        This includes start and end times, timestep, satellite count, ground station info, etc.
-        """
-        self.options = options
-        
-        # Ensure SatSim instance exists
-        if not self.sat_sim:
-            print("Error: SatSim instance is not set.")
-            return
+        parser.add_argument('--sat-sim-only', action='store_true', help="Run the Satellite Simulator standalone. Requires a TLE file.")
+        parser.add_argument('--algorithm-only', action='store_true', help="Run the Algorithm standalone. Requires an Adjacency Matrices (.am) file.")
+        parser.add_argument('--fl-only', action='store_true', help="Run the Federated Learning standalone. Requires a Federated Learning Adjacency Matrices (.flam) file.")
+        parser.add_argument('--model-only', action='store_true', help="Run the ML model standalone.")
 
-        # Set start and end times
-        if 'start_time' in options and 'end_time' in options:
-            start_time = self._convert_to_timestamp(options['start_time'])
-            end_time = self._convert_to_timestamp(options['end_time'])
-            self.sat_sim.set_start_end_times(start=start_time, end=end_time)
+    def add_sat_sim_args(parser):
+        print("Adding SAT_SIM args")
+        sat_sim_group = parser.add_argument_group(ModuleKey.SAT_SIM)
 
-        # Set timestep if provided
-        if 'timestep' in options:
-            self.sat_sim.set_timestep(options['timestep'])
+        # Add args here
+        sat_sim_group.add_argument('--start-time', type=str, help='The start date/time for the satellite simulation')
+        sat_sim_group.add_argument('--end-time', type=str, help='The end date/time for the satellite simulation')
+        sat_sim_group.add_argument('--timestep', type=int, help='Timestep for the simulation')
 
-        # Set satellite count if provided
-        if 'satellite_count' in options:
-            self.sat_sim.satellite_count = options['satellite_count']
+        sat_sim_group.add_argument('--gui', action='store_true', help='Enable GUI mode for satellite simulation')
 
-        # Set constellation type if provided
-        if 'constellation_type' in options:
-            self.sat_sim.constellation_type = options['constellation_type']
+    def add_algorithm_args(parser):
+        print("Adding ALGORITHM args")
+        algorithm_group = parser.add_argument_group(ModuleKey.ALGORITHM)
 
-        # Set ground station if provided
-        if 'ground_station' in options:
-            ground_station_location = options['ground_station']['location']
-            self.sat_sim.ground_station = Topos(latitude_degrees=ground_station_location['lat'],
-                                                longitude_degrees=ground_station_location['long'])
+        # Add args here
 
-        # Set output file type (txt or csv) if provided
-        if 'output_file_type' in options:
-            self.sat_sim.set_output_file_type(options['output_file_type'])
+    def add_fl_args(parser):
+        print("Adding FL args")
+        fl_group = parser.add_argument_group(ModuleKey.FL)
 
-        # TODO: Check keys exist
-        self.sat_sim.set_output_to_file(self.options["module_settings"]["output_to_file"])
+        # Add args here
+        fl_group.add_argument('--num-rounds', type=int, help='Number of Federated Learning rounds for the simulation')
+        fl_group.add_argument('--num-clients', type=int, help='Number of Federated Learning clients for the simulation')
 
-    def read_options_from_file(self, file_path):
-        """
-        Read and apply options from a JSON configuration file.
-        This method loads the JSON file and passes the options to the `read_options` method.
-        """
-        import json
-        with open(file_path, 'r') as file:
-            options = json.load(file)
-        self.read_options(options)
+    add_positional_args(parser)
+    add_options_args(parser)
+    add_sat_sim_args(parser)
+    add_algorithm_args(parser)
+    add_fl_args(parser)
+
+    
+
+# def create_subparsers(parser):
+#     subparsers = parser.add_subparsers(dest='command', help="Available commands")
+
+#     # Create subparsers
+#     flomps_parser = subparsers.add_parser('flomps', help="Run a FLOMPS simulation")
+
+#     add_positional_args(flomps_parser)
+#     add_options_args(flomps_parser)
+
+#     add_sat_sim_args(flomps_parser)
+#     add_algorithm_args(flomps_parser)
+#     add_fl_args(flomps_parser)
