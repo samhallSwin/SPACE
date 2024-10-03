@@ -1,29 +1,49 @@
 {
     "sat_sim": {
-        "start_time": "2024-01-01 12:00:00",
-        "end_time": "2024-01-01 16:00:00",
+        "start_time": "2024-09-24 12:00:00",
+        "end_time": "2024-09-24 14:00:00",
         "timestep": 30,
-        "output_file_type": "csv",
+        "output_file_type": "txt",
         "ground_station": {
             "location": {
                 "lat": 35.6895,
                 "long": 139.6917
             }
         },
-        "gui": true
+        "gui": true,
+        "module_settings": {
+            "output_to_file": false
+        }
     },
     "algorithm": {
-        "no_of_nodes": 4,
-        "node_names": [
-            "GS",
-            "S1",
-            "S2",
-            "S3"
-        ]
+        "module_settings": {
+            "output_to_file": true
+        }
     },
     "federated_learning": {
-        "num_rounds": 3,
+        "num_rounds": 1,
         "num_clients": 4,
-        "model_type": "mnist"
+        "model_type": "ResNet50",
+        "data_set": "MNIST",
+        "tick": {
+            "tick_configuration": {
+                "tick_behavior": "Adaptive",
+                "tick_overflow": 0.2,
+                "tick_underflow": 0.1
+            },
+            "round_configuration": {
+                "expected_round_time": 15,
+                "expected_training_time": 10,
+                "expected_aggregation_time": 5
+            }
+        },
+        "client_aging": {
+            "maximal_client_age": "Undefined",
+            "maximal_ticks_age": "Undefined",
+            "maximal_rounds_age": "Undefined"
+        },
+        "module_settings": {
+            "output_to_file": true
+        }
     }
 }
