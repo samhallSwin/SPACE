@@ -1,6 +1,10 @@
 """
 Filename: sat_sim_output.py
-Author: Md Nahid Tanjum"""
+Author: Md Nahid Tanjum
+
+Changelog:
+- 2024-10-03: Changes to set satellite names in output from TLE file if exists by Yuganya Perumal.
+"""
 
 import numpy as np
 import csv
@@ -14,6 +18,7 @@ class SatSimOutput:
 
     def __init__(self):
         self.fl_input = None
+        self.satellite_names = []
         self.matrices = None
 
     def write_to_file(self, file, matrices):
@@ -48,6 +53,12 @@ class SatSimOutput:
         Placeholder for setting results, potentially integrating with a learning module.
         """
         self.matrices = matrices
+
+    def set_satellite_names(self, sat_names):
+        self.satellite_names = sat_names
+
+    def get_satellite_names(self):
+        return self.satellite_names
 
     def get_result(self):
         return self.matrices
