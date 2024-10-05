@@ -12,6 +12,7 @@ def add_sat_sim_args(parser):
         sat_sim_group.add_argument('--start-time', type=str, help='The start date/time for the satellite simulation')
         sat_sim_group.add_argument('--end-time', type=str, help='The end date/time for the satellite simulation')
         sat_sim_group.add_argument('--timestep', type=int, help='Timestep for the simulation')
+        sat_sim_group.add_argument('--gui', action='store_true', help='Enable GUI mode for satellite simulation')
 
 def add_algorithm_args(parser):
     print("Adding ALGORITHM args")
