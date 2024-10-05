@@ -10,6 +10,8 @@ def set_config_file(file):
     with open('settings.json') as f:
         options = json.load(f)
         options['config_file'] = file
+
+    with open('settings.json', 'w') as f:
         json.dump(options, f, indent=4)
     
 def get_config_file():
@@ -21,7 +23,8 @@ def get_config_file():
     return config_file
 
 def read_options_file():
-    with open('options.json') as f:
+    file = get_config_file()
+    with open(file) as f:
         options = json.load(f)
         
     return options
@@ -141,7 +144,7 @@ def update_options_with_args(parser, args_for_config, options):
 
     return options
 
-def run_standalone_module(single_module_key, input_file):
+def run_standalone_module(single_module_key, input_file, options):
         # Temporary structure
         module = module_factory.create_single_instance(single_module_key)
         module.config.read_options(options[single_module_key.value])
@@ -155,12 +158,11 @@ def log_options(options):
     print(options)
 
 def read_settings_cli(options, args):
-    # Check if user would like to read JSON options
-    # TODO: IN PROGRESS - We need a root command e.g. "run" for all simulation related stuff
-    # Anything without "run" would be for meta functions, e.g. show JSON options for a particular module
-    show_options_flag = args.show_options
-    if show_options_flag:
+    if args.show_options:
         log_options(options)
+        return
+    if args.options_file:
+        set_config_file(args.options_file)
         return
 
 def read_flomps_cli(parser, args, options):
@@ -216,7 +218,7 @@ if __name__ == "__main__":
         if single_module_key is not None:
             # Run standalone module
             # print("going to run standalone module")
-            run_standalone_module(single_module_key, input_file)
+            run_standalone_module(single_module_key, input_file, options)
         else:
             # Run as simulation pipeline
             
