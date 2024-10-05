@@ -7,7 +7,7 @@ Description: This script handles satellite simulations using TLE data and provid
 """
 
 from datetime import datetime, timedelta
-from skyfield.api import load, EarthSatellite
+from skyfield.api import load, EarthSatellite, utc
 import numpy as np
 import os
 from .sat_sim_output import SatSimOutput
@@ -16,7 +16,7 @@ from PyQt5.QtWidgets import QApplication
 
 class SatSim:
     # SatSim class manages satellite simulation based on TLE data and handles both GUI and CLI modes.
-    def __init__(self, start_time=None, end_time=None, timestep=30, output_file_type="csv", gui_enabled=False, tle_data=None):
+    def __init__(self, start_time=None, end_time=None, timestep=30, output_file_type="csv", gui_enabled=False, tle_data=None, output_to_file=False):
         # Initialize the SatSim instance with optional parameters for start and end times, timestep, output file type, and GUI mode.
         self.tle_data = tle_data if tle_data else None
         self.timestep = timedelta(minutes=timestep)
@@ -27,11 +27,12 @@ class SatSim:
         self.output_file_type = output_file_type if output_file_type in ["csv", "txt"] else "csv"
         self.output_path = ""
         self.gui_enabled = gui_enabled
+        self.output_to_file = output_to_file
 
         if self.start_time and self.end_time:
-            if not isinstance(self.start_time, datetime) or not isinstance(self.end_time, datetime):
-                raise ValueError("Start time and end time must be datetime objects")
-            if self.start_time >= self.end_time:
+            if not isinstance(self.start_time, type(self.sf_timescale.utc(0))):
+                raise ValueError("Start time and end time must be Skyfield Time objects")
+            if self.start_time.tt >= self.end_time.tt:
                 raise ValueError("Start time must be before end time")
 
     def set_gui_enabled(self, enabled):
@@ -54,6 +55,11 @@ class SatSim:
     def set_output_file_type(self, file_type):
         # Set the output file format (csv or txt).
         self.output_file_type = file_type
+        self.output.set_output_file_type(file_type)
+
+    def set_output_to_file(self, output_to_file):
+        # Set whether to output to file.
+        self.output_to_file = output_to_file
 
     def run_gui(self):
         # Launch the satellite simulation GUI.
@@ -64,15 +70,14 @@ class SatSim:
         gui.show()
         sys.exit(app.exec_())
 
-
     def get_satellite_positions(self, time):
         # Get satellite positions at a given time.
         if self.tle_data is None or len(self.tle_data) == 0:
-           print("No TLE data provided. Cannot calculate satellite positions.")
-           return {}
+            print("No TLE data provided. Cannot calculate satellite positions.")
+            return {}
         if isinstance(time, datetime):
             # Convert Python datetime object to Skyfield time object
-            time = self.sf_timescale.utc(time.year, time.month, time.day, time.hour, time.minute, time.second)
+            time = self.sf_timescale.from_datetime(time)
 
         positions = {}
         # Calculate satellite positions using TLE data
@@ -80,7 +85,7 @@ class SatSim:
             if len(tle) < 2:
                 print(f"Warning: Incomplete TLE data for {name}. Skipping this entry.")
                 continue  # Skip the incomplete TLE entry
-        
+
             try:
                 tle_line1, tle_line2 = tle
                 satellite = EarthSatellite(tle_line1, tle_line2, name)
@@ -88,9 +93,8 @@ class SatSim:
                 positions[name] = geocentric.position.km
             except Exception as e:
                 print(f"Error processing TLE data for {name}: {e}")
-            continue  # Skip this satellite if there's an error
+                continue  # Skip this satellite if there's an error
         return positions
-    
 
     def calculate_distance(self, pos1, pos2):
         # Calculate the Euclidean distance between two satellite positions.
@@ -116,59 +120,49 @@ class SatSim:
             print("No TLE data loaded. Please provide valid TLE data.")
             return []
 
-        # Convert start_time and end_time to Skyfield Time objects if they are not already
-        if isinstance(self.start_time, datetime):
-            current_time = self.sf_timescale.utc(self.start_time.year, self.start_time.month, self.start_time.day,
-                                                 self.start_time.hour, self.start_time.minute, self.start_time.second)
-        else:
-            current_time = self.start_time
-
-        if isinstance(self.end_time, datetime):
-            end_time = self.sf_timescale.utc(self.end_time.year, self.end_time.month, self.end_time.day,
-                                             self.end_time.hour, self.end_time.minute, self.end_time.second)
-        else:
-            end_time = self.end_time
+        current_time = self.start_time
+        end_time = self.end_time
+        timestep_days = self.timestep.total_seconds() / 86400.0
 
         matrices = []
         timestamps = []
 
         # Loop through time increments and generate adjacency matrices
-        while current_time.utc < end_time.utc:
+        while current_time.tt < end_time.tt:
             try:
                 positions = self.get_satellite_positions(current_time)
 
                 if not positions:
-                    print(f"Skipping timestep {current_time}: No positions calculated.")
-                    current_time = current_time + self.timestep
+                    print(f"Skipping timestep {current_time.utc_datetime()}: No positions calculated.")
+                    current_time = current_time + timestep_days
                     continue
 
                 # Generate adjacency matrix
                 adj_matrix, keys = self.generate_adjacency_matrix(positions)
                 matrices.append((current_time.utc_datetime().strftime('%Y-%m-%d %H:%M:%S'), adj_matrix))
 
-                # Increment the current_time by the timestep
-                current_time = current_time + timedelta(minutes=self.timestep.total_seconds() / 60)
+                # Increment the current_time by the timestep in days
+                current_time = current_time + timestep_days
 
             except Exception as e:
-                print(f"Error during simulation: {e}")
+                print(f"Error during simulation at time {current_time.utc_datetime()}: {e}")
+                import traceback
+                traceback.print_exc()
                 break
 
-        # Save results to output file
-        output_file = os.path.join(os.getcwd(), f"output.{self.output_file_type}")
-        print(f"Writing output to {output_file}")
-
-        if matrices:
-            if self.output_file_type == "txt":
-                self.output.write_to_file(output_file, matrices)
-            elif self.output_file_type == "csv":
-                timestamps = [timestamp for timestamp, _ in matrices]
-                keys = list(self.tle_data.keys())
-                self.output.write_to_csv(output_file, matrices, timestamps, keys)
+        # Save results using the output module
+        if self.output_to_file and matrices:
+            self.output.set_output_path(os.getcwd())
+            self.output.set_tle_keys(list(self.tle_data.keys()))
+            self.output.save_matrices(matrices)
         else:
             print("No data to write to output file.")
 
         if not matrices:
-           print("Warning: No adjacency matrices generated. Check TLE data and timestep settings.")
+            print("Warning: No adjacency matrices generated. Check TLE data and timestep settings.")
+
+        # Set results in output module
+        self.output.set_result(matrices)
 
         return matrices
 

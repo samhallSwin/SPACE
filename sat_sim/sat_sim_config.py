@@ -8,7 +8,7 @@ from a JSON file and applies them to the simulation instance, ensuring that all 
 
 import json
 from datetime import datetime
-from skyfield.api import load, Topos
+from skyfield.api import load, Topos, utc
 from interfaces.config import Config
 
 class SatSimConfig:
@@ -22,7 +22,8 @@ class SatSimConfig:
         # Converts date-time string to a Skyfield time object.
         try:
             dt_obj = datetime.strptime(time_str, "%Y-%m-%d %H:%M:%S")
-            return self.ts.utc(dt_obj.year, dt_obj.month, dt_obj.day, dt_obj.hour, dt_obj.minute, dt_obj.second)
+            dt_obj = dt_obj.replace(tzinfo=utc)
+            return self.ts.from_datetime(dt_obj)
         except ValueError:
             raise ValueError(f"Invalid datetime format: {time_str}. Correct format should be YYYY-MM-DD HH:MM:SS")
 
@@ -61,6 +62,10 @@ class SatSimConfig:
         if options['output_file_type'] not in ["csv", "txt"]:
             raise ValueError("Output file type must be 'csv' or 'txt'.")
         self.sat_sim.set_output_file_type(options['output_file_type'])
+
+        # Set output to file.
+        if 'module_settings' in options and 'output_to_file' in options['module_settings']:
+            self.sat_sim.set_output_to_file(options["module_settings"]["output_to_file"])
 
         # Configure the ground station if specified.
         if 'ground_station' in options:

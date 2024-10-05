@@ -17,6 +17,33 @@ class SatSimOutput:
         self.fl_input = None
         self.matrices = None
         self.timestamps = None
+        self.output_file_type = 'csv'
+        self.output_path = os.getcwd()
+        self.keys = None
+
+    def set_output_file_type(self, file_type):
+        self.output_file_type = file_type
+
+    def set_output_path(self, output_path):
+        self.output_path = output_path
+
+    def set_tle_keys(self, keys):
+        self.keys = keys
+
+    def save_matrices(self, matrices):
+        output_file = os.path.join(self.output_path, f"output.{self.output_file_type}")
+        print(f"Writing output to {output_file}")
+
+        if matrices:
+            if self.output_file_type == "txt":
+                self.write_to_file(output_file, matrices, keys=self.keys)
+            elif self.output_file_type == "csv":
+                timestamps = [timestamp for timestamp, _ in matrices]
+                self.write_to_csv(output_file, matrices, timestamps, keys=self.keys)
+            else:
+                print(f"Unsupported output file type: {self.output_file_type}")
+        else:
+            print("No data to write to output file.")
 
     def write_to_file(self, file, matrices, keys=None):
         #Write data to a text file with headers.
@@ -80,7 +107,7 @@ class SatSimOutput:
 
             with open(csv_file, mode='w', newline='') as f:
                 writer = csv.writer(f)
-                
+
                 # Write number of satellites
                 writer.writerow(['Number of satellites:', max_size])
                 # Write satellite labels
@@ -99,7 +126,7 @@ class SatSimOutput:
 
                     writer.writerow([timestamp, matrix.shape[0]])
                     for row in matrix:
-                        writer.writerow(row.tolist())                    
+                        writer.writerow(row.tolist())
                     writer.writerow([])
 
             return True
@@ -107,9 +134,9 @@ class SatSimOutput:
             print(f"Error writing to CSV: {e}")
             return False
 
-    def set_result(self):
-        #Placeholder for setting results.
-        pass
+    def set_result(self, matrices):
+        # Sets the simulation results.
+        self.matrices = matrices
 
     def set_fl_input(self, fl_input):
         #Sets the Federated Learning input.
