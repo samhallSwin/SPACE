@@ -29,7 +29,7 @@ class SatSim:
         self.gui_enabled = gui_enabled
         self.output_to_file = output_to_file
 
-        if self.start_time and self.end_time:
+        if self.start_time is not None and self.end_time is not None:
             if not isinstance(self.start_time, type(self.sf_timescale.utc(0))):
                 raise ValueError("Start time and end time must be Skyfield Time objects")
             if self.start_time.tt >= self.end_time.tt:
