@@ -1,0 +1,22 @@
+test_get_selected_satellite_name (__main__.TestAlgorithmCore.test_get_selected_satellite_name) ... ok
+test_select_satellite_with_max_connections (__main__.TestAlgorithmCore.test_select_satellite_with_max_connections) ... ok
+test_select_satellite_with_previous_selection_count (__main__.TestAlgorithmCore.test_select_satellite_with_previous_selection_count) ... ok
+test_set_get_adjacency_matrices (__main__.TestAlgorithmCore.test_set_get_adjacency_matrices) ... ok
+test_set_get_satellite_names (__main__.TestAlgorithmCore.test_set_get_satellite_names) ... ok
+test_start_algorithm_steps (__main__.TestAlgorithmCore.test_start_algorithm_steps) ... ok
+test_start_algorithm_steps_one_satellite (__main__.TestAlgorithmCore.test_start_algorithm_steps_one_satellite) ... ok
+test_auto_generate_satellite_names (__main__.TestAlgorithmHandler.test_auto_generate_satellite_names) ... ok
+test_parse_data (__main__.TestAlgorithmHandler.test_parse_data) ... ok
+test_parse_file (__main__.TestAlgorithmHandler.test_parse_file) ... ok
+test_read_adjacency_matrices_invalid_file (__main__.TestAlgorithmHandler.test_read_adjacency_matrices_invalid_file) ... ok
+test_validate_adjacency_matrices (__main__.TestAlgorithmHandler.test_validate_adjacency_matrices) ... ok
+test_validate_adjacency_matrices_not_square (__main__.TestAlgorithmHandler.test_validate_adjacency_matrices_not_square) ... ok
+test_validate_adjacency_matrices_not_symmetry (__main__.TestAlgorithmHandler.test_validate_adjacency_matrices_not_symmetry) ... ok
+test_process_algorithm_output (__main__.TestAlgorithmOutput.test_process_algorithm_output) ... ok
+test_set_and_get_result (__main__.TestAlgorithmOutput.test_set_and_get_result) ... ok
+test_write_to_file (__main__.TestAlgorithmOutput.test_write_to_file) ... ok
+
+----------------------------------------------------------------------
+Ran 17 tests in 0.043s
+
+OK
