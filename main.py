@@ -230,13 +230,14 @@ if __name__ == "__main__":
             sat_sim_module.handler.parse_file(input_file)
             sat_sim_module.handler.run_module()
             matrices = sat_sim_module.output.get_result()
-            sat_names = sat_sim_module.output.get_satellite_names()
-            print(matrices) 
+            print(matrices)
                 
-            algorithm_module.handler.parse_data(matrices, sat_names)
+            algorithm_module.handler.parse_data(matrices)
             algorithm_module.handler.run_module()
             flam = algorithm_module.output.get_result()
             print(flam)
 
             fl_module.handler.parse_data(flam)
             fl_module.handler.run_module()
+
+   

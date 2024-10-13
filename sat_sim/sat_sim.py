@@ -1,9 +1,6 @@
 """
 Filename: sat_sim.py
 Author: Md Nahid Tanjum
-
-Changelog:
-- 2024-10-03: Changes to retrieve satellite names from TLE file if exists by Yuganya Perumal.
 """
 
 import argparse
@@ -21,7 +18,6 @@ class SatSim:
     def __init__(self):
         self.tle_data = None
         self.timestep = None
-        self.satellite_names = []
         self.sf_timescale = load.timescale()
         self.output = SatSimOutput()
         self.start_time = None
@@ -53,12 +49,10 @@ class SatSim:
     def get_satellite_positions(self, tle_data, time):
         """Retrieve satellite positions at a given time."""
         positions = {}
-        self.satellite_names = [] # Reset to prevent duplication of Satellite names
         for name, tle in tle_data.items():
             satellite = EarthSatellite(tle[0], tle[1], name)
             geocentric = satellite.at(time)
             positions[name] = geocentric.position.km
-            self.satellite_names.append(name)
         return positions
 
     def calculate_distance(self, pos1, pos2):
@@ -93,9 +87,6 @@ class SatSim:
 
         # Set output of generated matrices
         self.output.set_result(matrices)
-
-        # Set output of satellite names
-        self.output.set_satellite_names(self.satellite_names) 
         
 
 def parse_args():

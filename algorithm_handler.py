@@ -101,25 +101,23 @@ class AlgorithmHandler(Handler):
         self.sat_names = [f"Satellite {k+1}" for k in range(adjacency_matrix_size)]
         self.send_satNames(self.sat_names)
 
-    def parse_data(self, data, names):
+    def parse_data(self, data):
         if data is None:
             raise ValueError("No incoming Adjacency Martix, unable to proceed.")
         else:
             self.adjacency_matrices = data
-            self.sat_names = names
             if self.validate_adjacency_matrices(self.adjacency_matrices):
                 if not self.sat_names:
                     no_of_rows = self.adjacency_matrices[0][1].shape[0]
                     self.auto_generate_satellite_names(no_of_rows)
-                else:
-                    self.algorithm.set_satellite_names(self.sat_names)  
                 self.send_adjmatrices(self.adjacency_matrices)
 
     def parse_file(self, file_name):
         self.adjacency_matrices = self.read_adjacency_matrices(file_name)
         if self.validate_adjacency_matrices(self.adjacency_matrices):
-            no_of_rows = self.adjacency_matrices[0][1].shape[0]
-            self.auto_generate_satellite_names(no_of_rows) 
+            if not self.sat_names:
+                    no_of_rows = self.adjacency_matrices[0][1].shape[0]
+                    self.auto_generate_satellite_names(no_of_rows)
             self.send_adjmatrices(self.adjacency_matrices)
 
     def send_adjmatrices(self, adj_matrices):
