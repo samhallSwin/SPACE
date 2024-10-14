@@ -66,14 +66,14 @@ class SatSimOutput:
                 if keys and len(keys) > 0:
                     num_satellites = len(keys)
                     f.write(f"Number of satellites: {num_satellites}\n")
-                    sat_labels = ' '.join(keys)
+                    sat_labels = ', '.join(keys)
                     f.write(f"{sat_labels}\n\n")
                     print(f"Written header with {num_satellites} satellites to {file}.")
                 else:
                     if matrices and len(matrices[0][1].shape) > 1:
                         num_satellites = matrices[0][1].shape[1]
                         f.write(f"Number of satellites: {num_satellites}\n")
-                        sat_labels = ' '.join([f'Sat{i+1}' for i in range(num_satellites)])
+                        sat_labels = ', '.join([f'Sat{i+1}' for i in range(num_satellites)])
                         f.write(f"{sat_labels}\n\n")
                         print(f"Written header with {num_satellites} satellites to {file}.")
                     else:
