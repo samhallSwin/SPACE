@@ -16,7 +16,6 @@ from typing import List, Any
 class SatSimResult:
     matrices: Any
     satellite_names: List[str]
-    timestamps: List[str] = None
 
 class SatSimOutput:
     #Handles writing simulation data to text and CSV files.
@@ -151,5 +150,4 @@ class SatSimOutput:
         return SatSimResult(
             matrices=self.matrices,
             satellite_names=self.keys,
-            timestamps=self.timestamps
         )
