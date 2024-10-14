@@ -38,8 +38,19 @@ class SatSimOutput:
         self.keys = keys
 
     def save_matrices(self, matrices):
+        self.matrices = matrices
         output_file = os.path.join(self.output_path, f"output.{self.output_file_type}")
         print(f"Writing output to {output_file}")
+
+        
+        if not self.keys or len(self.keys) == 0:
+            if matrices and len(matrices) > 0:
+                sample_matrix = matrices[0][1]
+                if sample_matrix.ndim > 1:
+                    num_satellites = sample_matrix.shape[1]
+                else:
+                    num_satellites = 1
+                self.keys = [f'Satellite {i+1}' for i in range(num_satellites)]
 
         if matrices:
             if self.output_file_type == "txt":
@@ -72,7 +83,7 @@ class SatSimOutput:
                     if matrices and len(matrices[0][1].shape) > 1:
                         num_satellites = matrices[0][1].shape[1]
                         f.write(f"Number of satellites: {num_satellites}\n")
-                        sat_labels = ', '.join([f'Sat{i+1}' for i in range(num_satellites)])
+                        sat_labels = ', '.join([f'Satellite {i+1}' for i in range(num_satellites)])
                         f.write(f"{sat_labels}\n\n")
                         print(f"Written header with {num_satellites} satellites to {file}.")
                     else:
@@ -117,7 +128,7 @@ class SatSimOutput:
                 if keys and len(keys) == max_size:
                     sat_labels = keys
                 else:
-                    sat_labels = [f'Sat{i+1}' for i in range(max_size)]
+                    sat_labels = [f'Satellite {i+1}' for i in range(max_size)]
                 writer.writerow(sat_labels)
                 # Write header for matrix data
                 writer.writerow(['Time', 'Matrix Size'])
@@ -147,6 +158,17 @@ class SatSimOutput:
 
     def get_result(self):
         # Retrieves the simulation results as a data class instance.
+        if not self.keys or len(self.keys) == 0:
+            # Auto-generate satellite names
+            if self.matrices and len(self.matrices) > 0:
+                sample_matrix = self.matrices[0][1]
+                if sample_matrix.ndim > 1:
+                    num_satellites = sample_matrix.shape[1]
+                else:
+                    num_satellites = 1  # In case of 1D matrices
+                self.keys = [f'Satellite {i+1}' for i in range(num_satellites)]
+            else:
+                self.keys = []
         return SatSimResult(
             matrices=self.matrices,
             satellite_names=self.keys,
