@@ -9,6 +9,14 @@ to text and CSV files.
 import numpy as np
 import csv
 import os
+from dataclasses import dataclass
+from typing import List, Any
+
+@dataclass
+class SatSimResult:
+    matrices: Any
+    satellite_names: List[str]
+    timestamps: List[str] = None
 
 class SatSimOutput:
     #Handles writing simulation data to text and CSV files.
@@ -38,8 +46,8 @@ class SatSimOutput:
             if self.output_file_type == "txt":
                 self.write_to_file(output_file, matrices, keys=self.keys)
             elif self.output_file_type == "csv":
-                timestamps = [timestamp for timestamp, _ in matrices]
-                self.write_to_csv(output_file, matrices, timestamps, keys=self.keys)
+                self.timestamps = [timestamp for timestamp, _ in matrices]
+                self.write_to_csv(output_file, matrices, self.timestamps, keys=self.keys)
             else:
                 print(f"Unsupported output file type: {self.output_file_type}")
         else:
@@ -53,35 +61,31 @@ class SatSimOutput:
                 print(f"No data to write to {file}.")
                 return False
 
-            # Check if file exists and is non-empty
-            file_exists = os.path.isfile(file)
-            write_header = not file_exists or os.path.getsize(file) == 0
-
-            with open(file, "a") as f:
-                if write_header:
-                    if keys and len(keys) > 0:
-                        num_satellites = len(keys)
+            # Open the file in write mode to overwrite existing content
+            with open(file, "w") as f:
+                if keys and len(keys) > 0:
+                    num_satellites = len(keys)
+                    f.write(f"Number of satellites: {num_satellites}\n")
+                    sat_labels = ' '.join(keys)
+                    f.write(f"{sat_labels}\n\n")
+                    print(f"Written header with {num_satellites} satellites to {file}.")
+                else:
+                    if matrices and len(matrices[0][1].shape) > 1:
+                        num_satellites = matrices[0][1].shape[1]
                         f.write(f"Number of satellites: {num_satellites}\n")
-                        sat_labels = ','.join(keys)
+                        sat_labels = ' '.join([f'Sat{i+1}' for i in range(num_satellites)])
                         f.write(f"{sat_labels}\n\n")
                         print(f"Written header with {num_satellites} satellites to {file}.")
                     else:
-                        if matrices and len(matrices[0][1].shape) > 1:
-                            num_satellites = matrices[0][1].shape[1]
-                            f.write(f"Number of satellites: {num_satellites}\n")
-                            sat_labels = ','.join([f'Sat{i+1}' for i in range(num_satellites)])
-                            f.write(f"{sat_labels}\n\n")
-                            print(f"Written default header with {num_satellites} satellites to {file}.")
-                        else:
-                            print("Cannot determine the number of satellites.")
-                            return False
+                        print("Cannot determine the number of satellites.")
+                        return False
 
                 for timestamp, matrix in matrices:
                     if matrix.size == 0:
                         print(f"Skipping empty matrix at {timestamp}")
                         continue
                     f.write(f"Time: {timestamp}\n")
-                    np.savetxt(f, matrix, fmt='%d', delimiter=',')
+                    np.savetxt(f, matrix, fmt='%d')
                     f.write("\n")
                     print(f"Written matrix for time {timestamp} to {file}.")
             return True
@@ -143,7 +147,9 @@ class SatSimOutput:
         self.fl_input = fl_input
 
     def get_result(self):
-        #Retrieves the simulation results.
-        return {
-            'matrices': self.matrices,
-        }
+        # Retrieves the simulation results as a data class instance.
+        return SatSimResult(
+            matrices=self.matrices,
+            satellite_names=self.keys,
+            timestamps=self.timestamps
+        )
