@@ -164,7 +164,9 @@ class TestAlgorithmHandler(unittest.TestCase):
     def test_parse_file(self):
         # Mock the file read method to avoid file I/O in the test
         def mock_read_adjacency_matrices(file_name):
-            return [("2024-10-04 15:40:00", np.array([[0, 0, 1, 1], [0, 0, 0, 0], [1, 0, 0, 1], [1, 0, 1, 0]]))]
+            matrices = [("2024-10-04 15:40:00", np.array([[0, 0, 1, 1], [0, 0, 0, 0], [1, 0, 0, 1], [1, 0, 1, 0]]))]
+            satnames = ["Satellite 1", "Satellite 2", "Satellite 3", "Satellite 4"]
+            return satnames, matrices
 
         self.mock.read_adjacency_matrices = mock_read_adjacency_matrices
         self.mock.parse_file("mock_file.txt")
@@ -196,7 +198,7 @@ class TestAlgorithmOutput(unittest.TestCase):
     def test_write_to_file(self):
         # Test writing algorithm output to a file
         self.output.write_to_file(self.algorithm_output)
-        with open('Federated_Learning_Adjacency_Matrix.txt', 'r') as file:
+        with open('FLAM.txt', 'r') as file:
             content = file.read()
             self.assertIn('Satellite 1', content)
     

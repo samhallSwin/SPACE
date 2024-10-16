@@ -17,6 +17,6 @@ test_set_and_get_result (__main__.TestAlgorithmOutput.test_set_and_get_result) .
 test_write_to_file (__main__.TestAlgorithmOutput.test_write_to_file) ... ok
 
 ----------------------------------------------------------------------
-Ran 17 tests in 0.043s
+Ran 17 tests in 0.063s
 
 OK
