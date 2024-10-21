@@ -152,7 +152,6 @@ class SatSim:
 
         # Save results using the output module
         if self.output_to_file and matrices:
-            self.output.set_output_path(os.getcwd())
             self.output.set_tle_keys(list(self.tle_data.keys()))
             self.output.save_matrices(matrices)
         else:

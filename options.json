@@ -4,8 +4,6 @@
         "end_time": "2024-09-24 14:00:00",
         "timestep": 30,
         "output_file_type": "txt",
-        "satellite_count": 4,
-        "constellation_type": "delta",
         "ground_station": {
             "location": {
                 "lat": 35.6895,
