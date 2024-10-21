@@ -29,7 +29,7 @@ class SatSimOutput:
         # Get the directory of the current script (sat_sim_output.py)
         script_dir = os.path.dirname(os.path.abspath(__file__))
         # Set output_path to 'sat_sim_output' folder within the 'sat_sim' directory
-        self.output_path = os.path.join(script_dir, 'sat_sim_output')  # Modified
+        self.output_path = os.path.join(script_dir, 'sat_sim_output')
         self.keys = None
 
     def set_output_file_type(self, file_type):
@@ -44,11 +44,11 @@ class SatSimOutput:
     def save_matrices(self, matrices):
         self.matrices = matrices
         # Generate timestamp string
-        timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")  # Added
+        timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
         # Generate unique output file name with 'sat_sim_output' and date/time
-        output_file_name = f"sat_sim_output_{timestamp_str}.{self.output_file_type}"  # Modified
+        output_file_name = f"sat_sim_output_{timestamp_str}.{self.output_file_type}"
         # Construct full output file path
-        output_file = os.path.join(self.output_path, output_file_name)  # Modified
+        output_file = os.path.join(self.output_path, output_file_name)
         print(f"Writing output to {output_file}")
 
         if not self.keys or len(self.keys) == 0:
@@ -139,14 +139,14 @@ class SatSimOutput:
                     sat_labels = [f'Satellite {i+1}' for i in range(max_size)]
                 writer.writerow(sat_labels)
                 # Write header for matrix data
-                writer.writerow(['Time', 'Matrix Size'])
+                writer.writerow(['Time'])
                 # Write each matrix with timestamp
                 for (timestamp, matrix) in matrices:
                     if matrix.size == 0:
                         print(f"Skipping empty matrix at {timestamp}")
                         continue
 
-                    writer.writerow([timestamp, matrix.shape[0]])
+                    writer.writerow([timestamp])
                     for row in matrix:
                         writer.writerow(row.tolist())
                     writer.writerow([])
