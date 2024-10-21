@@ -13,6 +13,7 @@ Changelog:
 - 2024-08-31: Added method to set result as data frame object to be passed as input FL component by Yuganya Perumal.
 - 2024-09-09: Algorithm output returns the FLAM.
 - 2024-09-21: Algorithm output re organised to remove redundancy and added timestamp and satellite name to data structure passed to FL.
+- 2024-10-14: Output file name changed to FLAM.txt as per client feedback.
 
 Usage: 
 Instantiate AlgorithmOutput and assign FLInput. 
@@ -73,7 +74,7 @@ class AlgorithmOutput(Output):
     
      # Write the Federated Learning Adjacency Matrix (FLAM) to the file.
     def write_to_file(self, algorithm_output):
-        file_name = 'Federated_Learning_Adjacency_Matrix.txt'
+        file_name = 'FLAM.txt'
         self.process_algorithm_output(algorithm_output)
         with open(file_name, 'w') as file:
             file.write(self.get_flam().to_string(index=False)) 
