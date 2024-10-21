@@ -29,7 +29,7 @@ class SatSimOutput:
         # Get the directory of the current script (sat_sim_output.py)
         script_dir = os.path.dirname(os.path.abspath(__file__))
         # Set output_path to 'sat_sim_output' folder within the 'sat_sim' directory
-        self.output_path = os.path.join(script_dir, 'sat_sim_output')
+        self.output_path = os.path.join(script_dir, 'output')
         self.keys = None
 
     def set_output_file_type(self, file_type):
@@ -46,7 +46,7 @@ class SatSimOutput:
         # Generate timestamp string
         timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
         # Generate unique output file name with 'sat_sim_output' and date/time
-        output_file_name = f"sat_sim_output_{timestamp_str}.{self.output_file_type}"
+        output_file_name = f"sat_sim_{timestamp_str}.{self.output_file_type}"
         # Construct full output file path
         output_file = os.path.join(self.output_path, output_file_name)
         print(f"Writing output to {output_file}")
