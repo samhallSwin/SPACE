@@ -19,7 +19,7 @@ import json
 from dataclasses import dataclass
 
 from interfaces.config import Config
-from algorithm_core import Algorithm
+from flomps_algorithm.algorithm_core import Algorithm
 
 @dataclass
 class AlgorithmOptions:

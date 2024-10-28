@@ -15,7 +15,7 @@ Usage:
 """
 import json
 from dataclasses import dataclass
-from fl_core import FederatedLearning
+from federated_learning.fl_core import FederatedLearning
 from model import *
 
 from interfaces.config import Config

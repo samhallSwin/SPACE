@@ -19,6 +19,8 @@ Usage:
 Instantiate AlgorithmOutput and assign FLInput. 
 """
 from interfaces.output import Output
+import os
+from datetime import datetime
 import numpy as npy
 import pandas as pds
 class AlgorithmOutput(Output):
@@ -26,6 +28,11 @@ class AlgorithmOutput(Output):
     # Constructor
     def __init__(self):
         self.flam_output = None
+
+        # Get the directory of the current script (sat_sim_output.py)
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        # Set output_path to 'sat_sim_output' folder within the 'sat_sim' directory
+        self.output_path = os.path.join(script_dir, 'output')
 
     def get_result(self):
         return self.flam_output
@@ -74,7 +81,14 @@ class AlgorithmOutput(Output):
     
      # Write the Federated Learning Adjacency Matrix (FLAM) to the file.
     def write_to_file(self, algorithm_output):
-        file_name = 'FLAM.txt'
+        # Generate timestamp string
+        timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
+        # Generate unique output file name with 'sat_sim_output' and date/time
+        output_file_name = f"flam_{timestamp_str}.txt"
+        # Construct full output file path
+        output_file = os.path.join(self.output_path, output_file_name)
+        print(f"Writing output to {output_file}")
+
         self.process_algorithm_output(algorithm_output)
-        with open(file_name, 'w') as file:
+        with open(output_file, 'w') as file:
             file.write(self.get_flam().to_string(index=False)) 

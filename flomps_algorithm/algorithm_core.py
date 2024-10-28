@@ -18,7 +18,7 @@ Changelog:
 Usage: 
 Instantiate to setup Algorithmhandler and AlgorithmConfig.
 """
-from algorithm_output import AlgorithmOutput
+from flomps_algorithm.algorithm_output import AlgorithmOutput
 import numpy as npy
 class Algorithm():
 

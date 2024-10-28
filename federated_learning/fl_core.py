@@ -22,7 +22,7 @@ import flwr as fl
 from flwr.server.driver.grpc_driver import GrpcDriver as p2p
 
 from model import Model
-from fl_output import FLOutput
+from federated_learning.fl_output import FLOutput
 
 from typing import Tuple, List
 import multiprocessing

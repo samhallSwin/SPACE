@@ -20,7 +20,7 @@ Instantiate AlgorithmHandler and assign Algorithm.
 Then run start_algorithm() with adjacency matrices. 
 """
 from interfaces.handler import Handler
-from algorithm_core import Algorithm
+from flomps_algorithm.algorithm_core import Algorithm
 import numpy as npy
 import sys
 import os

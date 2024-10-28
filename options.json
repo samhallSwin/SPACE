@@ -1,7 +1,7 @@
 {
     "sat_sim": {
-        "start_time": "2024-10-01 12:00:00",
-        "end_time": "2024-10-01 14:00:00",
+        "start_time": "2024-08-12 12:00:00",
+        "end_time": "2024-08-12 14:00:00",
         "timestep": 30,
         "output_file_type": "txt",
         "ground_station": {

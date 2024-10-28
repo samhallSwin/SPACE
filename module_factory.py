@@ -20,15 +20,15 @@ from sat_sim.sat_sim_config import SatSimConfig
 from sat_sim.sat_sim_handler import SatSimHandler
 from sat_sim.sat_sim_output import SatSimOutput
 
-from algorithm_core import Algorithm
-from algorithm_config import AlgorithmConfig
-from algorithm_handler import AlgorithmHandler
-from algorithm_output import AlgorithmOutput
+from flomps_algorithm.algorithm_core import Algorithm
+from flomps_algorithm.algorithm_config import AlgorithmConfig
+from flomps_algorithm.algorithm_handler import AlgorithmHandler
+from flomps_algorithm.algorithm_output import AlgorithmOutput
 
-from fl_core import FederatedLearning
-from fl_config import FLConfig
-from fl_handler import FLHandler
-from fl_output import FLOutput
+from federated_learning.fl_core import FederatedLearning
+from federated_learning.fl_config import FLConfig
+from federated_learning.fl_handler import FLHandler
+from federated_learning.fl_output import FLOutput
 
 class ModuleKey(Enum):
     SAT_SIM = "sat_sim"

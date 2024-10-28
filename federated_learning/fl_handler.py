@@ -16,7 +16,7 @@ Usage:
 
 """
 from interfaces.handler import Handler
-from fl_core import FederatedLearning
+from federated_learning.fl_core import FederatedLearning
 # algorithm input
 
 
