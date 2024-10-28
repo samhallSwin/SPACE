@@ -1,7 +1,7 @@
 {
     "sat_sim": {
-        "start_time": "2024-03-01 12:00:00",
-        "end_time": "2024-03-01 14:00:00",
+        "start_time": "2024-09-12 12:00:00",
+        "end_time": "2024-09-12 14:00:00",
         "timestep": 30,
         "output_file_type": "txt",
         "ground_station": {
@@ -23,7 +23,7 @@
     "federated_learning": {
         "num_rounds": 1,
         "num_clients": 4,
-        "model_type": "ResNet50",
+        "model_type": "SimpleCNN",
         "data_set": "MNIST",
         "tick": {
             "tick_configuration": {
