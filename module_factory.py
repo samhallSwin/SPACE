@@ -36,6 +36,13 @@ class ModuleKey(Enum):
     FL = "federated_learning"
     MODEL = "model"
 
+MODULE_MAPPING = {
+        'sat_sim': 'sat_sim',
+        'algorithm': 'algorithm',
+        'fl': 'federated_learning',
+        'model': 'model'
+    }
+
 # Instantiate relevant classes
 
 # Instantiate Handlers, Configs and Cores

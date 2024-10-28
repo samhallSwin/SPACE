@@ -6,6 +6,8 @@ import module_factory
 from module_factory import ModuleKey
 import cli_args
 
+from workflows import flomps
+
 def set_config_file(file):
     with open('settings.json') as f:
         options = json.load(f)
@@ -76,19 +78,12 @@ def check_standalone_module_flag(args):
     
     single_module = flags[0]
 
-    # Module mapping for fl -> federated_learning, cli takes "fl" rather than "federated_learning"
-    module_mapping = {
-        'sat_sim': 'sat_sim',
-        'algorithm': 'algorithm',
-        'fl': 'federated_learning',
-        'model': 'model'
-    }
     # error for mapping failure
-    if single_module not in module_mapping:
+    if single_module not in module_factory.MODULE_MAPPING:
         raise ValueError(f"Invalid module specified for standalone operation: {single_module}")
 
     try:
-        return ModuleKey(module_mapping[single_module])
+        return ModuleKey(module_factory.MODULE_MAPPING[single_module])
     except ValueError:
         raise ValueError(f"Invalid module specified for standalone operation: {single_module}")
 
@@ -165,7 +160,7 @@ def read_settings_cli(options, args):
         set_config_file(args.options_file)
         return
 
-def read_flomps_cli(parser, args, options):
+def read_modules_cli(parser, args, options):
     args_for_config = {k: v for k, v in args.__dict__.items() if v is not None and v is not False}
     args_for_config.pop("command")
     print(args_for_config)
@@ -182,18 +177,7 @@ def read_flomps_cli(parser, args, options):
 
     # Input file ready to be used by entry module
     return single_module_key, input_file
-    
-def build_modules(options):
-    sat_sim_module = module_factory.create_sat_sim_module()
-    sat_sim_module.config.read_options(options["sat_sim"])
-        
-    algorithm_module = module_factory.create_algorithm_module()
-    algorithm_module.config.read_options(options["algorithm"])
 
-    fl_module = module_factory.create_fl_module()
-    fl_module.config.read_options(options["federated_learning"])
-
-    return sat_sim_module, algorithm_module, fl_module
 
 if __name__ == "__main__":
     options = read_options_file()
@@ -204,42 +188,18 @@ if __name__ == "__main__":
 
     subparsers_action = parser._subparsers._group_actions[0]
     
-    # Access the 'flomps' subparser
-    flomps_parser = subparsers_action.choices['flomps']
-    # print(parser._subparsers._group_actions.)
-
     if args.command == 'settings':
         read_settings_cli(options, args)
-    elif args.command == 'flomps':
-        flomps_parser = subparsers_action.choices['flomps']
-        single_module_key, input_file = read_flomps_cli(flomps_parser, args, options)
+    else:
+        parser = subparsers_action.choices[args.command]
+        single_module_key, input_file = read_modules_cli(parser, args, options)
 
         # Check which module was selected
         if single_module_key is not None:
             # Run standalone module
-            # print("going to run standalone module")
             run_standalone_module(single_module_key, input_file, options)
         else:
-            # Run as simulation pipeline
-            
-            # Check if user would like to run an ML performance test or use existing settings
-            # (Model runtime accounted for in algorithm process)
-
-            # Create Modules
-            sat_sim_module, algorithm_module, fl_module = build_modules(options)
-            
-            # # Simulation Process
-            sat_sim_module.handler.parse_file(input_file)
-            sat_sim_module.handler.run_module()
-            matrices = sat_sim_module.output.get_result()
-            print(matrices)
-                
-            algorithm_module.handler.parse_data(matrices)
-            algorithm_module.handler.run_module()
-            flam = algorithm_module.output.get_result()
-            print(flam)
-
-            fl_module.handler.parse_data(flam)
-            fl_module.handler.run_module()
+            if args.command == 'flomps':
+                flomps.run(input_file, options)
 
    
