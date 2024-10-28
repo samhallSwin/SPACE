@@ -22,7 +22,9 @@ Then run start_algorithm() with adjacency matrices.
 from interfaces.handler import Handler
 from algorithm_core import Algorithm
 import numpy as npy
+import sys
 import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 class AlgorithmHandler(Handler):
 
     # Constructor
@@ -132,15 +134,14 @@ class AlgorithmHandler(Handler):
         if data is None:
             raise ValueError("No incoming Adjacency Martix, unable to proceed.")
         else:
-            self.adjacency_matrices = data # Remove this line when Nahid's code is merged
-            #self.adjacency_matrices = data.matrices #Reactivate when Nahid's code is merged
-            #self.sat_names = data.satellite_names #Reactivate when Nahid's code is merged
+            self.adjacency_matrices = data.matrices 
+            self.sat_names = data.satellite_names 
             if self.validate_adjacency_matrices(self.adjacency_matrices):
                 if not self.sat_names:
                     no_of_rows = self.adjacency_matrices[0][1].shape[0]
                     self.auto_generate_satellite_names(no_of_rows)
                 else:
-                    self.sat_names
+                    self.send_satNames(self.sat_names)
                 self.send_adjmatrices(self.adjacency_matrices)
 
     def parse_file(self, file_name):
