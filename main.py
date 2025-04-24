@@ -17,7 +17,7 @@ Usage:
 python main.py <workflow> <input-file> <standalone-module(?)> <module-args>
 python main.py settings <global-args>
 
-TEST COMMENT FOR GIT TOMFOOLERY
+TEST COMMENT FOR GIT TOMFOOLERY---)))
 """
 
 import sys
