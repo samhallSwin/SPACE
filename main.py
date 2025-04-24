@@ -17,6 +17,7 @@ Usage:
 python main.py <workflow> <input-file> <standalone-module(?)> <module-args>
 python main.py settings <global-args>
 
+---;
 """
 
 import sys
