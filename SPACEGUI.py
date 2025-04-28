@@ -9,32 +9,38 @@ from PyQt5.QtWidgets import (
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
-
 # ————————————————————————————————
 #  1) OpenGL Globe
 # ————————————————————————————————
 class GlobeWidget(QOpenGLWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        # Sets angle of rotation
+        #Sets angle of rotation
         self.xRot = self.yRot = 0.0
 
-
+       # self.lastPos = None
         self.quadric = None
         self.textureID = 0
 
     def initializeGL(self):
-        glClearColor(0.2, 0.3, 0.3, 1.0)  # BG colour
-        glEnable(GL_DEPTH_TEST)  # Enable 3d Rendering
-        glEnable(GL_TEXTURE_2D)  # Enable textures
+        glClearColor(0.2, 0.3, 0.3, 1.0)
+        glEnable(GL_DEPTH_TEST)
+        glEnable(GL_TEXTURE_2D)
 
-
-        # load texture
         self.textureID = self.loadTexture("Earth.png")
 
-        # Set up sphere
+        if not self.textureID:
+            glDisable(GL_TEXTURE_2D)
+
         self.quadric = gluNewQuadric()
         gluQuadricTexture(self.quadric, GL_TRUE)
+
+        # Set up perspective manually (since no resizeGL)
+        glMatrixMode(GL_PROJECTION)
+        glLoadIdentity()
+        gluPerspective(45, self.width() / (self.height() or 1), 1.0, 100.0)
+        glMatrixMode(GL_MODELVIEW)
+        glLoadIdentity()
 
     def loadTexture(self, path):
         img = QImage(path)
@@ -44,6 +50,8 @@ class GlobeWidget(QOpenGLWidget):
 
         img = img.convertToFormat(QImage.Format_RGBA8888)
         w, h = img.width(), img.height()
+        ptr = img.bits()
+        ptr.setsize(img.byteCount())  # <-- THIS LINE WAS MISSING
         arr = np.array(ptr, dtype=np.uint8).reshape(h, w, 4)
 
         tex = glGenTextures(1)
@@ -54,13 +62,14 @@ class GlobeWidget(QOpenGLWidget):
         glBindTexture(GL_TEXTURE_2D, 0)
         return tex
 
+
     def paintGL(self):
         # Clear Screen
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         glLoadIdentity()
-        # GL
+        # GL Camera
         gluLookAt(0, 0, 5, 0, 0, 0, 0, 1, 0)
-        glRotatef(-90, 1, 0, 0)
+        glRotatef(90, 1, 0, 0)
         glRotatef(self.xRot, 1, 0, 0)
         glRotatef(self.yRot, 0, 1, 0)
 
@@ -73,7 +82,6 @@ class GlobeWidget(QOpenGLWidget):
             glBindTexture(GL_TEXTURE_2D, 0)
 
 
-
 # ————————————————————————————————
 #  2) Combined Clock + Globe + Slider Widget
 # ————————————————————————————————
@@ -84,14 +92,14 @@ class TimeGlobeWidget(QWidget):
         self.time = QTime.currentTime()
 
         # Widgets
-        self.welc_lbl = QLabel("Welcome to S.P.A.C.E.")
-        self.time_lbl = QLabel(self.time.toString("hh:mm:ss"))
-        self.start_btn = QPushButton("Start")
-        self.stop_btn = QPushButton("Stop")
-        self.now_btn = QPushButton("Now")
+        self.welc_lbl     = QLabel("Welcome to S.P.A.C.E.")
+        self.time_lbl     = QLabel(self.time.toString("hh:mm:ss"))
+        self.start_btn    = QPushButton("Start")
+        self.stop_btn     = QPushButton("Stop")
+        self.now_btn      = QPushButton("Now")
         self.midnight_btn = QPushButton("Midnight")
-        self.globe = GlobeWidget()
-        self.slider = QSlider(Qt.Horizontal)
+        self.globe        = GlobeWidget()
+        self.slider       = QSlider(Qt.Horizontal)
 
         # Timer
         self.timer = QTimer(self)
@@ -134,7 +142,7 @@ class TimeGlobeWidget(QWidget):
         self.now_btn.clicked.connect(self.now)
         self.midnight_btn.clicked.connect(self.midnight)
 
-        # Set clock to start on start up
+        #Set clock to start on start up
         self.now()
         self.start()
 
@@ -144,7 +152,7 @@ class TimeGlobeWidget(QWidget):
 
     def onSlider(self, value):
         # Map slider (0–360) to globe rotation
-        self.globe.yRot = float(value)
+        self.globe.xRot = -float(value)
         self.globe.update()
 
     def start(self):
