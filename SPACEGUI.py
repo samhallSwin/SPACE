@@ -16,7 +16,7 @@ class GlobeWidget(QOpenGLWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         #Sets angle of rotation
-        self.xRot = self.yRot = 0.0
+        self.xRot = self.yRot = self.zRot = 0.0
 
        # self.lastPos = None
         self.quadric = None
@@ -67,11 +67,12 @@ class GlobeWidget(QOpenGLWidget):
         # Clear Screen
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         glLoadIdentity()
-        # GL Camera
+        # GL Camera starting position eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ
         gluLookAt(0, 0, 5, 0, 0, 0, 0, 1, 0)
-        glRotatef(90, 1, 0, 0)
+        #glRotatef(-90, 1, 0, 0)
         glRotatef(self.xRot, 1, 0, 0)
         glRotatef(self.yRot, 0, 1, 0)
+        glRotatef(self.zRot, 0, 0, 1)
 
         if self.textureID:
             glBindTexture(GL_TEXTURE_2D, self.textureID)
@@ -152,7 +153,7 @@ class TimeGlobeWidget(QWidget):
 
     def onSlider(self, value):
         # Map slider (0–360) to globe rotation
-        self.globe.xRot = -float(value)
+        self.globe.yRot = -float(value)
         self.globe.update()
 
     def start(self):
