@@ -362,6 +362,25 @@ class SatSimGUI(QMainWindow):
         satellite_count = len(positions)
         sphere_radius = 400
 
+        #set up earth sphere
+        #TODO: look into texture mapping
+        #TODO: look into screwing with mesh opacity
+        earth_radius = 6378
+        earth_sphere = vtk.vtkSphereSource()
+        earth_sphere.SetCenter(0, 0, 0)
+        earth_sphere.SetRadius(earth_radius)
+
+        mapper = vtk.vtkPolyDataMapper()
+        mapper.SetInputConnection(earth_sphere.GetOutputPort())
+        
+        actor = vtk.vtkActor()
+        actor.SetMapper(mapper)
+        actor.GetProperty().SetColor(1.0, 1.0, 1.0)
+        
+        #pngFile = "./earth.png"
+
+        self.renderer.AddActor(actor)
+
         # Generate adjacency matrix and keys
         adj_matrix, keys = self.simulation.generate_adjacency_matrix(positions)
         sat_positions = {}  # Map satellite names to positions
