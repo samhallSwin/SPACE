@@ -10,7 +10,7 @@
                 "long": 139.6917
             }
         },
-        "gui": false,
+        "gui": true,
         "module_settings": {
             "output_to_file": true
         }
