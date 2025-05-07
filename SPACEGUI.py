@@ -15,7 +15,9 @@ from OpenGL.GLU import *
 class GlobeWidget(QOpenGLWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.xRot = self.yRot = self.zRot = 0.0
+        self.xRot = 0.0
+        self.yRot = 90.0  # Start with prime meridian facing front
+        self.zRot = 0.0
         self.quadric = None
         self.textureID = 0
 
@@ -24,14 +26,17 @@ class GlobeWidget(QOpenGLWidget):
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_TEXTURE_2D)
 
-        glEnable(GL_BLEND)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-
         self.textureID = self.loadTexture("Earth.png")
         if not self.textureID:
             glDisable(GL_TEXTURE_2D)
         else:
             print(f"[OK] Texture loaded. ID: {self.textureID}")
+
+        # Flip texture vertically
+        glMatrixMode(GL_TEXTURE)
+        glLoadIdentity()
+        glScalef(1.0, -1.0, 1.0)  # Flip vertically
+        glMatrixMode(GL_MODELVIEW)
 
         self.quadric = gluNewQuadric()
         gluQuadricTexture(self.quadric, GL_TRUE)
@@ -64,8 +69,8 @@ class GlobeWidget(QOpenGLWidget):
 
     def drawCone(self, radius, height, num_slices):
         glBegin(GL_TRIANGLE_FAN)
-        glColor4f(1.0, 0.5, 0.0, 0.5)  # Orange, 50% transparent
-        glVertex3f(0, height / 2, 0)  # Cone tip
+        glColor4f(1.0, 0.5, 0.0, 0.5)  # Transparent orange
+        glVertex3f(0, height / 2, 0)
         for i in range(num_slices + 1):
             angle = i * (2.0 * np.pi) / num_slices
             x = radius * np.cos(angle)
@@ -76,38 +81,39 @@ class GlobeWidget(QOpenGLWidget):
     def paintGL(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         glLoadIdentity()
+
+        # Position the camera
         gluLookAt(0, 0, 5, 0, 0, 0, 0, 1, 0)
 
+        # FIX 1: Align poles vertically (Z → Y)
+        glRotatef(-90, 1, 0, 0)  # Rotate globe forward so poles face up/down
 
-        glRotatef(self.xRot, 1, 0, 0)
-        glRotatef(self.yRot, 0, 1, 0)  # <-- Primary rotation axis
-        glRotatef(self.zRot, 0, 0, 1)
+        # FIX 2: Rotate east–west around vertical (Z now acts as vertical)
+        glRotatef(self.yRot, 0, 0, 1)
 
-        # Earth: Opaque
+        # Draw Earth (opaque)
         if self.textureID:
             glEnable(GL_TEXTURE_2D)
             glBindTexture(GL_TEXTURE_2D, self.textureID)
 
-        glColor4f(1.0, 1.0, 1.0, 1.0)  # <- Force fully opaque color
+        glColor4f(1.0, 1.0, 1.0, 1.0)  # Ensure Earth is fully opaque
         gluSphere(self.quadric, 1.0, 40, 40)
 
         if self.textureID:
             glBindTexture(GL_TEXTURE_2D, 0)
             glDisable(GL_TEXTURE_2D)
 
-        # Cone: Transparent
+        # Draw transparent cone
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         glDepthMask(GL_FALSE)
-
         self.drawCone(radius=1.5, height=2.0, num_slices=40)
-
         glDepthMask(GL_TRUE)
         glDisable(GL_BLEND)
 
 
 # ————————————————————————————————
-#  2) Combined Clock + Globe + Slider Widget
+#  2) Time + Globe + Slider UI
 # ————————————————————————————————
 class TimeGlobeWidget(QWidget):
     def __init__(self):
@@ -137,7 +143,7 @@ class TimeGlobeWidget(QWidget):
         self.time_lbl.setFont(base)
 
         self.slider.setRange(0, 360)
-        self.slider.setValue(0)
+        self.slider.setValue(90)  # Start with Earth facing front
         self.slider.setTickInterval(30)
         self.slider.setTickPosition(QSlider.TicksBelow)
         self.slider.valueChanged.connect(self.onSlider)
@@ -167,7 +173,7 @@ class TimeGlobeWidget(QWidget):
         self.time_lbl.setText(self.time.toString("hh:mm:ss"))
 
     def onSlider(self, value):
-        self.globe.yRot = -float(value)
+        self.globe.yRot = float(value)
         self.globe.update()
 
     def start(self):
@@ -188,7 +194,7 @@ class TimeGlobeWidget(QWidget):
         self.time_lbl.setText(self.time.toString("hh:mm:ss"))
 
 # ————————————————————————————————
-#  3) Main Application Window
+#  3) Main Window
 # ————————————————————————————————
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -197,6 +203,9 @@ class MainWindow(QMainWindow):
         self.resize(1280, 720)
         self.setCentralWidget(TimeGlobeWidget())
 
+# ————————————————————————————————
+#  4) Application Entry
+# ————————————————————————————————
 if __name__ == "__main__":
     fmt = QSurfaceFormat()
     fmt.setVersion(2, 1)
