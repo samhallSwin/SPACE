@@ -24,18 +24,18 @@ class GlobeWidget(QOpenGLWidget):
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_TEXTURE_2D)
 
-        glEnable(GL_BLEND)  # Enable blending for transparency
+        glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
         self.textureID = self.loadTexture("Earth.png")
-
         if not self.textureID:
             glDisable(GL_TEXTURE_2D)
+        else:
+            print(f"[OK] Texture loaded. ID: {self.textureID}")
 
         self.quadric = gluNewQuadric()
         gluQuadricTexture(self.quadric, GL_TRUE)
 
-        # Set up perspective manually (since no resizeGL)
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
         gluPerspective(45, self.width() / (self.height() or 1), 1.0, 100.0)
@@ -64,9 +64,8 @@ class GlobeWidget(QOpenGLWidget):
 
     def drawCone(self, radius, height, num_slices):
         glBegin(GL_TRIANGLE_FAN)
-        glColor4f(1.0, 0.5, 0.0, 0.5)  # Orange color with 50% transparency
-        glVertex3f(0, height / 2, 0)  # Apex of the cone
-
+        glColor4f(1.0, 0.5, 0.0, 0.5)  # Orange, 50% transparent
+        glVertex3f(0, height / 2, 0)  # Cone tip
         for i in range(num_slices + 1):
             angle = i * (2.0 * np.pi) / num_slices
             x = radius * np.cos(angle)
@@ -78,22 +77,34 @@ class GlobeWidget(QOpenGLWidget):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         glLoadIdentity()
         gluLookAt(0, 0, 5, 0, 0, 0, 0, 1, 0)
+
+
         glRotatef(self.xRot, 1, 0, 0)
-        glRotatef(self.yRot, 0, 1, 0)
+        glRotatef(self.yRot, 0, 1, 0)  # <-- Primary rotation axis
         glRotatef(self.zRot, 0, 0, 1)
 
+        # Earth: Opaque
         if self.textureID:
+            glEnable(GL_TEXTURE_2D)
             glBindTexture(GL_TEXTURE_2D, self.textureID)
 
+        glColor4f(1.0, 1.0, 1.0, 1.0)  # <- Force fully opaque color
         gluSphere(self.quadric, 1.0, 40, 40)
 
         if self.textureID:
             glBindTexture(GL_TEXTURE_2D, 0)
+            glDisable(GL_TEXTURE_2D)
 
-        # Draw transparent cone
-        glDepthMask(GL_FALSE)  # Disable depth writing for transparency
+        # Cone: Transparent
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        glDepthMask(GL_FALSE)
+
         self.drawCone(radius=1.5, height=2.0, num_slices=40)
-        glDepthMask(GL_TRUE)  # Re-enable depth writing
+
+        glDepthMask(GL_TRUE)
+        glDisable(GL_BLEND)
+
 
 # ————————————————————————————————
 #  2) Combined Clock + Globe + Slider Widget
