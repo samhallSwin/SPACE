@@ -26,7 +26,7 @@ Example:
     output.evaluate_model(trained_model)
     accuracy = output.get_result()
     output.log_result("results.txt")
-    output.write_to_file("results.json", format="json")
+    output.write_to_file("results.json", format="json") 
 """
 
 import json
