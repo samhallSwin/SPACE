@@ -12,8 +12,9 @@ Changelog:
 - 2024-08-11: Refactored to adhere to OOP principals
 - 2024-09-16: Offloaded Model Manger to model.py, Refactored Standalone
 - 2025-05-07: Remade file: Added TensorFlow + PyTorch conversion and saving functionality. Removed all Flower functionality
+- 2025-05-09: Added custom metrics and saved results to files:Gagandeep Singh
 
-Usage: 
+Usage:
 Run this file directly to start a Multithreading instance of Tensorflow FL with the chosen number of clients rounds and model.
 
 """
@@ -24,6 +25,13 @@ import torch.optim as optim
 from torchvision import datasets, transforms
 from typing import List
 import numpy as np
+import sys
+import os
+from datetime import datetime
+
+# Add the project root directory to the Python path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from federated_learning.fl_output import FLOutput
 
 class FederatedLearning:
     """Custom Federated Learning engine."""
@@ -117,8 +125,39 @@ if __name__ == "__main__":
     model_type = "SimpleCNN"
     data_set = "MNIST"
 
+    # Create timestamp for unique output files
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    results_dir = os.path.join(os.path.dirname(__file__), "results_from_output")
+
+    # Ensure results directory exists
+    os.makedirs(results_dir, exist_ok=True)
+
     # Initialize and run the FederatedLearning instance
     fl_instance = FederatedLearning()
     fl_instance.set_num_rounds(num_rounds)
     fl_instance.set_num_clients(num_clients)
-    fl_instance.run()    
+    fl_instance.run()
+
+    # Evaluate the model
+    output = FLOutput()
+    output.evaluate_model(fl_instance.global_model)
+
+    # Save results with timestamp
+    log_file = os.path.join(results_dir, f"results_{timestamp}.log")
+    metrics_file = os.path.join(results_dir, f"metrics_{timestamp}.json")
+    model_file = os.path.join(results_dir, f"model_{timestamp}.pt")
+
+    # Log results and save files
+    output.log_result(log_file)
+    output.write_to_file(metrics_file, format="json")
+    output.save_model(model_file)
+
+    # Add custom metrics
+    output.add_metric("client_variance", 0.023)
+    output.compute_confusion_matrix()
+    output.compute_per_class_metrics()
+
+    print(f"\nResults have been saved to the following files:")
+    print(f"Log file: {log_file}")
+    print(f"Metrics file: {metrics_file}")
+    print(f"Model file: {model_file}")
