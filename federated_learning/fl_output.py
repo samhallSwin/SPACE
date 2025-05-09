@@ -14,6 +14,7 @@ Changelog:
               - Added JSON and text logging capabilities
               - Included standalone test functionality
               - Enhanced error handling
+- 2025-05-09: Added custom metrics and saved results to files
 
 Usage:
 1. Instantiate FLOutput with a test dataset
@@ -28,7 +29,6 @@ Example:
     output.log_result("results.txt")
     output.write_to_file("results.json", format="json")
 """
-#hello world
 
 import json
 import time
@@ -40,6 +40,10 @@ import torch.nn as nn
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 import numpy as np
+import sys
+
+# Add the project root directory to the Python path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from interfaces.output import Output
 
 
@@ -382,6 +386,13 @@ def run_test():
     """
     print("Running standalone test for FLOutput...")
 
+    # Create timestamp for unique output files
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    results_dir = os.path.join(os.path.dirname(__file__), "results_from_output")
+
+    # Ensure results directory exists
+    os.makedirs(results_dir, exist_ok=True)
+
     # Create a simple model for testing
     class SimpleModel(nn.Module):
         def __init__(self):
@@ -403,9 +414,14 @@ def run_test():
     print("Evaluating model...")
     metrics = output.evaluate_model(model, processing_time)
 
+    # Create output file paths with timestamp
+    log_file = os.path.join(results_dir, f"output_test_{timestamp}.log")
+    metrics_file = os.path.join(results_dir, f"output_test_{timestamp}.json")
+    model_file = os.path.join(results_dir, f"output_test_{timestamp}.pt")
+
     # Log results
     print("\nLogging results...")
-    output.log_result()
+    output.log_result(log_file)
 
     # Add custom metrics
     output.add_metric("custom_metric_1", 0.95)
@@ -420,12 +436,13 @@ def run_test():
 
     # Write results to files
     print("\nWriting results to files...")
-    output.write_to_file("results.json", "json")
-    output.write_to_file("results.txt", "txt")
+    output.write_to_file(metrics_file, "json")
+    output.save_model(model_file)
 
-    # Save model
-    print("\nSaving model...")
-    output.save_model("model.pt")
+    print(f"\nResults have been saved to the following files:")
+    print(f"Log file: {log_file}")
+    print(f"Metrics file: {metrics_file}")
+    print(f"Model file: {model_file}")
 
     print("\nTest completed successfully!")
 

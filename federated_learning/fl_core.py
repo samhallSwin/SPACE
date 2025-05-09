@@ -12,8 +12,9 @@ Changelog:
 - 2024-08-11: Refactored to adhere to OOP principals
 - 2024-09-16: Offloaded Model Manger to model.py, Refactored Standalone
 - 2025-05-07: Remade file: Added TensorFlow + PyTorch conversion and saving functionality. Removed all Flower functionality
+- 2025-05-09: Added processing time tracking for rounds and overall training
 
-Usage: 
+Usage:
 Run this file directly to start a Multithreading instance of Tensorflow FL with the chosen number of clients rounds and model.
 
 """
@@ -22,8 +23,16 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torchvision import datasets, transforms
-from typing import List
+from typing import List, Dict
 import numpy as np
+import sys
+import os
+import time
+from datetime import datetime
+
+# Add the project root directory to the Python path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from federated_learning.fl_output import FLOutput
 
 class FederatedLearning:
     """Custom Federated Learning engine."""
@@ -33,6 +42,8 @@ class FederatedLearning:
         self.num_clients = None
         self.global_model = None
         self.client_data = []
+        self.round_times = {}  # Dictionary to store processing times for each round
+        self.total_training_time = 0  # Total training time
 
     def set_num_rounds(self, rounds: int) -> None:
         self.num_rounds = rounds
@@ -91,13 +102,29 @@ class FederatedLearning:
         self.global_model.load_state_dict(global_state)
         print("Global model updated via federated averaging.")
 
+    def get_round_metrics(self) -> Dict:
+        """Get metrics for the current training session."""
+        return {
+            "round_times": self.round_times,
+            "total_training_time": self.total_training_time,
+            "average_round_time": self.total_training_time / self.num_rounds if self.num_rounds > 0 else 0,
+            "timestamp": datetime.now().isoformat()
+        }
+
     def run(self):
         """Run the federated learning process."""
         self.initialize_data()
         self.initialize_model()
 
+        # Start total training time
+        total_start_time = time.time()
+
         for round_num in range(self.num_rounds):
             print(f"Starting round {round_num + 1}...")
+
+            # Start round time
+            round_start_time = time.time()
+
             client_models = []
             for client_id, data_loader in enumerate(self.client_data):
                 print(f"Training client {client_id + 1}...")
@@ -105,9 +132,20 @@ class FederatedLearning:
                 client_models.append(client_model)
 
             self.federated_averaging(client_models)
-            print(f"Round {round_num + 1} completed.")
 
-        print("Federated learning process completed.")
+            # Calculate round time
+            round_time = time.time() - round_start_time
+            self.round_times[f"round_{round_num + 1}"] = round_time
+
+            print(f"Round {round_num + 1} completed in {round_time:.2f} seconds.")
+
+        # Calculate total training time
+        self.total_training_time = time.time() - total_start_time
+        print(f"\nFederated learning process completed in {self.total_training_time:.2f} seconds.")
+        print("\nRound-wise processing times:")
+        for round_num, round_time in self.round_times.items():
+            print(f"{round_num}: {round_time:.2f} seconds")
+        print(f"Average round time: {self.total_training_time/self.num_rounds:.2f} seconds")
 
 if __name__ == "__main__":
     """Standalone entry point for testing FederatedLearning."""
@@ -117,8 +155,39 @@ if __name__ == "__main__":
     model_type = "SimpleCNN"
     data_set = "MNIST"
 
+    # Create timestamp for unique output files
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    results_dir = os.path.join(os.path.dirname(__file__), "results_from_output")
+
+    # Ensure results directory exists
+    os.makedirs(results_dir, exist_ok=True)
+
     # Initialize and run the FederatedLearning instance
     fl_instance = FederatedLearning()
     fl_instance.set_num_rounds(num_rounds)
     fl_instance.set_num_clients(num_clients)
-    fl_instance.run()    
+    fl_instance.run()
+
+    # Evaluate the model
+    output = FLOutput()
+    output.evaluate_model(fl_instance.global_model, fl_instance.total_training_time)
+
+    # Add timing metrics
+    timing_metrics = fl_instance.get_round_metrics()
+    for metric_name, value in timing_metrics.items():
+        output.add_metric(metric_name, value)
+
+    # Save results with timestamp
+    log_file = os.path.join(results_dir, f"results_{timestamp}.log")
+    metrics_file = os.path.join(results_dir, f"metrics_{timestamp}.json")
+    model_file = os.path.join(results_dir, f"model_{timestamp}.pt")
+
+    # Log results and save files
+    output.log_result(log_file)
+    output.write_to_file(metrics_file, format="json")
+    output.save_model(model_file)
+
+    print(f"\nResults have been saved to the following files:")
+    print(f"Log file: {log_file}")
+    print(f"Metrics file: {metrics_file}")
+    print(f"Model file: {model_file}")
