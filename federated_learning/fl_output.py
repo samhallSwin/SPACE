@@ -29,7 +29,6 @@ Example:
     output.log_result("results.txt")
     output.write_to_file("results.json", format="json")
 """
-#hello world
 
 import json
 import time
@@ -42,7 +41,6 @@ from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 import numpy as np
 import sys
-import os
 
 # Add the project root directory to the Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
