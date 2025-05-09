@@ -11,7 +11,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_pdf import PdfPages
-from PyQt5.QtWidgets import QMainWindow, QPushButton, QVBoxLayout, QWidget, QLabel, QLineEdit, QMessageBox, QFileDialog, QSlider, QSizePolicy, QHBoxLayout, QFrame, QGraphicsOpacityEffect
+from PyQt5.QtWidgets import QMainWindow, QPushButton, QVBoxLayout, QWidget, QLabel, QLineEdit, QMessageBox, QFileDialog, QSlider, QSizePolicy, QHBoxLayout, QFrame, QGraphicsOpacityEffect, QScrollArea
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QRect, QPropertyAnimation, QEasingCurve
 
 from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
@@ -70,6 +70,8 @@ class DropLabel(QLabel):
         """)
 
 class CollapsibleOverlay(QFrame):
+    resizeSignal = pyqtSignal(int)  # Emits new height
+
     def __init__(self, parent=None):
         
         self.full_height = 150  # Total height when expanded
@@ -126,6 +128,8 @@ class CollapsibleOverlay(QFrame):
 
         self.toggle_button.setText("▲ Collapse" if self.expanded else "▼ Expand")
 
+        self.resizeSignal.emit(end_height)
+
         if self.expanded:
             self.content_widget.setVisible(True)
 
@@ -169,6 +173,77 @@ class CollapsibleOverlay(QFrame):
                 self.set_button_opacity(0.5)
         return super().eventFilter(source, event)
 
+#------------------------------------------------------------------------------------------------------------------------------
+
+class TLEDisplay(QFrame):
+    def __init__(self, parent=None):
+        self.full_width = 300  # Total width when expanded
+        self.collapsed_width = 20
+        self.control_panel_height_reduction = 92 #TODO: find a better way to access this infomration
+
+        self.overlay = parent.overlay
+        self.parent = parent
+        super().__init__(parent)
+        self.setStyleSheet("background-color: #f0f0f0; border: 1px solid gray;")
+        self.setParent(parent)
+        self.setVisible(True)
+
+        self.set_up_content_window()
+        self.set_up_scroll_box()
+        
+        self.toggle_height(self.overlay.height())
+        self.overlay.resizeSignal.connect(self.toggle_height)
+
+    def set_up_content_window(self):
+        self.content_window = QWidget(self)
+        self.content_window.setGeometry(0, 0, self.full_width, self.parent.height() - self.overlay.height() - self.control_panel_height_reduction)
+        self.content_window.setStyleSheet("background-color: #dddddd;")
+        self.content_window.setVisible(True)
+
+    def set_up_scroll_box(self):
+    # Use a vertical layout
+        main_layout = QVBoxLayout(self.content_window)
+        main_layout.setContentsMargins(10, 10, 10, 10)
+        main_layout.setSpacing(10)
+
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+
+        inner_widget = QWidget()
+        self.inner_layout = QVBoxLayout(inner_widget)
+        
+        scroll_area.setWidget(inner_widget)
+        main_layout.addWidget(scroll_area)
+
+    def populate_scroll_items(self, tle_data):
+        #clear all existing items
+        #TODO: update existing items, then Add/Clear additional items as needed.
+        for i in reversed(range(self.inner_layout.count())):
+            widget_to_remove = self.inner_layout.itemAt(i).widget()
+
+            self.inner_layout.removeWidget(widget_to_remove)
+
+            widget_to_remove.setParent(None)
+
+        print(str(tle_data))
+        for i in tle_data:
+            item = QLabel(str(i))
+            item.setMinimumHeight(150)
+            self.inner_layout.addWidget(item)
+
+    def toggle_height(self, height_offset):
+        
+        target_height = self.parent.height() - height_offset - self.control_panel_height_reduction
+
+        self.setGeometry(0, height_offset, self.full_width, target_height)  # Start with just the button height
+
+class TLESlot(QWidget):
+    def __init__(self):
+        super.__init__()
+    
+
+#------------------------------------------------------------------------------------------------------------------------------
+
 class SatSimGUI(QMainWindow):
     #The main GUI class for the Satellite Simulator.
     gui_initialized = False
@@ -188,6 +263,10 @@ class SatSimGUI(QMainWindow):
         self.set_up_dropdown()
 
         self.set_up_control_panel()
+
+        self.set_up_tle_display()
+
+        self.populate_tle_display()
 
         # Mark the GUI as initialized
         SatSimGUI.gui_initialized = True
@@ -236,17 +315,11 @@ class SatSimGUI(QMainWindow):
         self.vtkWidget.setMinimumHeight(400)
         self.main_layout.addWidget(self.vtkWidget, stretch=10)
 
-    #DEBUG TESTING - Remove for final sumbission
-    def set_up_display_label(self):
-        self.label = QLabel("Main window content underneath the dropdown")
-        self.label.setAlignment(Qt.AlignCenter)
-        self.main_layout.addWidget(self.label)
-
     def set_up_control_panel(self):
-        self.control_widget = QHBoxLayout()
+        self.control_panel = QHBoxLayout()
 
         self.start_time_input = QLineEdit(self.start_time.strftime("%Y-%m-%d %H:%M:%S"))
-        self.control_widget.addWidget(self.start_time_input)
+        self.control_panel.addWidget(self.start_time_input)
 
         slider_widget = QVBoxLayout()
 
@@ -263,13 +336,22 @@ class SatSimGUI(QMainWindow):
         btn_update.clicked.connect(self.update_orbit)
         slider_widget.addWidget(btn_update)
 
-        self.control_widget.addLayout(slider_widget)
+        self.control_panel.addLayout(slider_widget)
 
         self.end_time_input = QLineEdit(self.end_time.strftime("%Y-%m-%d %H:%M:%S"))
-        self.control_widget.addWidget(self.end_time_input)
+        self.control_panel.addWidget(self.end_time_input)
         
-        self.main_layout.addLayout(self.control_widget)
+        self.main_layout.addLayout(self.control_panel)
+
+    def set_up_tle_display(self):
+        self.tle_display = TLEDisplay(self)
+        self.tle_display.raise_()
+
+
     #endregion
+
+    def populate_tle_display(self):
+        self.tle_display.populate_scroll_items(self.simulation.tle_data)
 
     #region - events
     def on_slider_change(self, value):
@@ -288,6 +370,7 @@ class SatSimGUI(QMainWindow):
         positions = self.simulation.get_satellite_positions(self.start_time)
 
         self.update_visualization(self.start_time)
+        self.populate_tle_display()
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -361,25 +444,6 @@ class SatSimGUI(QMainWindow):
                   float('inf'), float('-inf')]
         satellite_count = len(positions)
         sphere_radius = 400
-
-        #set up earth sphere
-        #TODO: look into texture mapping
-        #TODO: look into screwing with mesh opacity
-        earth_radius = 6378
-        earth_sphere = vtk.vtkSphereSource()
-        earth_sphere.SetCenter(0, 0, 0)
-        earth_sphere.SetRadius(earth_radius)
-
-        mapper = vtk.vtkPolyDataMapper()
-        mapper.SetInputConnection(earth_sphere.GetOutputPort())
-        
-        actor = vtk.vtkActor()
-        actor.SetMapper(mapper)
-        actor.GetProperty().SetColor(1.0, 1.0, 1.0)
-        
-        #pngFile = "./earth.png"
-
-        self.renderer.AddActor(actor)
 
         # Generate adjacency matrix and keys
         adj_matrix, keys = self.simulation.generate_adjacency_matrix(positions)
