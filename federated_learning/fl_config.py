@@ -62,6 +62,7 @@ class FLConfig(Config):
         self.model.set_data_set(self.options["data_set"])
         self.fl_core.set_model(self.model)
         print("MODEL setters called")
+<<<<<<< Updated upstream
 
 
 # fl_core.py (append to the existing class)
@@ -72,4 +73,14 @@ def set_flam(self, flam_data):
     self.flam_data = flam_data
     print("FL Core received FLAM data:", flam_data)
 
+=======
+>>>>>>> Stashed changes
 
+
+# fl_core.py (append to the existing class)
+
+# Called by FLConfig to hand off algorithm (FLAM) settings.
+# Saves the settings to self.flam_data and shows them in the console.
+def set_flam(self, flam_data):
+    self.flam_data = flam_data
+    print("FL Core received FLAM data:", flam_data)
