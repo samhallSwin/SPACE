@@ -1,16 +1,26 @@
 """
 Filename: fl_config.py
-Description: Converts Federated Learning JSON options to local data types and configures core Federated Learning module via setters. 
-Author: Elysia Guglielmo and Connor Bett
-Date: 2024-08-02
+Description: Converts Federated Learning JSON options to local data types, passes model and algorithm (FLAM) config to the core engine, and sets them using dedicated setters.
+Author: Kimsakona SOK
+Date: 10/05/2025
 Version: 1.0
-Python Version: 
+Python Version: 3.10.0
 
 Changelog:
 - 2024-08-02: Initial creation.
 - 2024-09-16: Supported standalone execution, refactored Model Setters
+- 2025-05-10: Added FLAM algorithm data passing to core and print confirmation.
 
-Usage: 
+Usage:
+- Create a FLConfig instance with a FederatedLearning object and optional algorithm (FLAM)
+- Call read_options() with a config dict to initialize model and training settings
+- Algorithm data (if provided) is passed to the core using set_flam()
+
+Example:
+    fl_core = FederatedLearning()
+    flam = {"key": "alg1", "node_processing_time": 5, "search_depth": 2}
+    config = FLConfig(fl_core, algorithm=flam)
+    config.read_options({"num_rounds": 5, "num_clients": 3, "model_type": "SimpleModel", "data_set": "MNIST"})
 
 """
 
