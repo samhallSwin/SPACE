@@ -11,8 +11,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_pdf import PdfPages
-from PyQt5.QtWidgets import QMainWindow, QPushButton, QVBoxLayout, QWidget, QLabel, QLineEdit, QMessageBox, QFileDialog, QSlider, QSizePolicy, QHBoxLayout, QFrame, QGraphicsOpacityEffect, QScrollArea
-from PyQt5.QtCore import Qt, QThread, pyqtSignal, QRect, QPropertyAnimation, QEasingCurve
+from PyQt5.QtWidgets import QMainWindow, QPushButton, QVBoxLayout, QCheckBox, QWidget, QLabel, QLineEdit, QMessageBox, QFileDialog, QSlider, QSizePolicy, QHBoxLayout, QFrame, QGraphicsOpacityEffect, QScrollArea
+from PyQt5.QtCore import Qt, QThread, pyqtSignal, QRect, QPropertyAnimation, QEasingCurve, QSize
 
 from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 import vtk
@@ -83,18 +83,6 @@ class CollapsibleOverlay(QFrame):
         self.setGeometry(0, 0, parent.width(), self.collapsed_height)  # Start with just the button height
         self.setVisible(True)
 
-        self.toggle_button = QPushButton("▼ Expand", self)
-        self.toggle_button.setGeometry(0, 0, parent.width(), self.collapsed_height)
-        self.toggle_button.clicked.connect(self.toggle)
-
-        # Add opacity effect
-        self.opacity_effect = QGraphicsOpacityEffect(self.toggle_button)
-        self.toggle_button.setGraphicsEffect(self.opacity_effect)
-        self.opacity_effect.setOpacity(1.0)
-
-        # Set up enter/leave events
-        self.toggle_button.installEventFilter(self)
-
         self.content_widget = QWidget(self)
         self.content_widget.setGeometry(0, self.collapsed_height, parent.width(), self.full_height - self.collapsed_height)
         self.content_widget.setStyleSheet("background-color: #dddddd;")
@@ -114,6 +102,18 @@ class CollapsibleOverlay(QFrame):
         self.right_content.setWordWrap(True)
         self.content_layout.addWidget(self.right_content)
         
+        self.toggle_button = QPushButton("▼ Expand", self)
+        self.toggle_button.setGeometry(0, 0, parent.width(), self.collapsed_height)
+        self.toggle_button.clicked.connect(self.toggle)
+
+        # Add opacity effect
+        self.opacity_effect = QGraphicsOpacityEffect(self.toggle_button)
+        self.toggle_button.setGraphicsEffect(self.opacity_effect)
+        self.opacity_effect.setOpacity(1.0)
+
+        # Set up enter/leave events
+        self.toggle_button.installEventFilter(self)
+
         #AddAnimation when opening or closing widget
         self.animation = QPropertyAnimation(self, b"geometry")
         self.animation.setDuration(300)
@@ -180,6 +180,7 @@ class TLEDisplay(QFrame):
         self.full_width = 300  # Total width when expanded
         self.collapsed_width = 20
         self.control_panel_height_reduction = 92 #TODO: find a better way to access this infomration
+        self.expanded = True
 
         self.overlay = parent.overlay
         self.parent = parent
@@ -189,10 +190,25 @@ class TLEDisplay(QFrame):
         self.setVisible(True)
 
         self.set_up_content_window()
+        self.set_up_collapse_Button()
+
         self.set_up_scroll_box()
         
         self.toggle_height(self.overlay.height())
         self.overlay.resizeSignal.connect(self.toggle_height)
+
+    def set_up_collapse_Button(self):
+        self.toggle_button = QPushButton("▼ Expand", self)
+        self.toggle_button.setGeometry(0, 0, 20, self.height())
+
+        self.opacity_effect = QGraphicsOpacityEffect(self.toggle_button)
+        self.toggle_button.setGraphicsEffect(self.opacity_effect)
+        self.opacity_effect.setOpacity(1.0)
+
+        # Set up enter/leave events
+        self.toggle_button.installEventFilter(self)
+
+        self.toggle_button.clicked.connect(self.toggle_width)
 
     def set_up_content_window(self):
         self.content_window = QWidget(self)
@@ -225,22 +241,82 @@ class TLEDisplay(QFrame):
 
             widget_to_remove.setParent(None)
 
-        print(str(tle_data))
         for i in tle_data:
-            item = QLabel(str(i))
-            item.setMinimumHeight(150)
-            self.inner_layout.addWidget(item)
+            name = str(i)
+            line_1 = tle_data[str(i)][0]
+            line_2 = tle_data[str(i)][1]
+            print("name: " + str(name) + ", line 1: " + str(line_1) + ", line 2: " + str(line_2))
 
+            self.inner_layout.addWidget(TLESlot(name, line_1, line_2))
+
+    def toggle_width(self):
+        self.expanded = not self.expanded
+
+        #start_rect = self.geometry()
+        end_width = self.full_width if self.expanded else self.collapsed_width
+        #end_rect = QRect(0, 0, self.parent().width(), end_height)
+        self.setGeometry(0, 20, end_width, self.height())  # Start with just the button height
+
+        self.content_window.setVisible(self.expanded)
+        self.toggle_button.setText("▲ Collapse" if self.expanded else "▼ Expand")
+        
     def toggle_height(self, height_offset):
         
         target_height = self.parent.height() - height_offset - self.control_panel_height_reduction
 
         self.setGeometry(0, height_offset, self.full_width, target_height)  # Start with just the button height
+        self.toggle_button.setGeometry(0, 0, 20, target_height)
 
 class TLESlot(QWidget):
-    def __init__(self):
-        super.__init__()
-    
+    def __init__(self, name, line_1, line_2):
+        self.enabled = True
+
+        self.tle_name = name
+        self.tle_line_1 = line_1
+        self.tle_line_2 = line_2
+
+        super().__init__()
+        self.setMinimumHeight(150)
+
+        self.layout = QHBoxLayout(self)
+        
+        self.set_up_display_layer()
+
+    def set_up_display_layer(self):
+        #checkbox
+        self.checkbox = QCheckBox("")
+        self.checkbox.setToolTip("Enable" if self.enabled else "Disable")
+
+        indicator_size = 15 # Default checkbox indicator size in most styles
+        self.checkbox.setFixedSize(QSize(indicator_size, indicator_size))
+        
+        # Optional: Remove padding/margin (works in many styles)
+        self.checkbox.setStyleSheet("QCheckBox::indicator { margin: 0px; }")
+
+        self.checkbox.stateChanged.connect(self.checkbox_changed)
+
+        self.layout.addWidget(self.checkbox)
+
+        #label
+        item = QLabel(self.tle_name)
+        self.layout.addWidget(item)
+
+        #text
+        self.toggle_button = QPushButton("▼" if self.enabled else "▲", self)
+        self.toggle_button.setGeometry(0, 0, 20, 20)
+        self.toggle_button.clicked.connect(self.toggle)
+        self.layout.addWidget(self.toggle_button)
+
+    def checkbox_changed(self, state):
+        if state == 2:  # 2 = Checked, 0 = Unchecked, 1 = Partially checked
+            self.enabled = True
+        else:
+            self.enabled = False
+
+        self.checkbox.setToolTip("Enable" if self.enabled else "Disable")
+
+    def toggle(self):
+        self.toggle_button = QPushButton("▼" if self.enabled else "▲", self)
 
 #------------------------------------------------------------------------------------------------------------------------------
 
