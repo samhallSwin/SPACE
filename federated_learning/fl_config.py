@@ -43,11 +43,13 @@ class Config:
         model_type=self.options["model_type"],
         data_set=self.options["data_set"]
         )
+        print ("FL setters called")
 
     def set_federated_learning_model(self) -> None:
         self.model.set_model_type(self.options["model_type"])
         self.model.set_data_set(self.options["data_set"])
         self.fl_core.set_model(self.model)
+        print ("MODEL setters called")
 
 if __name__ == "__main__":
     from federated_learning.fl_core import FederatedLearning
