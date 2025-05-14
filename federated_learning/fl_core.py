@@ -147,6 +147,11 @@ class FederatedLearning:
             print(f"{round_num}: {round_time:.2f} seconds")
         print(f"Average round time: {self.total_training_time/self.num_rounds:.2f} seconds")
 
+    def set_model(self, model):
+        self.global_model = model
+        print("Model set in FL core.")
+
+
 if __name__ == "__main__":
     """Standalone entry point for testing FederatedLearning."""
     # Default customization values
