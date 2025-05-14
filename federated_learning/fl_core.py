@@ -151,6 +151,14 @@ class FederatedLearning:
         self.global_model = model
         print("Model set in FL core.")
 
+    def print_config_summary(self, model_type: str, data_set: str) -> None:
+        print("\n----Printing JSON options----")
+        print(f"Number of rounds: {self.num_rounds}")
+        print(f"Number of clients: {self.num_clients}")
+        print(f"Model type: {model_type}")
+        print(f"Dataset: {data_set}")
+        print("----JSON options printed successfully----\n")
+
 
 if __name__ == "__main__":
     """Standalone entry point for testing FederatedLearning."""
