@@ -386,12 +386,11 @@ def run_test():
     """
     print("Running standalone test for FLOutput...")
 
-    # Create timestamp for unique output files
+    # Create timestamped run folder
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    results_dir = os.path.join(os.path.dirname(__file__), "results_from_output")
-
-    # Ensure results directory exists
-    os.makedirs(results_dir, exist_ok=True)
+    results_root = os.path.join(os.path.dirname(__file__), "results_from_output")
+    run_dir = os.path.join(results_root, timestamp)
+    os.makedirs(run_dir, exist_ok=True)
 
     # Create a simple model for testing
     class SimpleModel(nn.Module):
@@ -407,17 +406,15 @@ def run_test():
     model = SimpleModel()
     output = FLOutput()
 
-    # Simulate processing time
+    # Simulate processing time and evaluate model
     processing_time = 10.5  # seconds
-
-    # Evaluate model
     print("Evaluating model...")
-    metrics = output.evaluate_model(model, processing_time)
+    output.evaluate_model(model, processing_time)
 
-    # Create output file paths with timestamp
-    log_file = os.path.join(results_dir, f"output_test_{timestamp}.log")
-    metrics_file = os.path.join(results_dir, f"output_test_{timestamp}.json")
-    model_file = os.path.join(results_dir, f"output_test_{timestamp}.pt")
+    # Create output file paths in this run folder
+    log_file = os.path.join(run_dir, f"output_test_{timestamp}.log")
+    metrics_file = os.path.join(run_dir, f"output_test_{timestamp}.json")
+    model_file = os.path.join(run_dir, f"output_test_{timestamp}.pt")
 
     # Log results
     print("\nLogging results...")
@@ -429,20 +426,27 @@ def run_test():
 
     # Compute additional metrics
     print("\nComputing confusion matrix...")
-    confusion_matrix = output.compute_confusion_matrix()
+    output.compute_confusion_matrix()
 
     print("\nComputing per-class metrics...")
-    per_class_metrics = output.compute_per_class_metrics()
+    output.compute_per_class_metrics()
 
     # Write results to files
     print("\nWriting results to files...")
     output.write_to_file(metrics_file, "json")
     output.save_model(model_file)
 
-    print(f"\nResults have been saved to the following files:")
-    print(f"Log file: {log_file}")
-    print(f"Metrics file: {metrics_file}")
-    print(f"Model file: {model_file}")
+    print("\nResults have been saved to:")
+    print("Log file:", log_file)
+    print("Metrics file:", metrics_file)
+    print("Model file:", model_file)
+
+    # Generate visualizations for this run
+    from federated_learning.fl_visualization import FLVisualization
+    print("\nGenerating visualizations...")
+    viz = FLVisualization(results_dir=run_dir)
+    viz.visualize_from_json(metrics_file)
+    print(f"Visualizations saved under {run_dir}")
 
     print("\nTest completed successfully!")
 
