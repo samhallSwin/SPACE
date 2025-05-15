@@ -31,34 +31,50 @@ class FLVisualization:
         with open(metrics_file, 'r') as f:
             metrics = json.load(f)
         # Extract core metrics
-        accuracy = metrics.get('accuracy', 0)
         # Correctly extract round_times from additional_metrics
-        round_times = metrics.get('additional_metrics', {}).get('round_times', {})
         # Generate plots and dashboard under the same run folder
-        self._create_training_progress_plot(metrics_file, round_times, accuracy)
         self._create_dashboard(metrics_file, metrics)
         # If additional run JSONs exist, optional comparison can be invoked separately
 
-    def _create_training_progress_plot(self, metrics_file: str, round_times: dict, accuracy: float):
-        """Create interactive training progress visualization"""
-        if not round_times:
-            return
-        runs_folder = os.path.dirname(metrics_file)
-        rounds = list(range(1, len(round_times) + 1))
-        times = list(round_times.values())
-        # Build Plotly figure
-        fig = make_subplots(rows=2, cols=1, subplot_titles=('Round Processing Times','Model Performance'), vertical_spacing=0.15)
-        fig.add_trace(go.Bar(x=rounds, y=times, name='Processing Time', marker_color='lightblue'), row=1, col=1)
-        fig.add_trace(go.Scatter(x=['Final'], y=[accuracy], mode='markers', marker=dict(size=20, color='green'), name=f'Accuracy: {accuracy:.2f}%'), row=2, col=1)
-        fig.update_layout(title='Federated Learning Training Progress', showlegend=True, height=600)
-        out_path = os.path.join(runs_folder, 'training_progress.html')
-        fig.write_html(out_path)
-        print(f"Training progress saved to {out_path}")
-
     def _create_dashboard(self, metrics_file: str, metrics: dict):
-        """Create a comprehensive HTML dashboard of metrics."""
+        """Create a comprehensive HTML dashboard of metrics and training progress."""
         runs_folder = os.path.dirname(metrics_file)
         timestamp = metrics.get('timestamp', '')
+        round_accuracies = metrics.get('additional_metrics', {}).get('round_accuracies', [])
+        num_rounds = len(round_accuracies)
+
+        # Build Plotly figure for training progress
+        rounds = list(range(1, num_rounds + 1))
+        times = list(metrics.get('additional_metrics', {}).get('round_times', {}).values())
+
+        fig = make_subplots(
+            rows=2, cols=1,
+            subplot_titles=('Round Processing Times', 'Round Accuracies'),
+            vertical_spacing=0.15
+        )
+
+        # Add bar plot for processing times
+        fig.add_trace(
+            go.Bar(x=rounds, y=times, name='Processing Time', marker_color='lightblue'),
+            row=1, col=1
+        )
+
+        # Add line plot for accuracies
+        fig.add_trace(
+            go.Scatter(x=rounds, y=round_accuracies, mode='lines+markers', name='Accuracy', line=dict(color='green', width=2)),
+            row=2, col=1
+        )
+
+        fig.update_layout(
+            title='Federated Learning Training Progress',
+            showlegend=True,
+            height=700
+        )
+
+        # Convert Plotly figure to HTML
+        training_progress_html = fig.to_html(full_html=False, include_plotlyjs='cdn')
+
+        # Combine dashboard and training progress
         html = f"""
 <!DOCTYPE html>
 <html>
@@ -79,27 +95,26 @@ class FLVisualization:
     <div class="metrics-container">
         <div class="metric-box">
             <div class="metric-label">Model Accuracy</div>
-            <div class="metric-value">{metrics.get('accuracy',0):.2f}%</div>
+            <div class="metric-value">{metrics.get('accuracy', 0):.2f}%</div>
         </div>
         <div class="metric-box">
             <div class="metric-label">Final Loss</div>
-            <div class="metric-value">{metrics.get('loss',0):.4f}</div>
+            <div class="metric-value">{metrics.get('loss', 0):.4f}</div>
         </div>
         <div class="metric-box">
             <div class="metric-label">Total Training Time</div>
-            <div class="metric-value">{metrics.get('processing_time',0):.2f}s</div>
+            <div class="metric-value">{metrics.get('processing_time', 0):.2f}s</div>
         </div>
         <div class="metric-box">
             <div class="metric-label">Number of Rounds</div>
-            <div class="metric-value">{len(metrics.get('round_times',{}))}</div>
+            <div class="metric-value">{num_rounds}</div>
         </div>
     </div>
-    <h2>Round Processing Times</h2>
-    <ul>
+    <h2>Training Progress</h2>
+    {training_progress_html}
+</body>
+</html>
 """
-        for r, t in metrics.get('round_times',{}).items():
-            html += f"        <li>{r}: {t:.2f} seconds</li>\n"
-        html += "    </ul>\n</body>\n</html>"
         dash_path = os.path.join(runs_folder, 'dashboard.html')
         with open(dash_path, 'w') as f:
             f.write(html)

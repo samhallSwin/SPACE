@@ -45,6 +45,7 @@ class FederatedLearning:
         self.client_data = []
         self.round_times = {}  # Dictionary to store processing times for each round
         self.total_training_time = 0  # Total training time
+        self.round_accuracies = []  # List to store accuracies for each round
 
     def set_num_rounds(self, rounds: int) -> None:
         self.num_rounds = rounds
@@ -62,7 +63,7 @@ class FederatedLearning:
             start = i * (len(dataset) // self.num_clients)
             end = (i + 1) * (len(dataset) // self.num_clients)
             subset = torch.utils.data.Subset(dataset, range(start, end))
-            client_loader = torch.utils.data.DataLoader(subset, batch_size=32, shuffle=True)
+            client_loader = torch.utils.data.DataLoader(subset, batch_size=32, shuffle=True, num_workers=2)
             self.client_data.append(client_loader)
         print("Client data initialized.")
 
@@ -83,8 +84,10 @@ class FederatedLearning:
     def train_client(self, model, data_loader):
         """Train a single client."""
         model.train()
-        optimizer = optim.SGD(model.parameters(), lr=0.01)
+        optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9, weight_decay=1e-4)
         criterion = nn.CrossEntropyLoss()
+        correct = 0
+        total = 0
 
         for data, target in data_loader:
             optimizer.zero_grad()
@@ -93,7 +96,13 @@ class FederatedLearning:
             loss.backward()
             optimizer.step()
 
-        return model.state_dict()
+            # Calculate accuracy
+            _, predicted = torch.max(output, 1)
+            correct += (predicted == target).sum().item()
+            total += target.size(0)
+
+        accuracy = correct / total if total > 0 else 0
+        return model.state_dict(), accuracy
 
     def federated_averaging(self, client_models: List[dict]):
         """Aggregate client models into a global model."""
@@ -107,6 +116,7 @@ class FederatedLearning:
         """Get metrics for the current training session."""
         return {
             "round_times": self.round_times,
+            "round_accuracies": self.round_accuracies,
             "total_training_time": self.total_training_time,
             "average_round_time": self.total_training_time / self.num_rounds if self.num_rounds > 0 else 0,
             "timestamp": datetime.now().isoformat()
@@ -119,6 +129,7 @@ class FederatedLearning:
 
         # Start total training time
         total_start_time = time.time()
+        round_accuracies = []  # Track accuracy for each round
 
         for round_num in range(self.num_rounds):
             print(f"Starting round {round_num + 1}...")
@@ -127,10 +138,15 @@ class FederatedLearning:
             round_start_time = time.time()
 
             client_models = []
+            round_correct = 0
+            round_total = 0
+
             for client_id, data_loader in enumerate(self.client_data):
                 print(f"Training client {client_id + 1}...")
-                client_model = self.train_client(self.global_model, data_loader)
+                client_model, accuracy = self.train_client(self.global_model, data_loader)
                 client_models.append(client_model)
+                round_correct += accuracy * len(data_loader.dataset)
+                round_total += len(data_loader.dataset)
 
             self.federated_averaging(client_models)
 
@@ -138,15 +154,22 @@ class FederatedLearning:
             round_time = time.time() - round_start_time
             self.round_times[f"round_{round_num + 1}"] = round_time
 
-            print(f"Round {round_num + 1} completed in {round_time:.2f} seconds.")
+            # Calculate round accuracy
+            round_accuracy = round_correct / round_total if round_total > 0 else 0
+            round_accuracies.append(round_accuracy)
+
+            print(f"Round {round_num + 1} completed in {round_time:.2f} seconds with accuracy {round_accuracy:.2%}.")
 
         # Calculate total training time
         self.total_training_time = time.time() - total_start_time
         print(f"\nFederated learning process completed in {self.total_training_time:.2f} seconds.")
-        print("\nRound-wise processing times:")
+        print("\nRound-wise processing times and accuracies:")
         for round_num, round_time in self.round_times.items():
-            print(f"{round_num}: {round_time:.2f} seconds")
+            print(f"{round_num}: {round_time:.2f} seconds, Accuracy: {round_accuracies[int(round_num.split('_')[1]) - 1]:.2%}")
         print(f"Average round time: {self.total_training_time/self.num_rounds:.2f} seconds")
+
+        # Store accuracies in metrics
+        self.round_accuracies = round_accuracies
 
 if __name__ == "__main__":
     """Standalone entry point for testing FederatedLearning."""
@@ -172,10 +195,13 @@ if __name__ == "__main__":
     output = FLOutput()
     output.evaluate_model(fl_instance.global_model, fl_instance.total_training_time)
 
-    # Add timing metrics
+    # Add timing and accuracy metrics
     timing_metrics = fl_instance.get_round_metrics()
     for metric_name, value in timing_metrics.items():
         output.add_metric(metric_name, value)
+
+    # Add round accuracies explicitly
+    output.add_metric("round_accuracies", fl_instance.round_accuracies)
 
     # Save results into this run folder
     log_file = os.path.join(run_dir, f"results_{timestamp}.log")
