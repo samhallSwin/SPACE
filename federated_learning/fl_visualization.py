@@ -32,8 +32,8 @@ class FLVisualization:
             metrics = json.load(f)
         # Extract core metrics
         accuracy = metrics.get('accuracy', 0)
-        # loss and processing_time are available in metrics but not directly used here
-        round_times = metrics.get('round_times', {})
+        # Correctly extract round_times from additional_metrics
+        round_times = metrics.get('additional_metrics', {}).get('round_times', {})
         # Generate plots and dashboard under the same run folder
         self._create_training_progress_plot(metrics_file, round_times, accuracy)
         self._create_dashboard(metrics_file, metrics)
