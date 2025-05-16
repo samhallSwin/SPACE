@@ -1,3 +1,20 @@
+"""
+Filename: fl_config.py
+Description: Converts Federated Learning JSON options to local data types and configures core Federated Learning module via setters. 
+Author: Kimsakona Sok
+Date: 2024-08-02
+Version: 1.0
+Python Version: 
+
+Changelog:
+- 2024-08-02: Initial creation.
+- 2024-09-16: Supported standalone execution, refactored Model Setters
+- 2025-05-15: Added JSON file reading, and printing the options out to see the connection
+Usage: 
+- Import this module and call read_options_from_file() with a JSON config file path.
+- Alternatively, run the file directly to test configuration loading.
+"""
+
 import json
 from dataclasses import dataclass
 import sys
@@ -17,7 +34,7 @@ class AlgorithmOptions:
     search_depth: int
 
 class Config:
-
+    # Constructor, accepts core module
     def __init__(self, federated_learning: FederatedLearning):
         self.fl_core = federated_learning
         self.model = Model()
