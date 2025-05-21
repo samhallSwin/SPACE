@@ -123,53 +123,58 @@ class FederatedLearning:
         }
 
     def run(self):
-        """Run the federated learning process."""
+        """Run the federated learning process with a moving parameter server."""
         self.initialize_data()
         self.initialize_model()
 
-        # Start total training time
         total_start_time = time.time()
-        round_accuracies = []  # Track accuracy for each round
+        round_accuracies = []
 
         for round_num in range(self.num_rounds):
-            print(f"Starting round {round_num + 1}...")
+            print(f"\nStarting round {round_num + 1}...")
 
-            # Start round time
             round_start_time = time.time()
+            # Randomly select a client to act as the parameter server
+            # In this case, we are using a round-robin approach
+            server_client = round_num % self.num_clients
+            print(f"Client {server_client + 1} is the parameter server for this round.")
 
             client_models = []
+            client_accuracies = []
             round_correct = 0
             round_total = 0
 
+            # Each client gets a copy of the global model
             for client_id, data_loader in enumerate(self.client_data):
+                # Create a new model instance and load the global weights
+                client_model = type(self.global_model)()
+                client_model.load_state_dict(self.global_model.state_dict())
                 print(f"Training client {client_id + 1}...")
-                client_model, accuracy = self.train_client(self.global_model, data_loader)
+                state_dict, accuracy = self.train_client(client_model, data_loader)
                 client_models.append(client_model)
+                client_accuracies.append(accuracy)
                 round_correct += accuracy * len(data_loader.dataset)
                 round_total += len(data_loader.dataset)
 
-            self.federated_averaging(client_models)
+            # The server client becomes the new global model
+            self.global_model.load_state_dict(client_models[server_client].state_dict())
+            print(f"Global model updated by Client {server_client + 1}.")
 
-            # Calculate round time
+            # Calculate round time and accuracy
             round_time = time.time() - round_start_time
             self.round_times[f"round_{round_num + 1}"] = round_time
-
-            # Calculate round accuracy
             round_accuracy = round_correct / round_total if round_total > 0 else 0
             round_accuracies.append(round_accuracy)
+            print(f"Round {round_num + 1} completed in {round_time:.2f} seconds with average accuracy {round_accuracy:.2%}.")
 
-            print(f"Round {round_num + 1} completed in {round_time:.2f} seconds with accuracy {round_accuracy:.2%}.")
-
-        # Calculate total training time
         self.total_training_time = time.time() - total_start_time
+        self.round_accuracies = round_accuracies
+
         print(f"\nFederated learning process completed in {self.total_training_time:.2f} seconds.")
         print("\nRound-wise processing times and accuracies:")
         for round_num, round_time in self.round_times.items():
             print(f"{round_num}: {round_time:.2f} seconds, Accuracy: {round_accuracies[int(round_num.split('_')[1]) - 1]:.2%}")
         print(f"Average round time: {self.total_training_time/self.num_rounds:.2f} seconds")
-
-        # Store accuracies in metrics
-        self.round_accuracies = round_accuracies
 
 if __name__ == "__main__":
     """Standalone entry point for testing FederatedLearning."""
