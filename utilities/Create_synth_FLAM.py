@@ -13,12 +13,19 @@ from collections import deque
 from datetime import datetime
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Create synthesized FLAM's for testing and exports as CSV. NOT BASED ON SAT SIM, JUST ORGANISED RANDOM DATA")
+    parser = argparse.ArgumentParser(
+        description=(
+            "Create synthesized FLAM's for testing and export as CSV.\n"
+            "NOT BASED ON SAT SIM, JUST ORGANISED RANDOM DATA\n\n"
+            "Example usage: python3 create_synth_FLAM.py 5 100 0.1 3 --down_bias=2.0"
+        ),
+        formatter_class=argparse.RawTextHelpFormatter
+    )
     parser.add_argument("Num_devices", type=int, help="Number of satellites in the network")
     parser.add_argument("timesteps", type=int, help="Total number of timesteps to simulate")
     parser.add_argument("toggle_chance", type=float, help="Base probability for toggling a connection, 0.1 or 0.2 seems about right")
-    parser.add_argument("training_time", type=int, help="The number of timesteps it takes to train at the start of each round - no connections allowed for this time")
-    parser.add_argument("--down_bias", type=float, default=1.0, help="Bias factor: random toggling led to rounds being too short, set this to greater than 1 (start at 2.0?) to make breaking a connection more likely than forming one")
+    parser.add_argument("training_time", type=int, help="The number of timesteps it takes to train at the start of each round — no connections allowed during this time")
+    parser.add_argument("--down_bias", type=float, default=1.0, help="Bias factor: random toggling can lead to short rounds. Set > 1 (e.g. 2.0) to make breaking a connection more likely than forming one")
     return parser.parse_args()
 
 def is_reachable(matrix, target):
