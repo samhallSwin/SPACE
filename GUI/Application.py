@@ -1,5 +1,6 @@
 import pygame as pg
 from OpenGL.GL import *
+import numpy as np
 
 class App:
     
@@ -36,6 +37,29 @@ class App:
     def quit(self):
         pg.quit
 
+
+class  Sphere:
+     def __init__(self):
+          
+        self.verticies  = (
+            -0.5, -0.5, 0.0, 1.0, 0.0, 0.0,
+            0.5, -0.5, 0.0, 0.0, 1.0, 0.0,
+            0.0, 0.5, 0.0, 0.0, 0.0, 1.0
+        )
+
+        #Numpy arrary datatype converts verticies into a format readable by gpu
+        self.verticies = np.arrary(self.vertices, dtype=np.float32)
+
+        self.vertex_count = 3
+
+        self.veo = glGenVertexArrays(1)
+        glBindVertexArray(self.veo)
+        #Vertex buffer object
+        self.vbo = glGenBuffers(1)
+        glBinBuffer(GL_ARRAY_BUFFER, self.vbo)
+        glBufferData(GL_ARRAY_BUFFER, self,verticies,nbytes, self,verticies, GLSTATIC_DRAW)
+
+        
 
 if __name__ == "__main__":
      myApp  = App()
