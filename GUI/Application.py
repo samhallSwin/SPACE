@@ -17,14 +17,27 @@ class App:
 
         self.mainloop()
 
-        def mainloop(self):
-            running = True
-            while (running):
-                for event in pg.event.get():
-                    if(event.type == pg.quit):
+#Gameloop
+    def mainloop(self):
+        running = True
+        while (running):
+            #Check events
+            for event in pg.event.get():
+                if(event.type == pg.QUIT):
                         running = False
+            #Refresh screen
+            glClear(GL_COLOR_BUFFER_BIT)
+            pg.display.flip()
 
-                glClear(GL_COLOR_BUFFER_BIT)
-                pg.display.flip()
+            #Framerate lock
+            self.clock.tick(60)
+        self.quit()
 
-                self.clock.tick(60)
+    def quit(self):
+        pg.quit
+
+
+if __name__ == "__main__":
+     myApp  = App()
+
+
