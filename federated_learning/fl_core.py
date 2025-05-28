@@ -28,8 +28,8 @@ import numpy as np
 import sys
 import os
 import time
+import threading
 from datetime import datetime
-import json
 
 # Add the project root directory to the Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -44,13 +44,10 @@ class FederatedLearning:
         self.num_clients = None
         self.global_model = None
         self.client_data = []
-        self.round_times = {}  # Dictionary to store processing times for each round
-        self.total_training_time = 0  # Total training time
-        self.round_accuracies = []  # List to store accuracies for each round
-        self.adjacency_matrix = None  # add adjacency matrix
-        self.aggregator_id = None     # add aggregator ID
-        self.topology_history = []  # add topology history
-        self.current_topology = None  # add current topology
+        self.round_times = {}
+        self.total_training_time = 0
+        self.round_accuracies = []
+        self.timestep = 0  # Global timestep counter
 
     def set_num_rounds(self, rounds: int) -> None:
         self.num_rounds = rounds
@@ -118,110 +115,125 @@ class FederatedLearning:
         print("Global model updated via federated averaging.")
 
     def get_round_metrics(self) -> Dict:
-        """extend metrics to include topology information"""
-        metrics = {
+        """Get metrics for the current training session."""
+        return {
             "round_times": self.round_times,
             "round_accuracies": self.round_accuracies,
             "total_training_time": self.total_training_time,
             "average_round_time": self.total_training_time / self.num_rounds if self.num_rounds > 0 else 0,
             "timestamp": datetime.now().isoformat()
         }
-        
-        # add topology information
-        if self.adjacency_matrix is not None:
-            metrics.update({
-                "topology": {
-                    "adjacency_matrix": self.adjacency_matrix.tolist() if hasattr(self.adjacency_matrix, 'tolist') else self.adjacency_matrix,
-                    "aggregator_id": self.aggregator_id,
-                    "current_topology": self.current_topology,
-                    "topology_history": self.topology_history
-                }
-            })
-        
-        return metrics
+    
+    def load_flam_schedule(self, flam_path):
+        """Parse FLAM CSV and return a list of dicts with timestep, phase, etc."""
+        schedule = []
+        with open(flam_path, "r") as f:
+            lines = f.readlines()
+        i = 0
+        while i < len(lines):
+            line = lines[i].strip()
+            if line.startswith("Timestep:"):
+                # Parse header
+                parts = line.split(", ")
+                timestep = int(parts[0].split(":")[1])
+                phase = parts[3].split(":")[1].strip()
+                schedule.append({"timestep": timestep, "phase": phase})
+                # Skip the adjacency matrix (5 lines)
+                i += 6
+            else:
+                i += 1
+        return schedule
 
-    def set_topology(self, adjacency_matrix, aggregator_id):
-        """set satellite topology"""
-        self.adjacency_matrix = adjacency_matrix
-        self.aggregator_id = aggregator_id
-        self.current_topology = {
-            'matrix': adjacency_matrix,
-            'aggregator': aggregator_id,
-            'timestamp': datetime.now().isoformat()
-        }
-        # record topology change
-        self.topology_history.append(self.current_topology)
-        print(f"Topology set with aggregator: {aggregator_id}")
-
-    def run(self):
-        """modify run logic to support FLAM topology and record topology information"""
+    def run(self, flam_path=None):
+        """Run the federated learning process, synchronized with FLAM phases."""
         self.initialize_data()
         self.initialize_model()
-
         total_start_time = time.time()
         round_accuracies = []
 
-        for round_num in range(self.num_rounds):
-            print(f"\nStarting round {round_num + 1}...")
+        # Load FLAM schedule if provided
+        flam_schedule = []
+        if flam_path:
+            flam_schedule = self.load_flam_schedule(flam_path)
+            print(f"Loaded FLAM schedule with {len(flam_schedule)} timesteps.")
 
-            round_start_time = time.time()
-            
-            # use FLAM topology aggregator
-            if self.adjacency_matrix is not None:
-                server_client = self.aggregator_id
-            else:
-                # default round-robin approach
-                server_client = round_num % self.num_clients
+        # Start the timestep counter in a background thread
+        stop_event = threading.Event()
+        def timestep_counter():
+            while not stop_event.is_set():
+                time.sleep(12) # Increment every 12 seconds
+                self.timestep += 1
+                print(f"Timestep: {self.timestep}")
 
-            print(f"Client {server_client + 1} is the parameter server for this round.")
+        counter_thread = threading.Thread(target=timestep_counter)
+        counter_thread.daemon = True
+        counter_thread.start()
 
-            client_models = []
-            client_accuracies = []
-            round_correct = 0
-            round_total = 0
+        try:
+            flam_idx = 0
+            round_num = 0
+            while flam_idx < len(flam_schedule) and round_num < self.num_rounds:
+                flam_entry = flam_schedule[flam_idx]
+                # Wait until the global timestep matches the FLAM timestep exactly
+                while self.timestep < flam_entry["timestep"]:
+                    time.sleep(0.5)
+                if self.timestep == flam_entry["timestep"]:
+                    phase = flam_entry["phase"]
+                    print(f"\nFLAM Timestep {flam_entry['timestep']} Phase: {phase}")
 
-            # Each client gets a copy of the global model
-            for client_id, data_loader in enumerate(self.client_data):
-                # Create a new model instance and load the global weights
-                client_model = type(self.global_model)()
-                client_model.load_state_dict(self.global_model.state_dict())
-                print(f"Training client {client_id + 1}...")
-                state_dict, accuracy = self.train_client(client_model, data_loader)
-                client_models.append(client_model)
-                client_accuracies.append(accuracy)
-                round_correct += accuracy * len(data_loader.dataset)
-                round_total += len(data_loader.dataset)
+                    if phase == "TRAINING":
+                        # Only train if we haven't already trained for this round
+                        if not hasattr(self, "_pending_client_models"):
+                            print(f"Training round {round_num + 1}...")
+                            client_models = []
+                            client_accuracies = []
+                            round_correct = 0
+                            round_total = 0
+                            for client_id, data_loader in enumerate(self.client_data):
+                                client_model = type(self.global_model)()
+                                client_model.load_state_dict(self.global_model.state_dict())
+                                print(f"Training client {client_id + 1}...")
+                                state_dict, accuracy = self.train_client(client_model, data_loader)
+                                client_models.append(state_dict)
+                                client_accuracies.append(accuracy)
+                                round_correct += accuracy * len(data_loader.dataset)
+                                round_total += len(data_loader.dataset)
+                            self._pending_client_models = client_models
+                            self._pending_round_correct = round_correct
+                            self._pending_round_total = round_total
+                            self._pending_round_start_time = time.time()
+                        else:
+                            print(f"Already trained for round {round_num + 1}, waiting for TRANSMITTING phase...")
+                    elif phase == "TRANSMITTING":
+                        if hasattr(self, "_pending_client_models"):
+                            self.federated_averaging(self._pending_client_models)
+                            print("Global model updated via federated averaging.")
+                            round_time = time.time() - self._pending_round_start_time
+                            round_accuracy = self._pending_round_correct / self._pending_round_total if self._pending_round_total > 0 else 0
+                            self.round_times[f"round_{round_num + 1}"] = round_time
+                            round_accuracies.append(round_accuracy)
+                            print(f"Round {round_num + 1} completed in {round_time:.2f} seconds with average accuracy {round_accuracy:.2%}.")
+                            round_num += 1
+                            # Clean up
+                            del self._pending_client_models
+                            del self._pending_round_correct
+                            del self._pending_round_total
+                            del self._pending_round_start_time
+                flam_idx += 1
 
-            # The server client becomes the new global model
-            self.global_model.load_state_dict(client_models[server_client].state_dict())
-            print(f"Global model updated by Client {server_client + 1}.")
+            self.total_training_time = time.time() - total_start_time
+            self.round_accuracies = round_accuracies
 
-            # Calculate round time and accuracy
-            round_time = time.time() - round_start_time
-            self.round_times[f"round_{round_num + 1}"] = round_time
-            round_accuracy = round_correct / round_total if round_total > 0 else 0
-            round_accuracies.append(round_accuracy)
-            print(f"Round {round_num + 1} completed in {round_time:.2f} seconds with average accuracy {round_accuracy:.2%}.")
-
-            # record topology information at the end of each round
-            if self.adjacency_matrix is not None:
-                round_topology = {
-                    'round': round_num + 1,
-                    'matrix': self.adjacency_matrix.tolist() if hasattr(self.adjacency_matrix, 'tolist') else self.adjacency_matrix,
-                    'aggregator': self.aggregator_id,
-                    'connected_clients': [self.get_connected_clients(i) for i in range(self.num_clients)],
-                    'timestamp': datetime.now().isoformat()
-                }
-                self.topology_history.append(round_topology)
-
-        self.total_training_time = time.time() - total_start_time
-        self.round_accuracies = round_accuracies
-
-        print(f"\nFederated learning process completed in {self.total_training_time:.2f} seconds.")
-        print("\nRound-wise processing times and accuracies:")
-        for round_num, round_time in self.round_times.items():
-            print(f"{round_num}: {round_time:.2f} seconds, Accuracy: {round_accuracies[int(round_num.split('_')[1]) - 1]:.2%}")
-        print(f"Average round time: {self.total_training_time/self.num_rounds:.2f} seconds")
+            print(f"\nFederated learning process completed in {self.total_training_time:.2f} seconds.")
+            print("\nRound-wise processing times and accuracies:")
+            for idx, round_time in self.round_times.items():
+                print(f"{idx}: {round_time:.2f} seconds, Accuracy: {round_accuracies[int(idx.split('_')[1]) - 1]:.2%}")
+            print(f"Average round time: {self.total_training_time/self.num_rounds:.2f} seconds")
+        finally:
+            stop_event.set()
+            counter_thread.join(timeout=2)
+            print("Counter thread stopped.")
+            print("Total timestep count:", self.timestep)
 
 if __name__ == "__main__":
     """Standalone entry point for testing FederatedLearning."""
@@ -241,7 +253,8 @@ if __name__ == "__main__":
     fl_instance = FederatedLearning()
     fl_instance.set_num_rounds(num_rounds)
     fl_instance.set_num_clients(num_clients)
-    fl_instance.run()
+    flam_path = os.path.join(os.path.dirname(__file__), "../synth_FLAMs/sim_5n_100t_0.10tc_3tr_2.00db_2025-05-23_11-14-15.csv")
+    fl_instance.run(flam_path=flam_path)
 
     # Evaluate the model
     output = FLOutput()
@@ -255,44 +268,23 @@ if __name__ == "__main__":
     # Add round accuracies explicitly
     output.add_metric("round_accuracies", fl_instance.round_accuracies)
 
-    # Add topology information
-    if fl_instance.adjacency_matrix is not None:
-        output.add_metric("topology_info", {
-            "adjacency_matrix": fl_instance.adjacency_matrix.tolist() if hasattr(fl_instance.adjacency_matrix, 'tolist') else fl_instance.adjacency_matrix,
-            "aggregator_id": fl_instance.aggregator_id,
-            "topology_history": fl_instance.topology_history
-        })
-
     # Save results into this run folder
     log_file = os.path.join(run_dir, f"results_{timestamp}.log")
     metrics_file = os.path.join(run_dir, f"metrics_{timestamp}.json")
     model_file = os.path.join(run_dir, f"model_{timestamp}.pt")
-    topology_file = os.path.join(run_dir, f"topology_{timestamp}.json")  # add topology file
 
     # Log results and save files
     output.log_result(log_file)
     output.write_to_file(metrics_file, format="json")
     output.save_model(model_file)
 
-    # save topology information separately
-    if fl_instance.adjacency_matrix is not None:
-        with open(topology_file, 'w') as f:
-            json.dump({
-                "topology_history": fl_instance.topology_history,
-                "final_topology": fl_instance.current_topology
-            }, f, indent=4)
-
     print("\nResults have been saved to:")
     print("Log file:", log_file)
     print("Metrics file:", metrics_file)
     print("Model file:", model_file)
-    if fl_instance.adjacency_matrix is not None:
-        print("Topology file:", topology_file)
 
     # Generate visualizations
     print("\nGenerating visualizations...")
     viz = FLVisualization(results_dir=run_dir)
     viz.visualize_from_json(metrics_file)
-    if fl_instance.adjacency_matrix is not None:
-        viz.visualize_topology(fl_instance.topology_history)  # add topology visualization
     print(f"Visualizations saved under {run_dir}")
