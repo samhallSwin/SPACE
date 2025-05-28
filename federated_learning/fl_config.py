@@ -1,3 +1,23 @@
+"""
+Filename: fl_config.py
+Description: read options from file and set up federated learning
+Author: kim
+Date: 2025-05-12
+Version: 1.3
+Python Version: 3.12
+
+Changelog:
+- 2025-05-28: Initial creation.
+- 2025-05-28: Added dataclass for algorithm options.
+- 2025-05-28: Added read_options_from_file function.
+- 2025-05-28: Added set_federated_learning function.
+- 2025-05-28: Added set_federated_learning_model function.
+
+Usage:
+python3 fl_config.py
+python3 fl_config.py --file options.json
+    
+"""
 import json
 from dataclasses import dataclass
 import sys

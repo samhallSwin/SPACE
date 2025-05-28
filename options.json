@@ -25,6 +25,7 @@
         "num_clients": 4,
         "model_type": "SimpleCNN",
         "data_set": "MNIST",
+        "flam_file": "FLAM.txt",
         "tick": {
             "tick_configuration": {
                 "tick_behavior": "Adaptive",

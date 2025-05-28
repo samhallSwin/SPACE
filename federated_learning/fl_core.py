@@ -29,6 +29,7 @@ import sys
 import os
 import time
 from datetime import datetime
+import json
 
 # Add the project root directory to the Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -46,6 +47,10 @@ class FederatedLearning:
         self.round_times = {}  # Dictionary to store processing times for each round
         self.total_training_time = 0  # Total training time
         self.round_accuracies = []  # List to store accuracies for each round
+        self.adjacency_matrix = None  # add adjacency matrix
+        self.aggregator_id = None     # add aggregator ID
+        self.topology_history = []  # add topology history
+        self.current_topology = None  # add current topology
 
     def set_num_rounds(self, rounds: int) -> None:
         self.num_rounds = rounds
@@ -113,17 +118,43 @@ class FederatedLearning:
         print("Global model updated via federated averaging.")
 
     def get_round_metrics(self) -> Dict:
-        """Get metrics for the current training session."""
-        return {
+        """extend metrics to include topology information"""
+        metrics = {
             "round_times": self.round_times,
             "round_accuracies": self.round_accuracies,
             "total_training_time": self.total_training_time,
             "average_round_time": self.total_training_time / self.num_rounds if self.num_rounds > 0 else 0,
             "timestamp": datetime.now().isoformat()
         }
+        
+        # add topology information
+        if self.adjacency_matrix is not None:
+            metrics.update({
+                "topology": {
+                    "adjacency_matrix": self.adjacency_matrix.tolist() if hasattr(self.adjacency_matrix, 'tolist') else self.adjacency_matrix,
+                    "aggregator_id": self.aggregator_id,
+                    "current_topology": self.current_topology,
+                    "topology_history": self.topology_history
+                }
+            })
+        
+        return metrics
+
+    def set_topology(self, adjacency_matrix, aggregator_id):
+        """set satellite topology"""
+        self.adjacency_matrix = adjacency_matrix
+        self.aggregator_id = aggregator_id
+        self.current_topology = {
+            'matrix': adjacency_matrix,
+            'aggregator': aggregator_id,
+            'timestamp': datetime.now().isoformat()
+        }
+        # record topology change
+        self.topology_history.append(self.current_topology)
+        print(f"Topology set with aggregator: {aggregator_id}")
 
     def run(self):
-        """Run the federated learning process with a moving parameter server."""
+        """modify run logic to support FLAM topology and record topology information"""
         self.initialize_data()
         self.initialize_model()
 
@@ -134,9 +165,14 @@ class FederatedLearning:
             print(f"\nStarting round {round_num + 1}...")
 
             round_start_time = time.time()
-            # Randomly select a client to act as the parameter server
-            # In this case, we are using a round-robin approach
-            server_client = round_num % self.num_clients
+            
+            # use FLAM topology aggregator
+            if self.adjacency_matrix is not None:
+                server_client = self.aggregator_id
+            else:
+                # default round-robin approach
+                server_client = round_num % self.num_clients
+
             print(f"Client {server_client + 1} is the parameter server for this round.")
 
             client_models = []
@@ -166,6 +202,17 @@ class FederatedLearning:
             round_accuracy = round_correct / round_total if round_total > 0 else 0
             round_accuracies.append(round_accuracy)
             print(f"Round {round_num + 1} completed in {round_time:.2f} seconds with average accuracy {round_accuracy:.2%}.")
+
+            # record topology information at the end of each round
+            if self.adjacency_matrix is not None:
+                round_topology = {
+                    'round': round_num + 1,
+                    'matrix': self.adjacency_matrix.tolist() if hasattr(self.adjacency_matrix, 'tolist') else self.adjacency_matrix,
+                    'aggregator': self.aggregator_id,
+                    'connected_clients': [self.get_connected_clients(i) for i in range(self.num_clients)],
+                    'timestamp': datetime.now().isoformat()
+                }
+                self.topology_history.append(round_topology)
 
         self.total_training_time = time.time() - total_start_time
         self.round_accuracies = round_accuracies
@@ -208,23 +255,44 @@ if __name__ == "__main__":
     # Add round accuracies explicitly
     output.add_metric("round_accuracies", fl_instance.round_accuracies)
 
+    # Add topology information
+    if fl_instance.adjacency_matrix is not None:
+        output.add_metric("topology_info", {
+            "adjacency_matrix": fl_instance.adjacency_matrix.tolist() if hasattr(fl_instance.adjacency_matrix, 'tolist') else fl_instance.adjacency_matrix,
+            "aggregator_id": fl_instance.aggregator_id,
+            "topology_history": fl_instance.topology_history
+        })
+
     # Save results into this run folder
     log_file = os.path.join(run_dir, f"results_{timestamp}.log")
     metrics_file = os.path.join(run_dir, f"metrics_{timestamp}.json")
     model_file = os.path.join(run_dir, f"model_{timestamp}.pt")
+    topology_file = os.path.join(run_dir, f"topology_{timestamp}.json")  # add topology file
 
     # Log results and save files
     output.log_result(log_file)
     output.write_to_file(metrics_file, format="json")
     output.save_model(model_file)
 
+    # save topology information separately
+    if fl_instance.adjacency_matrix is not None:
+        with open(topology_file, 'w') as f:
+            json.dump({
+                "topology_history": fl_instance.topology_history,
+                "final_topology": fl_instance.current_topology
+            }, f, indent=4)
+
     print("\nResults have been saved to:")
     print("Log file:", log_file)
     print("Metrics file:", metrics_file)
     print("Model file:", model_file)
+    if fl_instance.adjacency_matrix is not None:
+        print("Topology file:", topology_file)
 
     # Generate visualizations
     print("\nGenerating visualizations...")
     viz = FLVisualization(results_dir=run_dir)
     viz.visualize_from_json(metrics_file)
+    if fl_instance.adjacency_matrix is not None:
+        viz.visualize_topology(fl_instance.topology_history)  # add topology visualization
     print(f"Visualizations saved under {run_dir}")

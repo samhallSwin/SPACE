@@ -39,58 +39,51 @@ class FLHandler(Handler):
 
         for timestamp, group in self.flam.groupby("time_stamp"):
             print(f"\n[FLAM ROUND] \nTime: {timestamp}")
-            print(f"Satellite Count: {group['satellite_count'].iloc[0]}")
-
-            aggregator_row = group[group["aggregator_flag"] == True]
-            aggregator = "True" if not aggregator_row.empty else "None"
-            print(f"Aggregator: {aggregator}")
-
-            matrix_row = aggregator_row.iloc[0] if not aggregator_row.empty else group.iloc[0]
+            
+            # Analyzing the adjacency matrix.
+            matrix_row = group[group["aggregator_flag"] == True].iloc[0] if not group[group["aggregator_flag"] == True].empty else group.iloc[0]
             matrix_str = matrix_row["federatedlearning_adjacencymatrix"]
-
+            
             try:
-                cleaned = (
-                    matrix_str.replace('\n', '')
-                              .replace('\r', '')
-                              .replace('\x00', '')
-                              .replace('], [', '],[')
-                              .strip().rstrip(',')
-                )
-
-                if not cleaned.startswith('[['):
-                    cleaned = f'[{cleaned}]'
-
-                left, right = cleaned.count('['), cleaned.count(']')
-                if left > right:
-                    cleaned += ']' * (left - right)
-                elif right > left:
-                    cleaned = '[' * (right - left) + cleaned
-
-                matrix = ast.literal_eval(cleaned)
-
-                # Matrix display
-                print("Adjacency Matrix:")
-                sat_count = len(matrix)
-                header = "   | " + " | ".join(f"S{i+1}" for i in range(sat_count))
-                print(header)
-                print("-" * len(header))
-                for i, links in enumerate(matrix):
-                    row = f"S{i+1} | " + " | ".join(str(val) for val in links)
-                    print(row)
-
-                print("\nConnections:")
-                for i, links in enumerate(matrix):
-                    connected = [j+1 for j, val in enumerate(links) if val == 1]
-                    print(f" - Satellite {i+1} connects to: {connected if connected else 'None'}")
-
+                # clean and parse matrix
+                matrix = self.parse_adjacency_matrix(matrix_str)
+                
+                # find aggregator ID
+                aggregator_id = group[group["aggregator_flag"] == True].index[0] if not group[group["aggregator_flag"] == True].empty else 0
+                
+                # set topology
+                self.federated_learning.set_topology(matrix, aggregator_id)
+                
+                # reset client data
+                self.federated_learning.reset_clients()
+                
+                # run training
+                self.federated_learning.run()
+                
             except Exception as e:
-                print(f"[WARN] Couldn't parse adjacency matrix: {e}")
+                print(f"[WARN] Error in FLAM round: {e}")
                 continue
 
-            # Reset client data before each round
-            self.federated_learning.reset_clients()
+    def parse_adjacency_matrix(self, matrix_str):
+        """parse adjacency matrix string"""
+        cleaned = (
+            matrix_str.replace('\n', '')
+                      .replace('\r', '')
+                      .replace('\x00', '')
+                      .replace('], [', '],[')
+                      .strip().rstrip(',')
+        )
 
-            self.federated_learning.run()
+        if not cleaned.startswith('[['):
+            cleaned = f'[{cleaned}]'
+
+        left, right = cleaned.count('['), cleaned.count(']')
+        if left > right:
+            cleaned += ']' * (left - right)
+        elif right > left:
+            cleaned = '[' * (right - left) + cleaned
+
+        return ast.literal_eval(cleaned)
 
 
 def load_flam_txt(filepath: str) -> pd.DataFrame:
