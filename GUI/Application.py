@@ -69,7 +69,7 @@ class TimeGlobeWidget(QWidget):
            
         v.addWidget(self.sphere, stretch=1)
         v.addWidget(self.slider)
-        
+
         v.addWidget(self.welc_lbl, alignment=Qt.AlignHCenter)
         v.addWidget(self.time_lbl, alignment=Qt.AlignHCenter)
 
@@ -132,7 +132,7 @@ class  Sphere(QOpenGLWidget):
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_TEXTURE_2D)
 
-        self.textureID = self.loadTexture("Earth.png")
+        self.textureID = self.loadTexture("Assests\Earth.png")
         if not self.textureID:
             glDisable(GL_TEXTURE_2D)
         else:
