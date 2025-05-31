@@ -35,22 +35,22 @@ class MainWindow(QMainWindow):
 class TimeGlobeWidget(QWidget):
     def __init__(self):
         super().__init__()
-        # self.time = QTime.currentTime()
 
-        # self.welc_lbl     = QLabel("Welcome to S.P.A.C.E.")
-        # self.time_lbl     = QLabel(self.time.toString("hh:mm:ss"))
-        # self.start_btn    = QPushButton("Start")
-        # self.stop_btn     = QPushButton("Stop")
-        # self.now_btn      = QPushButton("Now")
-        # self.midnight_btn = QPushButton("Midnight")
-
-        
-
-        # self.timer = QTimer(self)
-        # self.timer.setInterval(1000)
-        # self.timer.timeout.connect(self._tick)
+        # Time Widget
+        self.time = QTime.currentTime()
+        self.welc_lbl     = QLabel("Welcome to S.P.A.C.E.")
+        self.time_lbl     = QLabel(self.time.toString("hh:mm:ss"))
+        self.start_btn    = QPushButton("Start")
+        self.stop_btn     = QPushButton("Stop")
+        self.now_btn      = QPushButton("Now")
+        self.midnight_btn = QPushButton("Midnight")
+        self.timer = QTimer(self)
+        self.timer.setInterval(1000)
+        self.timer.timeout.connect(self._tick)
         
         self.buildUI()
+
+        
 
     def buildUI(self):
 
@@ -63,16 +63,58 @@ class TimeGlobeWidget(QWidget):
         self.slider.setTickPosition(QSlider.TicksBelow)
         self.slider.valueChanged.connect(self.onSlider)
 
-     
+
 
         v = QVBoxLayout(self)
+           
         v.addWidget(self.sphere, stretch=1)
         v.addWidget(self.slider)
+        
+        v.addWidget(self.welc_lbl, alignment=Qt.AlignHCenter)
+        v.addWidget(self.time_lbl, alignment=Qt.AlignHCenter)
+
+        h = QHBoxLayout()
+        for btn in (self.start_btn, self.stop_btn, self.now_btn, self.midnight_btn):
+            h.addWidget(btn)
+        v.addLayout(h)
+
+  
+
+
+        self.start_btn.clicked.connect(self.start)
+        self.stop_btn.clicked.connect(self.stop)
+        self.now_btn.clicked.connect(self.now)
+        self.midnight_btn.clicked.connect(self.midnight)
 
     def onSlider(self, value):
         self.sphere.yRot = float(value)
         self.sphere.update()
 
+
+        self.now()
+        self.start()
+
+    def _tick(self):
+        self.time = self.time.addSecs(1)
+        self.time_lbl.setText(self.time.toString("hh:mm:ss"))
+
+ 
+    def start(self):
+        self.timer.start()
+
+    def stop(self):
+        self.timer.stop()
+
+    def now(self):
+        self.timer.stop()
+        self.time = QTime.currentTime()
+        self.time_lbl.setText(self.time.toString("hh:mm:ss"))
+        self.timer.start()
+
+    def midnight(self):
+        self.timer.stop()
+        self.time = QTime(0, 0, 0)
+        self.time_lbl.setText(self.time.toString("hh:mm:ss"))
 
 
 
@@ -205,7 +247,7 @@ class TLEDisplay(QFrame):
         self.collapsed_width = 20
 
         self.above_height_amount = 0
-        self.control_panel_height_reduction = 0 #TODO: find a better way to access this information
+        self.control_panel_height_reduction = 40 #TODO: find a better way to access this information
         
         self.expanded = True
         self.tle_dict = {}
