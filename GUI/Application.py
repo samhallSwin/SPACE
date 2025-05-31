@@ -14,12 +14,12 @@ class MainWindow(QMainWindow):
     def __init__(self): 
         super().__init__()
         #Initialize window and place OpengGL inside 
-        self.setWindowTitle("S")
+        self.setWindowTitle("S.P.A.C.E")
         self.setGeometry(100, 100, 640, 480)
         self.sphere = Sphere(self) 
         self.setCentralWidget(self.sphere)
 
-        self.mainloop()
+
 
 class  Sphere(QOpenGLWidget):
     def initializeGL(self):
