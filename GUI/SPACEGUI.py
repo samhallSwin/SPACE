@@ -118,20 +118,20 @@ class GlobeWidget(QOpenGLWidget):
 class TimeGlobeWidget(QWidget):
     def __init__(self):
         super().__init__()
-        self.time = QTime.currentTime()
+        # self.time = QTime.currentTime()
 
-        self.welc_lbl     = QLabel("Welcome to S.P.A.C.E.")
-        self.time_lbl     = QLabel(self.time.toString("hh:mm:ss"))
-        self.start_btn    = QPushButton("Start")
-        self.stop_btn     = QPushButton("Stop")
-        self.now_btn      = QPushButton("Now")
-        self.midnight_btn = QPushButton("Midnight")
-        self.globe        = GlobeWidget()
-        self.slider       = QSlider(Qt.Horizontal)
+        # self.welc_lbl     = QLabel("Welcome to S.P.A.C.E.")
+        # self.time_lbl     = QLabel(self.time.toString("hh:mm:ss"))
+        # self.start_btn    = QPushButton("Start")
+        # self.stop_btn     = QPushButton("Stop")
+        # self.now_btn      = QPushButton("Now")
+        # self.midnight_btn = QPushButton("Midnight")
+        # self.globe        = GlobeWidget()
+        # self.slider       = QSlider(Qt.Horizontal)
 
-        self.timer = QTimer(self)
-        self.timer.setInterval(1000)
-        self.timer.timeout.connect(self._tick)
+        # self.timer = QTimer(self)
+        # self.timer.setInterval(1000)
+        # self.timer.timeout.connect(self._tick)
 
         self._buildUI()
 
