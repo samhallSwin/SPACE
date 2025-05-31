@@ -18,13 +18,61 @@ class MainWindow(QMainWindow):
         #Initialize window and place OpengGL inside 
         self.setWindowTitle("S.P.A.C.E")
         self.setGeometry(100, 100, 640, 480)
-        self.sphere = Sphere(self) 
-        self.setCentralWidget(self.sphere)
+        self.setCentralWidget(TimeGlobeWidget())
+        # self.sphere = Sphere(self) 
+        # self.setCentralWidget(self.sphere)
         self.set_up_tle_display()
+        # self.buildUI()
 
     def set_up_tle_display(self):
         self.tle_display = TLEDisplay(self)
         self.tle_display.raise_()
+
+  
+# ————————————————————————————————
+#  2) Time + Globe + Slider UI
+# ————————————————————————————————
+class TimeGlobeWidget(QWidget):
+    def __init__(self):
+        super().__init__()
+        # self.time = QTime.currentTime()
+
+        # self.welc_lbl     = QLabel("Welcome to S.P.A.C.E.")
+        # self.time_lbl     = QLabel(self.time.toString("hh:mm:ss"))
+        # self.start_btn    = QPushButton("Start")
+        # self.stop_btn     = QPushButton("Stop")
+        # self.now_btn      = QPushButton("Now")
+        # self.midnight_btn = QPushButton("Midnight")
+
+        
+
+        # self.timer = QTimer(self)
+        # self.timer.setInterval(1000)
+        # self.timer.timeout.connect(self._tick)
+        
+        self.buildUI()
+
+    def buildUI(self):
+
+        self.sphere = Sphere()
+        self.slider = QSlider(Qt.Horizontal)
+
+        self.slider.setRange(0, 360)
+        self.slider.setValue(90)  # Start with Earth facing front
+        self.slider.setTickInterval(30)
+        self.slider.setTickPosition(QSlider.TicksBelow)
+        self.slider.valueChanged.connect(self.onSlider)
+
+     
+
+        v = QVBoxLayout(self)
+        v.addWidget(self.sphere, stretch=1)
+        v.addWidget(self.slider)
+
+    def onSlider(self, value):
+        self.sphere.yRot = float(value)
+        self.sphere.update()
+
 
 
 
