@@ -247,7 +247,7 @@ class TLEDisplay(QFrame):
         self.collapsed_width = 20
 
         self.above_height_amount = 0
-        self.control_panel_height_reduction = 40 #TODO: find a better way to access this information
+        self.control_panel_height_reduction = 110 #TODO: find a better way to access this information
         
         self.expanded = True
         self.tle_dict = {}
