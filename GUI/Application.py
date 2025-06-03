@@ -15,6 +15,9 @@ import datetime
 import os
 import skyfield
 from skyfield.api import load
+from skyfield.api import Timescale
+from skyfield.api import EarthSatellite
+
 
 EARTH_RADIUS = 6378
 increment = False
@@ -256,6 +259,10 @@ class  Sphere(QOpenGLWidget):
         self.satellites = Satellites()
 
     def initializeGL(self):
+        self.quadric = gluNewQuadric()
+        gluQuadricTexture(self.quadric, GL_TRUE)
+        self.satellites.Quadric(self.quadric)
+
         glClearColor(0.2, 0.3, 0.3, 1.0)
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_TEXTURE_2D)
@@ -313,6 +320,7 @@ class  Sphere(QOpenGLWidget):
         glEnd()
 
     def paintGL(self):
+        self.satellites.SatDraw()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         glLoadIdentity()
 
