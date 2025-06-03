@@ -18,6 +18,11 @@ Successfully integrated Sam's Create_synth_FLAM.py algorithm logic into the FLOM
 - **Automatic Directory Creation**: Ensures output directories exist
 - **FL Core Compatibility**: CSV output saved to `/Users/ash/Desktop/SPACE_FLTeam/synth_FLAMs/`
 
+Use this to create files
+```
+cd /Users/ash/Desktop/SPACE_FLTeam && python test_complete_integration.py
+```
+
 ### 3. Key Algorithm Features Implemented
 - ✅ Round-based training cycles
 - ✅ TRAINING phase (all connections zeroed)
@@ -84,7 +89,7 @@ Timestep: 4, Round: 1, Target Node: 1, Phase: TRANSMITTING
 ...
 ```
 
-## 🎯 Benefits Achieved
+##  Benefits Achieved
 
 1. **Enhanced Algorithm**: Sam's sophisticated round-based logic with connection evolution
 2. **SatSim Preserved**: No changes required to satellite simulation component
@@ -93,7 +98,7 @@ Timestep: 4, Round: 1, Target Node: 1, Phase: TRANSMITTING
 5. **Configurable**: Algorithm parameters easily adjustable
 6. **Robust Testing**: Comprehensive validation of integration
 
-## 🚀 Ready for Production
+
 
 The integration is complete and ready for use in the FLOMPS workflow:
 - SatSim → Algorithm (Sam's Logic) → FL Core
@@ -102,4 +107,3 @@ The integration is complete and ready for use in the FLOMPS workflow:
 - Provides required CSV output format
 - Fully tested and validated
 
-**Integration Status: ✅ COMPLETE AND FUNCTIONAL**

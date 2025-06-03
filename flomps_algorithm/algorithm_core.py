@@ -153,17 +153,19 @@ class Algorithm():
                 # No connectivity from SatSim, just evolve existing connections
                 self.evolve_connections()
 
-            # Create effective matrix based on training phase
+            # Update training counter and phase status
+            if self.in_training:
+                self.training_counter += 1
+                if self.training_counter > self.training_time:
+                    self.in_training = False
+
+            # Create effective matrix based on current training phase
             effective_matrix = npy.copy(self.connections)
-            phase = "TRAINING"
 
             if self.in_training:
                 # During training, zero out all connections
                 effective_matrix[:, :] = 0
-                self.training_counter += 1
-                if self.training_counter >= self.training_time:
-                    self.in_training = False
-                    phase = "TRANSMITTING"
+                phase = "TRAINING"
             else:
                 phase = "TRANSMITTING"
 
