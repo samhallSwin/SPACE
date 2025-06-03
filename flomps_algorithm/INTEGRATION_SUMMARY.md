@@ -20,7 +20,7 @@ Successfully integrated Sam's Create_synth_FLAM.py algorithm logic into the FLOM
 
 Use this to create files
 ```
-cd /Users/ash/Desktop/SPACE_FLTeam && python test_complete_integration.py
+cd /Users/ash/Desktop/SPACE_FLTeam && python generate_flam_csv.py
 ```
 
 ### 3. Key Algorithm Features Implemented
