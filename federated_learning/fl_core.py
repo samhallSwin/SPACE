@@ -29,6 +29,7 @@ import sys
 import os
 import time
 import threading
+import threading
 from datetime import datetime
 
 # Add the project root directory to the Python path
@@ -44,6 +45,10 @@ class FederatedLearning:
         self.num_clients = None
         self.global_model = None
         self.client_data = []
+        self.round_times = {}
+        self.total_training_time = 0
+        self.round_accuracies = []
+        self.timestep = 0  # Global timestep counter
         self.round_times = {}
         self.total_training_time = 0
         self.round_accuracies = []
@@ -123,7 +128,7 @@ class FederatedLearning:
             "average_round_time": self.total_training_time / self.num_rounds if self.num_rounds > 0 else 0,
             "timestamp": datetime.now().isoformat()
         }
-    
+
     def load_flam_schedule(self, flam_path):
         """Parse FLAM CSV and return a list of dicts with timestep, phase, etc."""
         schedule = []
@@ -253,7 +258,7 @@ if __name__ == "__main__":
     fl_instance = FederatedLearning()
     fl_instance.set_num_rounds(num_rounds)
     fl_instance.set_num_clients(num_clients)
-    flam_path = os.path.join(os.path.dirname(__file__), "../synth_FLAMs/sim_5n_100t_0.10tc_3tr_2.00db_2025-05-23_11-14-15.csv")
+    flam_path = os.path.join(os.path.dirname(__file__), "../synth_FLAMs/flam_4n_100t_flomps_2025-06-03_15-15-29.csv")
     fl_instance.run(flam_path=flam_path)
 
     # Evaluate the model
