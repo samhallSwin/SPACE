@@ -56,13 +56,6 @@ class FederatedLearning:
     def set_num_clients(self, clients: int) -> None:
         self.num_clients = clients
         print(f"Number of clients set to: {self.num_clients}")
-    
-    def set_topology(self, adjacency_matrix, aggregator_id):
-        
-        self.adjacency_matrix = adjacency_matrix
-        self.aggregator_id = int(aggregator_id)
-        print(f"[TOPOLOGY] Topology set. Aggregator: {self.aggregator_id}")
-
 
     def initialize_data(self):
         """Split dataset among clients."""

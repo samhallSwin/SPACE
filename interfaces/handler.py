@@ -1,7 +1,7 @@
 """
 Filename: handler.py
 Description: Handler interface for all component input classes intended to parse data from an expected format.
-Author: Nicholas Paul Candra
+Author: Elysia Guglielmo
 Date: 2025-05-28
 Version: 1.1
 """
