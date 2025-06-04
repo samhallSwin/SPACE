@@ -1,10 +1,9 @@
 """
 Filename: algorithm_output.py
 Description: Prepares and sends data to Federated Learning module
-Initial Creator: Elysia Guglielmo (System Architect)
-Author: Yuganya Perumal
-Date: 2024-08-07
-Version: 1.0
+Initial Creator: Elysia Guglielmo (System Architect), stephen zeng
+Date: 2025-06-04
+Version: 1.
 Python Version:
 
 Changelog:
@@ -14,32 +13,49 @@ Changelog:
 - 2024-09-09: Algorithm output returns the FLAM.
 - 2024-09-21: Algorithm output re organised to remove redundancy and added timestamp and satellite name to data structure passed to FL.
 - 2024-10-14: Output file name changed to FLAM.txt as per client feedback.
+- 2025-06-04: Removed hardcoded paths, added universal path management.
 
 Usage:
 Instantiate AlgorithmOutput and assign FLInput.
 """
 from interfaces.output import Output
 import os
+import sys
 from datetime import datetime
 import numpy as npy
 import pandas as pds
+
+# add path manager
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, project_root)
+
+try:
+    from utilities.path_manager import path_manager
+except ImportError:
+    # if path manager is not found, use backup path
+    print("Warning: Path manager not found, using backup path")
+    path_manager = None
+
 class AlgorithmOutput(Output):
 
     # Constructor
     def __init__(self):
         self.flam_output = None
 
-        # Get the directory of the current script (sat_sim_output.py)
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        # Set output_path to 'sat_sim_output' folder within the 'sat_sim' directory
-        self.output_path = os.path.join(script_dir, 'output')
-        # Ensure output directory exists
-        os.makedirs(self.output_path, exist_ok=True)
-
-        # Sam's CSV output path
-        self.csv_output_path = "/Users/ash/Desktop/SPACE_FLTeam/synth_FLAMs/"
-        # Ensure CSV output directory exists
-        os.makedirs(self.csv_output_path, exist_ok=True)
+        if path_manager:
+            # use path manager
+            self.output_path = str(path_manager.algorithm_output_dir)
+            self.csv_output_path = str(path_manager.synth_flams_dir)
+        else:
+            # use backup path
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            self.output_path = os.path.join(script_dir, 'output')
+            project_root = os.path.dirname(script_dir)
+            self.csv_output_path = os.path.join(project_root, "synth_FLAMs")
+            
+            # ensure directories exist
+            os.makedirs(self.output_path, exist_ok=True)
+            os.makedirs(self.csv_output_path, exist_ok=True)
 
     def get_result(self):
         return self.flam_output

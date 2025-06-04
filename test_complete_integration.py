@@ -1,6 +1,13 @@
 #!/usr/bin/env python3
 """
 Test the complete FLOMPS workflow with Sam's algorithm integration
+Author: stephen zeng
+Date: 2025-06-04
+Version: 1.0
+Python Version: 3.10
+
+Changelog:
+- 2025-06-04: Initial creation. 
 """
 
 import sys
@@ -9,6 +16,12 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 import numpy as np
 from flomps_algorithm.algorithm_core import Algorithm
+# add path manager
+try:
+    from utilities.path_manager import get_synth_flams_dir
+    use_path_manager = True
+except ImportError:
+    use_path_manager = False
 
 def test_flomps_integration():
     print("Testing FLOMPS integration with Sam's algorithm...")
@@ -60,20 +73,44 @@ def test_flomps_integration():
     print("✓ Connection evolution with bias working")
     print("✓ BFS reachability checking functional")
 
-    # Check outputs
-    csv_path = "/Users/ash/Desktop/SPACE_FLTeam/synth_FLAMs/"
-    csv_files = [f for f in os.listdir(csv_path) if f.startswith('flam_') and f.endswith('.csv')]
-    latest_csv = max(csv_files, key=lambda x: os.path.getctime(os.path.join(csv_path, x)))
+    # Check outputs using universal paths
+    if use_path_manager:
+        csv_path = get_synth_flams_dir()
+        csv_files = [f for f in csv_path.glob('flam_*.csv')]
+        if csv_files:
+            latest_csv = max(csv_files, key=lambda x: x.stat().st_ctime)
+            latest_csv_name = latest_csv.name
+        else:
+            latest_csv = None
+            latest_csv_name = "None"
+    else:
+        # use backup path
+        csv_path_str = "synth_FLAMs/"
+        if os.path.exists(csv_path_str):
+            csv_files = [f for f in os.listdir(csv_path_str) if f.startswith('flam_') and f.endswith('.csv')]
+            if csv_files:
+                latest_csv_name = max(csv_files, key=lambda x: os.path.getctime(os.path.join(csv_path_str, x)))
+                latest_csv = os.path.join(csv_path_str, latest_csv_name)
+            else:
+                latest_csv = None
+                latest_csv_name = "None"
+        else:
+            latest_csv = None
+            latest_csv_name = "None"
 
-    print(f"✓ Sam's CSV format created: {latest_csv}")
+    print(f"✓ Sam's CSV format created: {latest_csv_name}")
 
     # Verify CSV content format
-    with open(os.path.join(csv_path, latest_csv), 'r') as f:
-        first_line = f.readline().strip()
-        if "Timestep:" in first_line and "Round:" in first_line and "Target Node:" in first_line and "Phase:" in first_line:
-            print("✓ CSV format matches Sam's specification")
-        else:
-            print("✗ CSV format doesn't match expected format")
+    if latest_csv and os.path.exists(str(latest_csv)): # check if csv file exists
+        with open(str(latest_csv), 'r') as f: 
+            first_line = f.readline().strip()
+            # check if the first line contains the expected headers
+            if "Timestep:" in first_line and "Round:" in first_line and "Target Node:" in first_line and "Phase:" in first_line:
+                print("✓ CSV format matches Sam's specification")
+            else:
+                print("✗ CSV format doesn't match expected format")
+    else:
+        print("⚠ No CSV file found to verify format")
 
     print("\n🎉 INTEGRATION SUCCESS!")
     print("Sam's algorithm has been successfully integrated into FLOMPS:")

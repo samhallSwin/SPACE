@@ -33,6 +33,10 @@ class AlgorithmHandler(Handler):
         self.adjacency_matrices = []
         self.sat_names = []
     
+    def parse_input(self, file):
+        # Implementation of abstract method - delegates to parse_file
+        return self.parse_file(file)
+    
     @staticmethod 
     def read_adjacency_matrices(file_name):
         # Check if file exist.

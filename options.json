@@ -1,8 +1,8 @@
 {
     "sat_sim": {
-        "start_time": "2024-09-12 12:00:00",
-        "end_time": "2024-09-12 13:40:00",
-        "timestep": 1,
+        "start_time": "2025-06-05 01:00:00",
+        "end_time": "2025-06-05 01:10:00",
+        "timestep": 60,
         "output_file_type": "txt",
         "ground_station": {
             "location": {
@@ -10,7 +10,7 @@
                 "long": 139.6917
             }
         },
-        "gui": true,
+        "gui": false,
         "module_settings": {
             "output_to_file": true
         }
@@ -21,8 +21,8 @@
         }
     },
     "federated_learning": {
-        "num_rounds": 1,
-        "num_clients": 4,
+        "num_rounds": 3,
+        "num_clients": 40,
         "model_type": "SimpleCNN",
         "data_set": "MNIST",
         "tick": {

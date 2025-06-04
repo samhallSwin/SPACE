@@ -57,6 +57,25 @@ class FederatedLearning:
         self.num_clients = clients
         print(f"Number of clients set to: {self.num_clients}")
 
+    def set_model(self, model):
+        """Set the model for federated learning (compatibility method)."""
+        print(f"Model configuration received: {model}")
+        # This method exists for compatibility with the config system
+        # The actual model is initialized internally in initialize_model()
+
+    def set_topology(self, matrix, aggregator_id):
+        """Set the network topology and aggregator for federated learning."""
+        print(f"Setting topology with aggregator ID: {aggregator_id}")
+        # Store topology information for later use
+        self.current_topology = matrix
+        self.current_aggregator = aggregator_id
+
+    def reset_clients(self):
+        """Reset client data (compatibility method)."""
+        print("Resetting clients...")
+        # This method exists for compatibility with FL handler
+        # Client data is managed internally
+
     def initialize_data(self):
         """Split dataset among clients."""
         transform = transforms.Compose([transforms.ToTensor()])
@@ -123,7 +142,46 @@ class FederatedLearning:
             "average_round_time": self.total_training_time / self.num_rounds if self.num_rounds > 0 else 0,
             "timestamp": datetime.now().isoformat()
         }
+    def run_flam_round(self, flam_entry):
+        """Run a single FLAM-based round step based on the phase."""
+        phase = flam_entry.get("phase", "TRAINING")
+        print(f"\n[FLAM Phase: {phase}]")
 
+        if phase == "TRAINING":
+            client_models = []
+            round_correct = 0
+            round_total = 0
+            start_time = time.time()
+
+            for client_id, data_loader in enumerate(self.client_data):
+                client_model = type(self.global_model)()
+                client_model.load_state_dict(self.global_model.state_dict())
+                print(f"Training client {client_id + 1}...")
+
+                state_dict, accuracy = self.train_client(client_model, data_loader)
+                client_models.append(state_dict)
+                round_correct += accuracy * len(data_loader.dataset)
+                round_total += len(data_loader.dataset)
+
+            self._pending_client_models = client_models
+            self._pending_round_correct = round_correct
+            self._pending_round_total = round_total
+            self._pending_round_start_time = start_time
+
+        elif phase == "TRANSMITTING":
+            if hasattr(self, "_pending_client_models"):
+                self.federated_averaging(self._pending_client_models)
+
+                round_time = time.time() - self._pending_round_start_time
+                round_accuracy = self._pending_round_correct / self._pending_round_total if self._pending_round_total > 0 else 0
+
+                print(f"Completed round with accuracy: {round_accuracy:.2%} in {round_time:.2f} seconds")
+
+                # Clean up
+                del self._pending_client_models
+                del self._pending_round_correct
+                del self._pending_round_total
+                del self._pending_round_start_time
     def load_flam_schedule(self, flam_path):
         """Parse FLAM CSV and return a list of dicts with timestep, phase, etc."""
         schedule = []

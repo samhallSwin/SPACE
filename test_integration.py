@@ -11,6 +11,13 @@ import numpy as np
 from flomps_algorithm.algorithm_core import Algorithm
 from flomps_algorithm.algorithm_output import AlgorithmOutput
 
+# add path manager
+try:
+    from utilities.path_manager import get_synth_flams_dir
+    use_path_manager = True
+except ImportError:
+    use_path_manager = False
+
 def test_sam_algorithm():
     print("Testing Sam's algorithm integration...")
 
@@ -46,20 +53,40 @@ def test_sam_algorithm():
     print(f"Algorithm completed. Generated {len(output)} timestep results.")
 
     # Check first few results
-    for i, (timestamp, result) in enumerate(list(output.items())[:3]):
-        print(f"\nTimestep {i+1} ({timestamp}):")
-        print(f"  Round: {result.get('round_number', 'N/A')}")
-        print(f"  Phase: {result.get('phase', 'N/A')}")
-        print(f"  Target Node: {result.get('target_node', 'N/A')}")
-        print(f"  Selected Satellite: {result.get('selected_satellite', 'N/A')}")
-        print(f"  Aggregator Flag: {result.get('aggregator_flag', 'N/A')}")
-        print(f"  Matrix shape: {result['federatedlearning_adjacencymatrix'].shape}")
+    if isinstance(output, dict):
+        # Handle direct dictionary output
+        for i, (timestamp, result) in enumerate(list(output.items())[:3]):
+            print(f"\nTimestep {i+1} ({timestamp}):")
+            print(f"  Round: {result.get('round_number', 'N/A')}")
+            print(f"  Phase: {result.get('phase', 'N/A')}")
+            print(f"  Target Node: {result.get('target_node', 'N/A')}")
+            print(f"  Selected Satellite: {result.get('selected_satellite', 'N/A')}")
+            print(f"  Aggregator Flag: {result.get('aggregator_flag', 'N/A')}")
+            print(f"  Matrix shape: {result['federatedlearning_adjacencymatrix'].shape}")
+    else:
+        # Handle DataFrame output
+        for i in range(min(3, len(output))):
+            result = output.iloc[i]
+            print(f"\nTimestep {i+1}:")
+            print(f"  Timestamp: {result.get('time_stamp', 'N/A')}")
+            print(f"  Selected Satellite: {result.get('satellite_name', 'N/A')}")
+            print(f"  Aggregator Flag: {result.get('aggregator_flag', 'N/A')}")
+            print(f"  Matrix shape: {result['federatedlearning_adjacencymatrix'].shape if 'federatedlearning_adjacencymatrix' in result else 'N/A'}")
 
     print("\nTest completed successfully!")
 
-    # Check if CSV was created
-    csv_path = "/Users/ash/Desktop/SPACE_FLTeam/synth_FLAMs/"
-    csv_files = [f for f in os.listdir(csv_path) if f.startswith('flam_') and f.endswith('.csv')]
+    # Check outputs using universal paths
+    if use_path_manager:
+        csv_path = get_synth_flams_dir()
+        csv_files = [f.name for f in csv_path.glob('flam_*.csv')]
+    else:
+        # use backup path: synth_FLAMs/
+        csv_path = "synth_FLAMs/"
+        if os.path.exists(csv_path):
+            csv_files = [f for f in os.listdir(csv_path) if f.startswith('flam_') and f.endswith('.csv')]
+        else:
+            csv_files = []
+    
     if csv_files:
         print(f"Sam's CSV format files created: {csv_files}")
     else:

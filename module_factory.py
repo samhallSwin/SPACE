@@ -94,5 +94,6 @@ def create_fl_module() -> FLModule:
     fl = FederatedLearning()
     fl_config = FLConfig(fl)
     fl_handler = FLHandler(fl)
+    fl_output = FLOutput()
 
-    return FLModule(fl_config, fl_handler, fl.output)
+    return FLModule(fl_config, fl_handler, fl_output)
