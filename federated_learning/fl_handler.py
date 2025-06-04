@@ -1,47 +1,154 @@
 """
 Filename: fl_handler.py
-Description: Reads algorithm data to perform preprocessing before running federated learning round. 
-Author: Elysia Guglielmo and Connor Bett
-Date: 2024-08-02
-Version: 1.0
-Python Version: 
-
-Changelog:
-- 2024-08-02: Initial creation.
-- 2024-01-31: Core Integration Setup for fed avg 
-
-Todo/notes:
-- Model Intergration +
-Usage: 
-
+Description: Reads algorithm data to perform preprocessing before running federated learning round.
+Author: Nicholas Paul Candra
+Date: 2025-05-12
+Version: 1.3
+Python Version: 3.10+
 """
+
+import sys
+import os
+import ast
+import pandas as pd
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from interfaces.handler import Handler
 from federated_learning.fl_core import FederatedLearning
-# algorithm input
 
 
 class FLHandler(Handler):
-
-    # Constructor
     def __init__(self, fl_core: FederatedLearning):
+        super().__init__()
         self.federated_learning = fl_core
-        self.flam = None
 
-    def parse_data(self, data):
-        if data is not None:
-            self.flam = data
-        else:
-            raise FileNotFoundError(f"FL attempted to parse a FLAM, but was empty ")
-
-        return super().parse_data()
-
-    # for external file support
-    def parse_file(self, file):
-        return super().parse_input()
+    def parse_input(self, file):
+        return self.parse_file(file)
 
     def run_module(self):
-        if self.flam is None:
-            self.federated_learning.run()
+        if self.flam is not None:
+            print("[INFO] Parsing FLAM metadata for simulation...")
+            self.run_flam_based_simulation()
         else:
-            self.federated_learning.set_flam(self.flam)
+            print("[INFO] Running default Federated Learning Core...")
             self.federated_learning.run()
+
+    def run_flam_based_simulation(self):
+        print("[DEBUG] Parsed FLAM Columns:", self.flam.columns.tolist())
+
+        for timestamp, group in self.flam.groupby("time_stamp"):
+            print(f"\n[FLAM ROUND] \nTime: {timestamp}")
+            
+            # Analyzing the adjacency matrix.
+            matrix_row = group[group["aggregator_flag"] == True].iloc[0] if not group[group["aggregator_flag"] == True].empty else group.iloc[0]
+            matrix_str = matrix_row["federatedlearning_adjacencymatrix"]
+            
+            try:
+                # clean and parse matrix
+                matrix = self.parse_adjacency_matrix(matrix_str)
+                
+                # find aggregator ID
+                aggregator_id = group[group["aggregator_flag"] == True].index[0] if not group[group["aggregator_flag"] == True].empty else 0
+                
+                # set topology
+                self.federated_learning.set_topology(matrix, aggregator_id)
+                
+                # reset client data
+                self.federated_learning.reset_clients()
+                
+                # run training
+                self.federated_learning.run()
+                
+            except Exception as e:
+                print(f"[WARN] Error in FLAM round: {e}")
+                continue
+
+    def parse_adjacency_matrix(self, matrix_str):
+        """parse adjacency matrix string"""
+        cleaned = (
+            matrix_str.replace('\n', '')
+                      .replace('\r', '')
+                      .replace('\x00', '')
+                      .replace('], [', '],[')
+                      .strip().rstrip(',')
+        )
+
+        if not cleaned.startswith('[['):
+            cleaned = f'[{cleaned}]'
+
+        left, right = cleaned.count('['), cleaned.count(']')
+        if left > right:
+            cleaned += ']' * (left - right)
+        elif right > left:
+            cleaned = '[' * (right - left) + cleaned
+
+        return ast.literal_eval(cleaned)
+
+
+def load_flam_txt(filepath: str) -> pd.DataFrame:
+    with open(filepath, 'r') as f:
+        lines = f.readlines()
+
+    flam_entries = []
+
+    for line_num, line in enumerate(lines[1:], start=2):  # Skip header
+        fields = line.strip().split(None, 5)
+
+        if len(fields) < 6:
+            print(f"[WARN] Skipping malformed line {line_num}: not enough fields")
+            continue
+
+        time_stamp = fields[0] + ' ' + fields[1]
+        satellite_count = int(fields[2])
+        satellite_name = fields[3]
+        aggregator_flag = fields[4]
+        matrix_raw = " ".join(fields[5:])  
+        # Remove 'True' or 'False' if they leaked into matrix_raw
+        if matrix_raw.lower().startswith("true "):
+            matrix_raw = matrix_raw[5:].strip()
+        elif matrix_raw.lower().startswith("false "):
+            matrix_raw = matrix_raw[6:].strip()
+
+        # Normalize aggregator flag
+        is_aggregator = False
+        if str(aggregator_flag).lower() in ['true', '1', 't', 'y', 'yes']:
+            is_aggregator = True
+        elif str(aggregator_flag).lower() in ['false', '0', 'f', 'n', 'no', 'none']:
+            is_aggregator = False
+        else:
+            try:
+                is_aggregator = bool(int(aggregator_flag))
+            except (ValueError, TypeError):
+                is_aggregator = False
+
+        flam_entries.append({
+            "time_stamp": time_stamp,
+            "satellite_count": satellite_count,
+            "satellite_name": None if str(satellite_name).strip().lower() == "none" else satellite_name,
+            "aggregator_flag": is_aggregator,
+            "federatedlearning_adjacencymatrix": matrix_raw.strip()
+        })
+
+    return pd.DataFrame(flam_entries)
+
+
+if __name__ == "__main__":
+    print("[START] Initializing Federated Learning Handler...")
+
+    fl_core = FederatedLearning()
+    fl_core.set_num_clients(3)
+    fl_core.set_num_rounds(1)
+
+    # Inject reset_clients method to the instance if not defined
+    if not hasattr(fl_core, 'reset_clients'):
+        def reset_clients():
+            fl_core.client_data = []
+        fl_core.reset_clients = reset_clients
+
+    handler = FLHandler(fl_core)
+
+    handler.flam = load_flam_txt("FLAM.txt")
+
+    handler.run_module()
+    print("\n[DONE] FL process complete.")

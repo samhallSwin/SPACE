@@ -18,4 +18,4 @@ This project requires the following Core Software Libraries:
 The S.P.A.C.E project is a space simulation suite intending to validate a concept designed by the project’s client – Swinburne’s Space Instrumentation Engineering Group (SIEG). This concept aims to address current Earth Observation limitations, through the implementation of decentralised learning of satellite swarms, with the S.P.A.C.E project providing the framework for a virtual suite to which the client can use to further progress the initial FLOMPS (Federated Learning Over Moving Parameter Server) concept. 
 
 ## Full Documentation
-For full documentation, please refer to the [Wiki](Wiki) for system and operational details.
+For full documentation, please refer to the [Wiki](https://github.com/samhallSwin/SPACE/wiki) for system and operational details.
