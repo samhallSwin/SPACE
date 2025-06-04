@@ -23,6 +23,8 @@ TEST COMMENT FOR GIT TOMFOOLERY---)))
 import sys
 import argparse
 import json
+import os
+import glob
 
 import module_factory
 from module_factory import ModuleKey
@@ -219,6 +221,24 @@ def read_modules_cli(parser, args, options):
 
     # Get input file
     input_file = args.input_file
+
+    # If the input is a directory, auto-select a supported FLAM file
+    if os.path.isdir(input_file):
+        print(f"[INFO] Scanning directory for input files: {input_file}")
+
+        # Supported file types in priority order
+        supported_extensions = ['*.csv', '*.txt', '*.json']
+
+        flam_candidates = []
+        for ext in supported_extensions:
+            flam_candidates.extend(glob.glob(os.path.join(input_file, ext)))
+
+        if not flam_candidates:
+            raise FileNotFoundError(f"No supported input files (*.csv, *.txt, *.json) found in: {input_file}")
+
+        # Use the first match found
+        input_file = flam_candidates[0]
+        print(f"[INFO] Auto-selected input file: {input_file}")
 
     # Input file ready to be used by entry module
     return single_module_key, input_file
