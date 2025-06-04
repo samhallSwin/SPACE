@@ -1,153 +1,290 @@
 """
 Filename: federated_learning.py
 Description: Manage FLOWER Federated Learning epochs.
-Author: Elysia Guglielmo and Connor Bett
-Date: 2024-08-02
+Author: Joshua Zimmerman
+Date: 2025-05-07
 Version: 1.0
-Python Version: 
+Python Version: 3.10.0
 
 Changelog:
 - 2024-08-02: Initial creation.
 - 2024-08-11: Added a Model Manager Class, exposed variables in standalone execution for: round count, client count and model/data set.
 - 2024-08-11: Refactored to adhere to OOP principals
 - 2024-09-16: Offloaded Model Manger to model.py, Refactored Standalone
+- 2025-05-07: Remade file: Added TensorFlow + PyTorch conversion and saving functionality. Removed all Flower functionality
+- 2025-05-09: Added processing time tracking for rounds and overall training
 
-Usage: 
-Run this file directly to start a Multithreading instance of Flower FL with the chosen number of clients rounds and model.
+Usage:
+Run this file directly to start a Multithreading instance of Tensorflow FL with the chosen number of clients rounds and model.
 
 """
+
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torchvision import datasets, transforms
+from typing import List, Dict
 import numpy as np
-import tensorflow as tf
-import flwr as fl
-from flwr.server.driver.grpc_driver import GrpcDriver as p2p
-
-from model import Model
-from federated_learning.fl_output import FLOutput
-
-from typing import Tuple, List
-import multiprocessing
+import sys
+import os
 import time
+import threading
+from datetime import datetime
+
+# Add the project root directory to the Python path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from federated_learning.fl_output import FLOutput
+from federated_learning.fl_visualization import FLVisualization
 
 class FederatedLearning:
-    """Manages the Flower FL server and clients."""
+    """Custom Federated Learning engine."""
 
     def __init__(self):
         self.num_rounds = None
-        self.num_clients = None 
-        self.output = FLOutput()
-        #self.model_manager = ModelManager("mnist")
-        self.model_manager = None
-        self.flam = None
+        self.num_clients = None
+        self.global_model = None
+        self.client_data = []
+        self.round_times = {}
+        self.total_training_time = 0
+        self.round_accuracies = []
+        self.timestep = 0  # Global timestep counter
 
-
-    """Parse and Set Values from Handler"""
     def set_num_rounds(self, rounds: int) -> None:
         self.num_rounds = rounds
-        print(f"round count set to: {self.num_rounds}")
+        print(f"Number of rounds set to: {self.num_rounds}")
+
     def set_num_clients(self, clients: int) -> None:
         self.num_clients = clients
-        print(f"client count set to: {self.num_clients}")
-    def set_flam(self, flam) -> None:
-        self.flam = flam
-        self.num_clients = flam['satellite_count'].iat[0]
-        print(f"client count set to: {self.num_clients}")
+        print(f"Number of clients set to: {self.num_clients}")
 
-    def set_model_hyperparameters(self, params) -> None:
-        pass
-        # model_manager.set_model_hyperparameters(params)
-    def set_model(self, model: Model) -> None:
-        self.model_manager = model
-
-    def start_server(self):
-        """Start the Flower server."""
-        model = self.model_manager.create_model()
-        model.compile(optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"])
-
-        print(f"CLIENT count set to{self.num_clients}")
-        print(self.num_clients)
-
-        strategy = fl.server.strategy.FedAvg(
-            fraction_fit=1.0, 
-            min_fit_clients=self.num_clients, 
-            min_available_clients=self.num_clients,
-        )
-
-        fl.server.start_server(config=fl.server.ServerConfig(num_rounds=self.num_rounds), strategy=strategy, server_address="localhost:8080")
-
-    def start_client(self, client_id: int):
-        """Start a Flower client."""
-        client = FlowerClient(self.model_manager)
-        fl.client.start_numpy_client(server_address="localhost:8080", client=client)
-
-    def run(self):
-        """Run the Flower FL process with multiple clients."""
-        # Start the server in a separate process
-        server_process = multiprocessing.Process(target=self.start_server)
-        server_process.start()
-
-        # Sleep time for server to start, this is less important for devices with faster processors 
-        time.sleep(5)
-
-        # Start the clients in separate processes 
-        client_processes = []
+    def initialize_data(self):
+        """Split dataset among clients."""
+        transform = transforms.Compose([transforms.ToTensor()])
+        dataset = datasets.MNIST('~/.pytorch/MNIST_data/', download=True, train=True, transform=transform)
         for i in range(self.num_clients):
-            client_process = multiprocessing.Process(target=self.start_client, args=(i,))
-            client_process.start() 
-            client_processes.append(client_process)
+            start = i * (len(dataset) // self.num_clients)
+            end = (i + 1) * (len(dataset) // self.num_clients)
+            subset = torch.utils.data.Subset(dataset, range(start, end))
+            client_loader = torch.utils.data.DataLoader(subset, batch_size=32, shuffle=True, num_workers=2)
+            self.client_data.append(client_loader)
+        print("Client data initialized.")
 
-        # Wait for all client processes to complete
-        for client_process in client_processes:
-            client_process.join()
+    def initialize_model(self):
+        """Define a simple PyTorch model."""
+        class SimpleModel(nn.Module):
+            def __init__(self):
+                super(SimpleModel, self).__init__()
+                self.fc = nn.Linear(28 * 28, 10)
 
-        # Stop the server process
-        server_process.terminate()
-        server_process.join() 
+            def forward(self, x):
+                x = x.view(-1, 28 * 28)
+                return self.fc(x)
 
-# Define the Flower client class
-class FlowerClient(fl.client.NumPyClient):
-    """Flower client implementation for federated learning."""
+        self.global_model = SimpleModel()
+        print("Global model initialized.")
 
-    def __init__(self, model_manager: Model):
-        self.model = model_manager.create_model()
-        (self.x_train, self.y_train) = model_manager.load_data()
-    def get_parameters(self, config: dict) -> List[np.ndarray]:
-        return self.model.get_weights() 
+    def train_client(self, model, data_loader):
+        """Train a single client."""
+        model.train()
+        optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9, weight_decay=1e-4)
+        criterion = nn.CrossEntropyLoss()
+        correct = 0
+        total = 0
 
-    def fit(self, parameters: List[np.ndarray], config: dict) -> Tuple[List[np.ndarray], int, dict]:
-        self.model.set_weights(parameters) 
-        self.model.compile(optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"])
-        self.model.fit(self.x_train, self.y_train, epochs=1, batch_size=32)
-        return self.model.get_weights(), len(self.x_train), {} 
+        for data, target in data_loader:
+            optimizer.zero_grad()
+            output = model(data)
+            loss = criterion(output, target)
+            loss.backward()
+            optimizer.step()
 
-    def evaluate(self, parameters: List[np.ndarray], config: dict) -> Tuple[float, int, dict]:
-        self.model.set_weights(parameters)
-        self.model.compile(optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"])
-        loss, accuracy = self.model.evaluate(self.x_train, self.y_train)
-        return loss, len(self.x_train), {"accuracy": accuracy}
+            # Calculate accuracy
+            _, predicted = torch.max(output, 1)
+            correct += (predicted == target).sum().item()
+            total += target.size(0)
 
+        accuracy = correct / total if total > 0 else 0
+        return model.state_dict(), accuracy
 
-# Setup later...    
-class ClientNode():
-    def __init__(self) -> None:
-        pass
+    def federated_averaging(self, client_models: List[dict]):
+        """Aggregate client models into a global model."""
+        global_state = self.global_model.state_dict()
+        for key in global_state.keys():
+            global_state[key] = torch.stack([client[key] for client in client_models], dim=0).mean(dim=0)
+        self.global_model.load_state_dict(global_state)
+        print("Global model updated via federated averaging.")
 
-class AggregatorNode():
-    def __init__(self) -> None:
-        pass 
+    def get_round_metrics(self) -> Dict:
+        """Get metrics for the current training session."""
+        return {
+            "round_times": self.round_times,
+            "round_accuracies": self.round_accuracies,
+            "total_training_time": self.total_training_time,
+            "average_round_time": self.total_training_time / self.num_rounds if self.num_rounds > 0 else 0,
+            "timestamp": datetime.now().isoformat()
+        }
+    
+    def load_flam_schedule(self, flam_path):
+        """Parse FLAM CSV and return a list of dicts with timestep, phase, etc."""
+        schedule = []
+        with open(flam_path, "r") as f:
+            lines = f.readlines()
+        i = 0
+        while i < len(lines):
+            line = lines[i].strip()
+            if line.startswith("Timestep:"):
+                # Parse header
+                parts = line.split(", ")
+                timestep = int(parts[0].split(":")[1])
+                phase = parts[3].split(":")[1].strip()
+                schedule.append({"timestep": timestep, "phase": phase})
+                # Skip the adjacency matrix (5 lines)
+                i += 6
+            else:
+                i += 1
+        return schedule
 
+    def run(self, flam_path=None):
+        """Run the federated learning process, synchronized with FLAM phases."""
+        self.initialize_data()
+        self.initialize_model()
+        total_start_time = time.time()
+        round_accuracies = []
+
+        # Load FLAM schedule if provided
+        flam_schedule = []
+        if flam_path:
+            flam_schedule = self.load_flam_schedule(flam_path)
+            print(f"Loaded FLAM schedule with {len(flam_schedule)} timesteps.")
+
+        # Start the timestep counter in a background thread
+        stop_event = threading.Event()
+        def timestep_counter():
+            while not stop_event.is_set():
+                time.sleep(12) # Increment every 12 seconds
+                self.timestep += 1
+                print(f"Timestep: {self.timestep}")
+
+        counter_thread = threading.Thread(target=timestep_counter)
+        counter_thread.daemon = True
+        counter_thread.start()
+
+        try:
+            flam_idx = 0
+            round_num = 0
+            while flam_idx < len(flam_schedule) and round_num < self.num_rounds:
+                flam_entry = flam_schedule[flam_idx]
+                # Wait until the global timestep matches the FLAM timestep exactly
+                while self.timestep < flam_entry["timestep"]:
+                    time.sleep(0.5)
+                if self.timestep == flam_entry["timestep"]:
+                    phase = flam_entry["phase"]
+                    print(f"\nFLAM Timestep {flam_entry['timestep']} Phase: {phase}")
+
+                    if phase == "TRAINING":
+                        # Only train if we haven't already trained for this round
+                        if not hasattr(self, "_pending_client_models"):
+                            print(f"Training round {round_num + 1}...")
+                            client_models = []
+                            client_accuracies = []
+                            round_correct = 0
+                            round_total = 0
+                            for client_id, data_loader in enumerate(self.client_data):
+                                client_model = type(self.global_model)()
+                                client_model.load_state_dict(self.global_model.state_dict())
+                                print(f"Training client {client_id + 1}...")
+                                state_dict, accuracy = self.train_client(client_model, data_loader)
+                                client_models.append(state_dict)
+                                client_accuracies.append(accuracy)
+                                round_correct += accuracy * len(data_loader.dataset)
+                                round_total += len(data_loader.dataset)
+                            self._pending_client_models = client_models
+                            self._pending_round_correct = round_correct
+                            self._pending_round_total = round_total
+                            self._pending_round_start_time = time.time()
+                        else:
+                            print(f"Already trained for round {round_num + 1}, waiting for TRANSMITTING phase...")
+                    elif phase == "TRANSMITTING":
+                        if hasattr(self, "_pending_client_models"):
+                            self.federated_averaging(self._pending_client_models)
+                            print("Global model updated via federated averaging.")
+                            round_time = time.time() - self._pending_round_start_time
+                            round_accuracy = self._pending_round_correct / self._pending_round_total if self._pending_round_total > 0 else 0
+                            self.round_times[f"round_{round_num + 1}"] = round_time
+                            round_accuracies.append(round_accuracy)
+                            print(f"Round {round_num + 1} completed in {round_time:.2f} seconds with average accuracy {round_accuracy:.2%}.")
+                            round_num += 1
+                            # Clean up
+                            del self._pending_client_models
+                            del self._pending_round_correct
+                            del self._pending_round_total
+                            del self._pending_round_start_time
+                flam_idx += 1
+
+            self.total_training_time = time.time() - total_start_time
+            self.round_accuracies = round_accuracies
+
+            print(f"\nFederated learning process completed in {self.total_training_time:.2f} seconds.")
+            print("\nRound-wise processing times and accuracies:")
+            for idx, round_time in self.round_times.items():
+                print(f"{idx}: {round_time:.2f} seconds, Accuracy: {round_accuracies[int(idx.split('_')[1]) - 1]:.2%}")
+            print(f"Average round time: {self.total_training_time/self.num_rounds:.2f} seconds")
+        finally:
+            stop_event.set()
+            counter_thread.join(timeout=2)
+            print("Counter thread stopped.")
+            print("Total timestep count:", self.timestep)
 
 if __name__ == "__main__":
-    """STAND ALONE ENTRY POINT"""
-    # Default customisation values
+    """Standalone entry point for testing FederatedLearning."""
+    # Default customization values
     num_rounds = 5
     num_clients = 3
-    model_type = "ResNet50" # ResNet50 or SimpleCNN
-    data_set = "MNIST" # MNIST or BigEarthNet(WIP)
+    model_type = "SimpleCNN"
+    data_set = "MNIST"
 
-    # Initialise and run the FederatedLearning instance
+    # Create timestamped run directory under results_from_output
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    results_root = os.path.join(os.path.dirname(__file__), "results_from_output")
+    run_dir = os.path.join(results_root, timestamp)
+    os.makedirs(run_dir, exist_ok=True)
+
+    # Initialize and run the FederatedLearning instance
     fl_instance = FederatedLearning()
     fl_instance.set_num_rounds(num_rounds)
     fl_instance.set_num_clients(num_clients)
-    fl_instance.model_manager.set_model_type(model_type)
-    fl_instance.model_manager.set_data_set(data_set)
-    fl_instance.run()
+    flam_path = os.path.join(os.path.dirname(__file__), "../synth_FLAMs/sim_5n_100t_0.10tc_3tr_2.00db_2025-05-23_11-14-15.csv")
+    fl_instance.run(flam_path=flam_path)
+
+    # Evaluate the model
+    output = FLOutput()
+    output.evaluate_model(fl_instance.global_model, fl_instance.total_training_time)
+
+    # Add timing and accuracy metrics
+    timing_metrics = fl_instance.get_round_metrics()
+    for metric_name, value in timing_metrics.items():
+        output.add_metric(metric_name, value)
+
+    # Add round accuracies explicitly
+    output.add_metric("round_accuracies", fl_instance.round_accuracies)
+
+    # Save results into this run folder
+    log_file = os.path.join(run_dir, f"results_{timestamp}.log")
+    metrics_file = os.path.join(run_dir, f"metrics_{timestamp}.json")
+    model_file = os.path.join(run_dir, f"model_{timestamp}.pt")
+
+    # Log results and save files
+    output.log_result(log_file)
+    output.write_to_file(metrics_file, format="json")
+    output.save_model(model_file)
+
+    print("\nResults have been saved to:")
+    print("Log file:", log_file)
+    print("Metrics file:", metrics_file)
+    print("Model file:", model_file)
+
+    # Generate visualizations
+    print("\nGenerating visualizations...")
+    viz = FLVisualization(results_dir=run_dir)
+    viz.visualize_from_json(metrics_file)
+    print(f"Visualizations saved under {run_dir}")
