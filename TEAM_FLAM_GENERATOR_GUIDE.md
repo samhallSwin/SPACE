@@ -56,21 +56,23 @@ Output: Training phases and target assignments
 
 ### **Basic Generation**
 ```bash
-cd /Users/ash/Desktop/SPACE_FLTeam
+# into the FLAM Generator directory
+cd /path/to/your/SPACE_FLTeam
 python generate_flam_csv.py
 ```
 
 ### **Custom Satellite Count**
 ```bash
-# Use different TLE files for different satellite counts
+# use different TLE files for different satellite counts
 python generate_flam_csv.py TLEs/SatCount8.tle    # 8 satellites
 python generate_flam_csv.py TLEs/SatCount40.tle   # 40 satellites
 ```
 
 ### **Integration with Main FLOMPS**
 ```bash
-# Full FLOMPS workflow (includes FLAM generation)
-python main.py flomps --start-time "2024-09-12 12:00:00" --end-time "2024-09-12 13:40:00"
+# Full FLOMPS run with FLAMs
+cd /path/to/your/SPACE_FLTeam 
+python main.py flomps --start-time "2024-09-12 12:00:00" --end-time "2024-09-12 13:40:00" 
 ```
 
 ---

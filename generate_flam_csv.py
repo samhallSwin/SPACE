@@ -3,18 +3,37 @@
 FLAM CSV Generator
 Main utility to generate FLAM CSV files using SatSim → Algorithm workflow.
 Uses direct core classes (bypasses handlers) for better reliability.
+Author: stephen zeng
+Date: 2025-06-04
+Version: 2.0
+Python Version: 3.12
+
+Changelog:
+- 2025-06-04: Initial creation. 
+- 2025-06-04: Added command line argument support for time parameters
 """
 
 import sys
 import os
+import argparse # for command line arguments
+from datetime import datetime, timedelta # for time handling
 sys.path.append(os.path.abspath('.'))
 
 from sat_sim.sat_sim import SatSim
 from flomps_algorithm.algorithm_core import Algorithm
 import json
 from skyfield.api import load
+import glob
 
-def generate_flam_csv(tle_file="TLEs/SatCount4.tle"):
+# add path manager
+try:
+    from utilities.path_manager import get_synth_flams_dir
+    use_path_manager = True
+except ImportError:
+    use_path_manager = False
+
+# main function
+def generate_flam_csv(tle_file="TLEs/SatCount4.tle", start_time=None, end_time=None, timestep=1):
     """
     Generate FLAM CSV using SatSim + Algorithm direct approach.
 
@@ -25,21 +44,27 @@ def generate_flam_csv(tle_file="TLEs/SatCount4.tle"):
     print("🚀 Starting FLAM CSV Generation...")
     print(f"📡 Using TLE file: {tle_file}")
 
-    # Load configuration
-    with open('options.json', 'r') as f:
-        config = json.load(f)
+    # If no time specified, use current time as start and add 10 minutes as end
+    if start_time is None:
+        start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        print(f"No start time specified, using current time: {start_time}")
+    
+    if end_time is None:
+        start_dt = datetime.strptime(start_time, "%Y-%m-%d %H:%M:%S")
+        end_dt = start_dt + timedelta(minutes=10)
+        end_time = end_dt.strftime("%Y-%m-%d %H:%M:%S")
+        print(f"No end time specified, using 10 minutes later: {end_time}")
 
     # Calculate expected timesteps
-    from datetime import datetime
-    start_time = datetime.strptime(config['sat_sim']['start_time'], "%Y-%m-%d %H:%M:%S")
-    end_time = datetime.strptime(config['sat_sim']['end_time'], "%Y-%m-%d %H:%M:%S")
-    timestep_minutes = config['sat_sim']['timestep']
-    total_minutes = int((end_time - start_time).total_seconds() / 60)
+    start_dt = datetime.strptime(start_time, "%Y-%m-%d %H:%M:%S")
+    end_dt = datetime.strptime(end_time, "%Y-%m-%d %H:%M:%S")
+    timestep_minutes = timestep
+    total_minutes = int((end_dt - start_dt).total_seconds() / 60)
     expected_timesteps = total_minutes // timestep_minutes
 
-    print(f"⏱️  Expected timesteps: {expected_timesteps}")
-    print(f"    Start: {start_time}")
-    print(f"    End: {end_time}")
+    print(f"Expected timesteps: {expected_timesteps}")
+    print(f"    Start: {start_dt}")
+    print(f"    End: {end_dt}")
     print(f"    Interval: {timestep_minutes} minutes")
 
     try:
@@ -48,10 +73,10 @@ def generate_flam_csv(tle_file="TLEs/SatCount4.tle"):
 
         # Convert to Skyfield time objects
         ts = load.timescale()
-        start_skyfield = ts.utc(start_time.year, start_time.month, start_time.day,
-                               start_time.hour, start_time.minute, start_time.second)
-        end_skyfield = ts.utc(end_time.year, end_time.month, end_time.day,
-                             end_time.hour, end_time.minute, end_time.second)
+        start_skyfield = ts.utc(start_dt.year, start_dt.month, start_dt.day,
+                               start_dt.hour, start_dt.minute, start_dt.second)
+        end_skyfield = ts.utc(end_dt.year, end_dt.month, end_dt.day,
+                             end_dt.hour, end_dt.minute, end_dt.second)
 
         # Create SatSim instance
         sat_sim = SatSim(
@@ -117,19 +142,41 @@ def generate_flam_csv(tle_file="TLEs/SatCount4.tle"):
         print("\n📄 Checking output files...")
 
         # Find the generated CSV file
-        import glob
-        csv_files = glob.glob("/Users/ash/Desktop/SPACE_FLTeam/synth_FLAMs/*.csv")
+        if use_path_manager:
+            csv_dir = get_synth_flams_dir()
+            csv_files = list(csv_dir.glob("*.csv"))
+            print(f"CSV directory: {csv_dir}")
+        else:
+            # use backup path
+            csv_dir_str = "synth_FLAMs/"
+            if os.path.exists(csv_dir_str):
+                csv_files = [os.path.join(csv_dir_str, f) for f in os.listdir(csv_dir_str) if f.endswith('.csv')]
+            else:
+                csv_files = []
+            print(f"CSV directory: {csv_dir_str}")
+        
         if csv_files:
-            latest_csv = max(csv_files, key=os.path.getctime)
-            print(f"✅ CSV file generated: {os.path.basename(latest_csv)}")
-
-            # Count lines to verify timesteps
-            with open(latest_csv, 'r') as f:
-                content = f.read()
-                timestep_count = content.count('Timestep:')
+            print(f"Found {len(csv_files)} CSV files")
+            
+            # Check the latest file
+            if use_path_manager:
+                latest_file = max(csv_files, key=lambda x: x.stat().st_ctime)
+                print(f"Latest file: {latest_file.name}")
+                
+                # Count timesteps in the latest file
+                with open(latest_file, 'r') as f:
+                    timestep_count = sum(1 for line in f if line.startswith("Timestep:")) # count the number of lines that start with "Timestep:"
+                print(f"CSV contains {timestep_count} timesteps")
+            else:
+                latest_file = max(csv_files, key=lambda x: os.path.getctime(x))
+                print(f"Latest file: {os.path.basename(latest_file)}")
+                
+                # Count timesteps in the latest file
+                with open(latest_file, 'r') as f:
+                    timestep_count = sum(1 for line in f if line.startswith("Timestep:"))
                 print(f"📊 CSV contains {timestep_count} timesteps")
-
-            return latest_csv
+            
+            return latest_file
         else:
             print("❌ No CSV file found in synth_FLAMs/")
             return None
@@ -140,15 +187,42 @@ def generate_flam_csv(tle_file="TLEs/SatCount4.tle"):
         traceback.print_exc()
         return None
 
-if __name__ == "__main__":
-    # Allow TLE file to be specified as command line argument
-    tle_file = sys.argv[1] if len(sys.argv) > 1 else "TLEs/SatCount4.tle"
+def main():
+    """Main function to generate FLAM CSV with command line argument support"""
+    parser = argparse.ArgumentParser(description='Generate FLAM CSV files from TLE data')
+    parser.add_argument('tle_file', nargs='?', default='TLEs/SatCount4.tle', 
+                       help='TLE file path (default: TLEs/SatCount4.tle)')
+    parser.add_argument('--start-time', type=str, 
+                       help='Start time in YYYY-MM-DD HH:MM:SS format (default: current time)')
+    parser.add_argument('--end-time', type=str, 
+                       help='End time in YYYY-MM-DD HH:MM:SS format (default: start + 10 minutes)')
+    parser.add_argument('--timestep', type=int, default=1, 
+                       help='Timestep in minutes (default: 1)')
+    
+    args = parser.parse_args()
+    
+    print("Starting FLAM CSV Generation...")
+    print(f"Parameters:")
+    print(f"   TLE file: {args.tle_file}")
+    if args.start_time:
+        print(f"   Start time: {args.start_time}")
+    else:
+        print(f"   Start time: [Current time]")
+    if args.end_time:
+        print(f"   End time: {args.end_time}")
+    else:
+        print(f"   End time: [Start + 10 minutes]")
+    print(f"   Timestep: {args.timestep} minutes")
 
-    result = generate_flam_csv(tle_file)
+    result = generate_flam_csv(args.tle_file, args.start_time, args.end_time, args.timestep)
 
     if result:
-        print(f"\n🎉 SUCCESS! FLAM CSV generated: {os.path.basename(result)}")
+        filename = result.name if use_path_manager else os.path.basename(result)
+        print(f"\n🎉 SUCCESS! FLAM CSV generated: {filename}")
         print(f"📁 Full path: {result}")
         print("\n🔗 This CSV can now be used by FL core!")
     else:
         print("\n💥 FAILED to generate FLAM CSV")
+
+if __name__ == "__main__":
+    main()
