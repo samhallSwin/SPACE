@@ -71,6 +71,7 @@ class TimeGlobeWidget(QWidget):
 
         self.sphere = Sphere()
         self.slider = QSlider(Qt.Horizontal)
+        self.slider.setAccessibleName("slider_Time")
 
         self.slider.setRange(0, 360)
         self.slider.setValue(90)  # Start with Earth facing front
@@ -267,7 +268,7 @@ class  Sphere(QOpenGLWidget):
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_TEXTURE_2D)
 
-        self.textureID = self.loadTexture("Assests\Earth.png")
+        self.textureID = self.loadTexture("Assests/Earth.png")
         if not self.textureID:
             glDisable(GL_TEXTURE_2D)
         else:

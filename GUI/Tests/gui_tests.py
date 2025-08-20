@@ -1,27 +1,39 @@
 import unittest
 import sys
-from PyQt5.QtWidgets import QApplication
+import time
+import subprocess
 
-from GUI import Application
+from pywinauto import Application
+from pathlib import Path
 
-# python -m unittest GUI/Tests/gui_tests.py in CMD to run tests
-
-# Ensure a single QApplication is created
-app = QApplication.instance()
-if app is None:
-    app = QApplication(sys.argv)
+# To run tests:
+# python -m unittest -v GUI.Tests.gui_tests
 
 class TestGUIWindow(unittest.TestCase):
-    def setUp(self):
-        self.window = Application.MainWindow()
+    @classmethod
+    def setUpClass(cls):
+        python_exe = Path(".venv") / "Scripts" / "python.exe"
+        script_path = Path("GUI") / "Application.py"
+        cls.proc = subprocess.Popen([str(python_exe), str(script_path)])
 
-    def tearDown(self):
-        self.window.close()
+        time.sleep(2)
 
-    def test_open_window(self):
-        self.assertFalse(self.window.isVisible())
+        cls.app = Application(backend="uia").connect(title="S.P.A.C.E")
+        cls.window = cls.app.window(title="S.P.A.C.E")
 
-        self.window.show()
-        self.assertTrue(self.window.isVisible())
-    
-    
+    @classmethod
+    def tearDownClass(cls):
+        cls.proc.terminate()
+
+    def test_window_exists(self):
+        self.assertTrue(self.window.exists())
+        
+    def test_midnight_button_exists(self):
+        button = self.window.child_window(title="Midnight2", control_type="Button")
+        self.assertTrue(button.exists())
+
+    def test_print_all_elements(self):
+        self.window.print_control_identifiers()
+
+if __name__ == "__main__":
+    unittest.main()
