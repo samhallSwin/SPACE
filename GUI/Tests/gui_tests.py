@@ -29,11 +29,12 @@ class TestGUIWindow(unittest.TestCase):
         self.assertTrue(self.window.exists())
         
     def test_midnight_button_exists(self):
-        button = self.window.child_window(title="Midnight2", control_type="Button")
+        button = self.window.child_window(title="Midnight", control_type="Button")
         self.assertTrue(button.exists())
+        # button.click()
 
     def test_print_all_elements(self):
         self.window.print_control_identifiers()
 
 if __name__ == "__main__":
-    unittest.main()
+    unittest.main() 
