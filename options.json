@@ -21,7 +21,8 @@
         }
     },
     "federated_learning": {
-        "num_rounds": 5,
+        "num_rounds": 3,
+
         "num_clients": 4,
         "model_type": "SimpleCNN",
         "data_set": "MNIST",

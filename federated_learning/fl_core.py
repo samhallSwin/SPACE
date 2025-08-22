@@ -30,9 +30,8 @@ import os
 import time
 import threading
 from datetime import datetime
-import glob
-from torch.utils.data import DataLoader, Subset, random_split
-import torchvision
+from torch.utils.data import random_split, Subset, DataLoader
+
 
 # Add the project root directory to the Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -85,29 +84,74 @@ class FederatedLearning:
         self.timestep = 0
 
     def initialize_data(self):
-        """Initialize client data loaders"""
-        transform = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize((0.5,), (0.5,))
-        ])
-        full_dataset = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=transform)
+        """Split dataset among clients."""
+        transform = transforms.Compose([transforms.ToTensor()])
+
+        dataset = datasets.EuroSAT(root='~/.pytorch/EuroSAT/', download=True,
+                                transform=transform)
+
+        # split
+        n_total = len(dataset)
+        n_train = int(0.7 * n_total)
+        n_test  = n_total - n_train
+        self.train_set, self.test_set = random_split(
+            dataset,
+            [n_train, n_test],
+            generator=torch.Generator().manual_seed(42) 
+        )
+
+        per_client = len(self.train_set) // self.num_clients
+        self.client_data = []
+        for i in range(self.num_clients):
+            start, end = i * per_client, (i + 1) * per_client
+            subset = Subset(self.train_set, range(start, end))
+            loader = DataLoader(subset, batch_size=32, shuffle=True)
+            self.client_data.append(loader)
+
+        print(f"Client data initialized (EuroSAT). Train={n_train}, Test={n_test}")
         
-        # Split dataset among clients
-        client_datasets = random_split(full_dataset, [len(full_dataset) // self.num_clients] * self.num_clients)
-        self.client_data = [DataLoader(dataset, batch_size=32, shuffle=True) for dataset in client_datasets]
+
+        # dataset = datasets.MNIST('~/.pytorch/MNIST_data/', download=True, train=True, transform=transform)
+        # for i in range(self.num_clients):
+        #     start = i * (len(dataset) // self.num_clients)
+        #     end = (i + 1) * (len(dataset) // self.num_clients)
+        #     subset = torch.utils.data.Subset(dataset, range(start, end))
+        #     client_loader = torch.utils.data.DataLoader(subset, batch_size=32, shuffle=True)
+        #     self.client_data.append(client_loader)
+        # print("Client data initialized.")
 
     def initialize_model(self):
-        """Initialize the global model"""
-        class SimpleModel(nn.Module):
+        """Tiny CNN for 64x64x3 EuroSAT (10 classes)."""
+        class SimpleEuroSATCNN(nn.Module):
             def __init__(self):
-                super(SimpleModel, self).__init__()
-                self.fc = nn.Linear(784, 10)
-
+                super().__init__()
+                self.net = nn.Sequential(
+                    nn.Conv2d(3, 32, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2),   # output: 32x32
+                    nn.Conv2d(32, 64, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2),  # output: 16x16
+                    nn.Conv2d(64, 128, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2), # output: 8x8
+                    nn.Flatten(),
+                    nn.Linear(128*8*8, 256), nn.ReLU(),
+                    nn.Linear(256, 10)  # EuroSAT has 10 classes
+                )
             def forward(self, x):
-                x = x.view(x.size(0), -1)
-                return self.fc(x)
+                return self.net(x)
+
+        self.global_model = SimpleEuroSATCNN()
+        print("Global model initialized for EuroSAT.")
         
-        self.global_model = SimpleModel()
+        # """Define a simple PyTorch model."""
+        # class SimpleModel(nn.Module):
+        #     def __init__(self):
+        #         super(SimpleModel, self).__init__()
+        #         self.fc = nn.Linear(28 * 28, 10)
+
+        #     def forward(self, x):
+        #         x = x.view(-1, 28 * 28)
+        #         return self.fc(x)
+
+        # self.global_model = SimpleModel()
+        # print("Global model initialized.")
+
 
     def train_client(self, model, data_loader):
         """Train a client model on local data"""
@@ -329,6 +373,19 @@ class FederatedLearning:
             counter_thread.join(timeout=2)
             print("Counter thread stopped.")
             print("Total timestep count:", self.timestep)
+
+    def set_model(self, model):
+        self.global_model = model
+        print("Model set in FL core.")
+
+    def print_config_summary(self, model_type: str, data_set: str) -> None:
+        print("\n----Printing JSON options----")
+        print(f"Number of rounds: {self.num_rounds}")
+        print(f"Number of clients: {self.num_clients}")
+        print(f"Model type: {model_type}")
+        print(f"Dataset: {data_set}")
+        print("----JSON options printed successfully----\n")
+
 
 if __name__ == "__main__":
     """Standalone entry point for testing FederatedLearning."""
