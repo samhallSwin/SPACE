@@ -1,0 +1,16 @@
+{
+  "accuracy": 89.94,
+  "loss": 0.37724634268283846,
+  "processing_time": 10.0,
+  "timestamp": "2025-06-04T23:46:02.634668",
+  "additional_metrics": {
+    "round_times": {
+      "round_1": 3.5,
+      "round_2": 4.2
+    },
+    "round_accuracies": [
+      85.5,
+      87.2
+    ]
+  }
+}
