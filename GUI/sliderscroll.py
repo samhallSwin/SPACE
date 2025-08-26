@@ -25,30 +25,65 @@ class Window(QWidget):
     def __init__(self):
         super().__init__()
 
-        # Window geometry
+
+        self.time = QTime.currentTime()
+        self.time_display = QLineEdit(self.time.toString("hh:mm:ss"),self)
+        self.timer = QTimer(self)
+        self.timer.setInterval(1000)
+        self.timer.timeout.connect(self.tick)
+        self.slider = QSlider(Qt.Horizontal)
+
+        self.initUI()
+
+
+
+    def initUI(self): 
         self.setGeometry(100, 100, 800, 400)
         self.setWindowTitle("Clock Display")
 
         # Layout
         layout = QVBoxLayout()
-
+        layout.addWidget(self.time_display)
+        layout.addWidget(self.slider)
+        layout.addWidget(self.play_btn)
+        layout.addWidget(self.stop_btn)
+        self.setLayout(layout)
+        
         # Font
         font = QFont('Arial', 120, QFont.Bold)
-
-
+        
         # QLineEdit as display-only clock
-        self.time_display = QLineEdit(self)
         self.time_display.setReadOnly(True)  # Prevent edits
         self.time_display.setAlignment(Qt.AlignCenter)
         self.time_display.setFont(font)
         self.time_display.setStyleSheet("border: none; background: transparent;")  # look like QLabel
+        self.update_time()
 
         # Accessibility for automation
         self.time_display.setAccessibleName("clock_Time")
         self.time_display.setAccessibleDescription(QTime.currentTime().toString("hh:mm:ss"))
 
+         # Play button
+        self.play_btn = QPushButton("▶")
+        self.play_btn.clicked.connect(self.scroll)
+        # Stop Button
+        self.stop_btn = QPushButton("Stop")
+        self.stop_btn.clicked.connect(self.stop)
+
+
+
+        # Time
+    def tick(self):
+        self.time = self.time.addSecs(1)
+        self.time_display.setText(self.time.toString("hh:mm:ss"))
+
+    def start(self):
+        self.timer.start()
+    
+
+
         # Slider
-        self.slider = QSlider(Qt.Horizontal)
+       
         #self.slider.setAccessibleName("slider_Time")
 
         self.slider.setRange(0, 360)
@@ -61,30 +96,7 @@ class Window(QWidget):
         self.anim.setEasingCurve(QEasingCurve.Linear)
         self.anim.setDuration(40000) 
 
-        # Play button
-        self.play_btn = QPushButton("▶")
-        self.play_btn.clicked.connect(self.scroll)
-        # Stop Button
-        self.stop_btn = QPushButton("Stop")
-        self.stop_btn.clicked.connect(self.stop)
-
-        # Add to layout
-        layout.addWidget(self.time_display)
-        layout.addWidget(self.slider)
-        layout.addWidget(self.play_btn)
-        layout.addWidget(self.stop_btn)
-        self.setLayout(layout)
-
-        # Timer updates every second
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.update_time)
-        self.timer.start(1000)
-
-        # Initial display
-        self.update_time()
-        self.midnight
-
-     
+            
 
 # what to do on slider interaction
     def onSlider(self, value):
@@ -92,8 +104,7 @@ class Window(QWidget):
         s =  value * 240
         total = int(round(s)) % 86400
 
-        current_time = QTime(0,0).addSecs(total).toString("hh:mm:ss" \
-        "")
+        current_time = QTime(0,0).addSecs(total).toString("hh:mm:ss")
         self.time_display.setText(current_time)
 
 
@@ -106,18 +117,6 @@ class Window(QWidget):
         
     
 
-    def stop(self):
-        self.anim.stop()
-
-    def update_time(self):
-        current_time = QTime.currentTime().toString("hh:mm:ss")
-        self.time_display.setText(current_time)
-        self.time_display.setAccessibleDescription(current_time)
-
-    def midnight(self):
-        current_time = QTime.fromMSecsSinceStartOfDay(0).toString("hh:mm:ss")
-        self.time_display.setText(current_time)
-        self.time_display.setAccessibleDescription(current_time)
 
 # Run the app
 if __name__ == "__main__":
