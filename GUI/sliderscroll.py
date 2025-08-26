@@ -56,7 +56,7 @@ class Window(QWidget):
         self.slider.setTickInterval(30)
         #self.slider.setTickPosition(QSlider.TicksBelow)
         self.slider.valueChanged.connect(self.onSlider)
-
+        # Animations
         self.anim = QPropertyAnimation(self.slider, b"value", self)
         self.anim.setEasingCurve(QEasingCurve.Linear)
         self.anim.setDuration(4000) 
@@ -84,22 +84,21 @@ class Window(QWidget):
         self.update_time()
         self.midnight
 
-        self.scroll_timer = QTimer(self)
-        self.scroll_timer.setInterval(10)                 # ms between steps (adjust speed here)
-        self.scroll_timer.timeout.connect(self._step)
+     
 
 # what to do on slider interaction
     def onSlider(self, value):
         print(value)
 # auto scroll slider
     def scroll(self):
-        for i in range(0,361,1):
-            self.slider.setValue(int(i))
-            #time.sleep(0.1)      
+        self.anim.stop()
+        self.anim.setStartValue(self.slider.value())
+        self.anim.setEndValue(self.slider.maximum())
+        self.anim.start()
         
 
     def stop(self):
-        quit()
+        self.anim.stop()
 
     def update_time(self):
         current_time = QTime.currentTime().toString("hh:mm:ss")
