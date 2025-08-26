@@ -59,7 +59,7 @@ class Window(QWidget):
         # Animations
         self.anim = QPropertyAnimation(self.slider, b"value", self)
         self.anim.setEasingCurve(QEasingCurve.Linear)
-        self.anim.setDuration(4000) 
+        self.anim.setDuration(40000) 
 
         # Play button
         self.play_btn = QPushButton("▶")
@@ -89,6 +89,14 @@ class Window(QWidget):
 # what to do on slider interaction
     def onSlider(self, value):
         print(value)
+        s =  value * 240
+        total = int(round(s)) % 86400
+
+        current_time = QTime(0,0).addSecs(total).toString("hh:mm:ss" \
+        "")
+        self.time_display.setText(current_time)
+
+
 # auto scroll slider
     def scroll(self):
         self.anim.stop()
@@ -96,6 +104,7 @@ class Window(QWidget):
         self.anim.setEndValue(self.slider.maximum())
         self.anim.start()
         
+    
 
     def stop(self):
         self.anim.stop()
