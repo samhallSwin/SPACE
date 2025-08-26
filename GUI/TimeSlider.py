@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import (
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from PyQt5.QtWidgets import QPushButton, QVBoxLayout, QWidget, QFrame, QGraphicsOpacityEffect, QScrollArea
-from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtCore import pyqtSignal, QPropertyAnimation, QEasingCurve
 import math
 import datetime
 import os
@@ -19,10 +19,8 @@ from skyfield.api import Timescale
 from skyfield.api import EarthSatellite
 import time
 
-
 #----------------------------------------------------------------
 # Constants
-
 
 Seconds_Per_Day = 24 * 60 *60
 Earth_Degrees = 360
@@ -78,7 +76,7 @@ class TimeSliderWidget(QWidget):
         self.slider.setRange(0, 360)
         self.slider.setValue(90)  
         self.slider.setTickInterval(30)
-        self.slider.setTickPosition(QSlider.TicksBelow)
+        #self.slider.setTickPosition(QSlider.TicksBelow)
         self.slider.valueChanged.connect(self.onSlider)
 
         # Play button
@@ -102,7 +100,15 @@ class TimeSliderWidget(QWidget):
         layout.addWidget(self.time_display)
         layout.addWidget(self.slider)
         self.setLayout(layout)
+        h = QHBoxLayout()
+        for btn in (self.play_btn, self.start_btn, self.stop_btn, self.now_btn, self.midnight_btn):
+            h.addWidget(btn)
+        layout.addLayout(h)
 
+    # Animations Controls
+        self.anim = QPropertyAnimation(self.slider, b"value", self)
+        self.anim.setEasingCurve(QEasingCurve.Linear)
+        self.anim.setDuration(4000) 
 
     # Time Controls
     # Updates display clock every second
@@ -118,27 +124,32 @@ class TimeSliderWidget(QWidget):
         self.timer.stop()
         self.time = QTime.currentTime()
         self.time_display.setText(self.time.toString("hh:mm:ss"))
+        self.slider.setValue(seconds_to_degrees(self.time))
         self.timer.start()
 
     def midnight(self):
         self.timer.stop()
         self.time = QTime(0, 0, 0)
+        self.slider.setValue(0)
         self.time_display.setText(self.time.toString("hh:mm:ss"))
 
     def stop(self):
         self.timer.stop()
+        self.anim.stop()
 
     # Slider Controls
     def onSlider(self, value):
         print(value)
         self.timer.stop()
-        s =  value * 240
-        total = int(round(s)) % 86400
-        self.time = QTime(0,0).addSecs(total)
+        self.time = QTime(0,0).addSecs(degrees_to_sec(value))
         self.time_display.setText(self.time.toString("hh:mm:ss"))
         self.timer.start()
 
-
+    def scroll(self):
+        self.anim.stop()
+        self.anim.setStartValue(self.slider.value())
+        self.anim.setEndValue(self.slider.maximum())
+        self.anim.start()
 
 
 # Run the app
