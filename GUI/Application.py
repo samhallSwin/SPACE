@@ -42,6 +42,10 @@ class MainWindow(QMainWindow):
     def set_up_tle_display(self):
         self.tle_display = TLEDisplay(self)
         self.tle_display.raise_()
+        
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.tle_display.update_height()
 
   
 # ————————————————————————————————
@@ -107,8 +111,8 @@ class TimeGlobeWidget(QWidget):
         self.sphere.update()
 
 
-        self.now()
-        self.start()
+        # self.now()
+        # self.start()
 
     def _tick(self):
         self.time = self.time.addSecs(1)
@@ -268,7 +272,7 @@ class  Sphere(QOpenGLWidget):
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_TEXTURE_2D)
 
-        self.textureID = self.loadTexture("Assests/Earth.png")
+        self.textureID = self.loadTexture("GUI/Assests/Earth.png")
         if not self.textureID:
             glDisable(GL_TEXTURE_2D)
         else:
