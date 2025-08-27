@@ -62,12 +62,15 @@ class TestGUIWindow(unittest.TestCase):
         
     # Tests for Emelee:
     def test_start_button_exists(self):
+        # (title: Start)
         pass
     
     def test_stop_button_exists(self):
+        # (title: Stop)
         pass
     
     def test_now_button_exists(self):
+        # (title: Now)
         pass
 
     # def test_print_all_elements(self):
