@@ -18,43 +18,28 @@ Changelog:
 Usage:
 Instantiate to setup Algorithmhandler and AlgorithmConfig.
 """
+
 from flomps_algorithm.algorithm_output import AlgorithmOutput
 import numpy as npy
 import random
-from collections import deque
 
 class Algorithm():
 
-    # Constructor
     def __init__(self):
         self.satellite_names = []
         self.adjacency_matrices = None
         self.output = AlgorithmOutput()
         self.selection_counts = None
         self.output_to_file = True
-        self.algorithm_output_data = None  # Store algorithm output data
-
-        # Sam's algorithm parameters
-        self.toggle_chance = 0.1  # Default toggle chance for connection evolution
-        self.training_time = 3    # Default training time in timesteps
-        self.down_bias = 2.0      # Bias for breaking connections vs forming them
+        self.algorithm_output_data = None
 
         # Round tracking variables
         self.round_number = 1
-        self.target_node = None
-        self.training_counter = 0
-        self.in_training = True
-        self.connections = None  # Will store the evolving connection matrix
+        self.current_server = None
 
     def set_satellite_names(self, satellite_names):
         self.satellite_names = satellite_names
         self.selection_counts = npy.zeros(len(satellite_names))
-        # Initialize the connection matrix based on number of satellites
-        num_satellites = len(satellite_names)
-        self.connections = npy.zeros((num_satellites, num_satellites), dtype=int)
-        # Select initial target node
-        if num_satellites > 0:
-            self.target_node = random.randint(0, num_satellites - 1)
 
     def get_satellite_names(self):
         return self.satellite_names
@@ -69,146 +54,120 @@ class Algorithm():
         self.output_to_file = output_to_file
 
     def get_algorithm_output(self):
-        """Get algorithm output data, for workflow use"""
         return self.algorithm_output_data
 
-    def set_algorithm_parameters(self, toggle_chance=0.1, training_time=3, down_bias=2.0):
-        """Set parameters for Sam's algorithm"""
-        self.toggle_chance = toggle_chance
-        self.training_time = training_time
-        self.down_bias = down_bias
+    def find_best_server_for_round(self, start_matrix_index=0, round_length=5):
+        """
+        Find the server that connects to the MOST satellites over the next round_length timestamps.
+        More realistic for sparse satellite connectivity.
+        """
+        if start_matrix_index >= len(self.adjacency_matrices):
+            return 0, round_length  # Default fallback
 
-    def is_reachable(self, matrix, target):
-        """Check if all nodes can reach the target via BFS - Sam's reachability logic"""
-        num_nodes = len(matrix)
-        visited = [False] * num_nodes
-        queue = deque([target])
-        visited[target] = True
+        num_satellites = len(self.satellite_names)
+        best_server = 0
+        best_total_connections = 0
 
-        while queue:
-            node = queue.popleft()
-            for neighbor, connected in enumerate(matrix[node]):
-                if connected and not visited[neighbor]:
-                    visited[neighbor] = True
-                    queue.append(neighbor)
+        # Check each satellite as potential server
+        for server_idx in range(num_satellites):
+            total_connections = 0
 
-        return all(visited)
+            # Look ahead for the next 'round_length' timestamps
+            end_idx = min(start_matrix_index + round_length, len(self.adjacency_matrices))
 
-    def evolve_connections(self):
-        """Evolve connections using Sam's toggle logic with bias"""
-        num_devices = len(self.satellite_names)
+            for matrix_idx in range(start_matrix_index, end_idx):
+                _, matrix = self.adjacency_matrices[matrix_idx]
+                # Count how many other satellites this server connects to
+                connections_count = sum(matrix[server_idx]) - matrix[server_idx][server_idx]  # Exclude self-connection
+                total_connections += connections_count
 
-        # Toggle connections with directional bias
-        for i in range(num_devices):
-            for j in range(i + 1, num_devices):
-                if self.connections[i][j] == 1:
-                    # Existing connection - bias towards breaking it
-                    if random.random() < self.toggle_chance * self.down_bias:
-                        self.connections[i][j] = 0
-                        self.connections[j][i] = 0
-                else:
-                    # No connection - normal chance to form one
-                    if random.random() < self.toggle_chance:
-                        self.connections[i][j] = 1
-                        self.connections[j][i] = 1
+            # Apply load balancing - prefer servers that haven't been selected much
+            # Subtract a small penalty for frequently selected servers
+            load_penalty = self.selection_counts[server_idx] * 0.1
+            adjusted_score = total_connections - load_penalty
 
-    def select_satellite_with_max_connections(self, each_matrix):
-        satellite_connections = npy.sum(each_matrix, axis=1)
-        max_connections = npy.max(satellite_connections)
-        max_connected_satellites = [i for i, conn in enumerate(satellite_connections) if conn == max_connections]
+            if adjusted_score > best_total_connections:
+                best_total_connections = adjusted_score
+                best_server = server_idx
 
-        if len(max_connected_satellites) > 1:
-            # Select satellite with the fewest past selections in case there is more than one satellite with max no.of connectivity.
-            selected_satellite_index = min(max_connected_satellites, key=lambda index: self.selection_counts[index])
-        else:
-            selected_satellite_index = max_connected_satellites[0]
+        # Update selection count for the chosen server
+        self.selection_counts[best_server] += 1
 
-        # Update the selection count for the chosen satellite.
-        self.selection_counts[selected_satellite_index] += 1
-        return selected_satellite_index, max_connections
+        print(f"Round {self.round_number}: Selected Server {best_server} ({self.satellite_names[best_server]}) "
+              f"with {best_total_connections:.1f} total connections over {round_length} timestamps")
 
-    def get_selected_satellite_name(self, satellite_index):
-        satellite_names = self.get_satellite_names()
-        if 0 <= satellite_index < len(satellite_names):
-            return satellite_names[satellite_index]
-        else:
-            raise IndexError("Satellite does not exist for selection.")
+        return best_server, round_length
 
     def start_algorithm_steps(self):
-        """Sam's round-based algorithm with TRAINING/TRANSMITTING phases"""
+        """
+        New FLOMPS algorithm with realistic satellite connectivity and variable round lengths.
+        """
         adjacency_matrices = self.get_adjacency_matrices()
         algorithm_output = {}
 
-        # Initialize if this is the first run
-        if self.target_node is None and len(self.satellite_names) > 0:
-            self.target_node = random.randint(0, len(self.satellite_names) - 1)
+        current_matrix_index = 0
+        round_length = 5  # Default round length
 
-        # Process each timestep
-        for time_stamp, incoming_matrix in adjacency_matrices:
-            nrows, mcolumns = incoming_matrix.shape
-            satellite_count = nrows if nrows == mcolumns else 0
+        while current_matrix_index < len(adjacency_matrices):
+            # Select best server for this round
+            selected_server, actual_round_length = self.find_best_server_for_round(
+                current_matrix_index, round_length
+            )
+            self.current_server = selected_server
 
-            # If using SatSim data, update our evolving connections based on actual connectivity
-            # For real integration, we evolve from the incoming SatSim data
-            if npy.any(incoming_matrix):
-                # Update our connections based on SatSim input and apply evolution
-                self.connections = incoming_matrix.copy()
-                self.evolve_connections()
-            else:
-                # No connectivity from SatSim, just evolve existing connections
-                self.evolve_connections()
+            # Process this round's timestamps
+            round_end = min(current_matrix_index + actual_round_length, len(adjacency_matrices))
 
-            # Update training counter and phase status
-            if self.in_training:
-                self.training_counter += 1
-                if self.training_counter > self.training_time:
-                    self.in_training = False
+            for timestep_in_round in range(actual_round_length):
+                if current_matrix_index >= len(adjacency_matrices):
+                    break
 
-            # Create effective matrix based on current training phase
-            effective_matrix = npy.copy(self.connections)
+                time_stamp, matrix = adjacency_matrices[current_matrix_index]
 
-            if self.in_training:
-                # During training, zero out all connections
-                effective_matrix[:, :] = 0
-                phase = "TRAINING"
-            else:
+                # All timestamps are transmitting (no training delays)
                 phase = "TRANSMITTING"
 
-            # Determine selected satellite and aggregator flag
-            selected_satellite = None
-            aggregator_flag = None
+                # Get server info
+                selected_satellite_name = self.satellite_names[selected_server]
 
-            if not self.in_training and self.target_node is not None:
-                selected_satellite = self.get_selected_satellite_name(self.target_node)
-                aggregator_flag = True
+                # Store algorithm output
+                algorithm_output[time_stamp] = {
+                    'satellite_count': len(matrix),
+                    'satellite_names': self.satellite_names,
+                    'selected_satellite': selected_satellite_name,
+                    'aggregator_id': selected_server,
+                    'federatedlearning_adjacencymatrix': matrix,
+                    'aggregator_flag': True,  # Always true since we always select a server
+                    'round_number': self.round_number,
+                    'phase': phase,
+                    'target_node': selected_server,
+                    'round_length': actual_round_length,
+                    'timestep_in_round': timestep_in_round + 1
+                }
 
-            # Store algorithm output in original format for compatibility
-            algorithm_output[time_stamp] = {
-                'satellite_count': satellite_count,
-                'selected_satellite': selected_satellite,
-                'federatedlearning_adjacencymatrix': effective_matrix,
-                'aggregator_flag': aggregator_flag,
-                'round_number': self.round_number,  # Additional info for Sam's format
-                'phase': phase,  # Additional info for Sam's format
-                'target_node': self.target_node  # Additional info for Sam's format
-            }
+                current_matrix_index += 1
 
-            # Check for round completion during transmitting phase
-            if not self.in_training and self.target_node is not None:
-                if self.is_reachable(effective_matrix, self.target_node):
-                    print(f"Round {self.round_number} complete — all nodes can reach target {self.target_node}.")
-                    # Start new round
-                    self.round_number += 1
-                    self.target_node = random.randint(0, len(self.satellite_names) - 1)
-                    self.training_counter = 0
-                    self.in_training = True
-                    print(f" Starting Round {self.round_number} | New Target Node: {self.target_node}")
+            # Move to next round
+            self.round_number += 1
+
+            # Adaptive round length based on connectivity density
+            # If satellites are well connected, use shorter rounds
+            # If sparse, use longer rounds
+            if current_matrix_index < len(adjacency_matrices):
+                _, sample_matrix = adjacency_matrices[current_matrix_index]
+                connectivity_density = npy.sum(sample_matrix) / (len(sample_matrix) ** 2)
+
+                if connectivity_density > 0.3:  # Well connected
+                    round_length = 3
+                elif connectivity_density > 0.1:  # Moderately connected
+                    round_length = 5
+                else:  # Sparse
+                    round_length = 8
 
         # Store the algorithm output data for external access
         self.algorithm_output_data = algorithm_output
 
         if self.output_to_file:
-            self.output.write_to_file(algorithm_output)  # write to file.
+            self.output.write_to_file(algorithm_output)
 
-        self.output.set_result(algorithm_output)  # set result to AlgorithmOutput
-
+        self.output.set_result(algorithm_output)
