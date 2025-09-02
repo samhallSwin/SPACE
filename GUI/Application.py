@@ -505,6 +505,7 @@ class TLEDisplay(QFrame):
 
     def set_up_collapse_button(self):
         self.toggle_button = QPushButton("▼\nE\nx\np\na\nn\nd", self)
+        self.toggle_button.setAccessibleName("button_ExpandCollapse")
         self.toggle_button.setGeometry(0, self.above_height_amount, 20, self.height())
 
         self.opacity_effect = QGraphicsOpacityEffect(self.toggle_button)

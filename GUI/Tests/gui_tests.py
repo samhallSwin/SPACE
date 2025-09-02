@@ -48,8 +48,6 @@ class TestGUIWindow(unittest.TestCase):
     def test_click_midnight_button(self):
         button = self.window.child_window(title="Midnight", control_type="Button")
         self.assertTrue(button.exists(), "Midnight button should exist")
-
-        # Click the button
         button.click_input()
 
         # After clicking, check that the clock label shows midnight
@@ -60,18 +58,21 @@ class TestGUIWindow(unittest.TestCase):
         slider = self.window.child_window(title="slider_Time", control_type="Slider")
         self.assertTrue(slider.exists(), "Time slider should exist")
         
+    def test_expand_collapse_exists(self):
+        pass
+        
     # Tests for Emelee:
     def test_start_button_exists(self):
-        # (title: Start)
-        pass
-    
+        button = self.window.child_window(title="Start", control_type="Button")
+        self.assertTrue(button.exists(), "Start button should exist")
+
     def test_stop_button_exists(self):
-        # (title: Stop)
-        pass
-    
+        button = self.window.child_window(title="Stop", control_type="Button")
+        self.assertTrue(button.exists(), "Stop button should exist")
+
     def test_now_button_exists(self):
-        # (title: Now)
-        pass
+        button = self.window.child_window(title="Now", control_type="Button")
+        self.assertTrue(button.exists(), "Now button should exist")
 
     # def test_print_all_elements(self):
     #     self.window.print_control_identifiers()
