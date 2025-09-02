@@ -73,6 +73,11 @@ class TestGUIWindow(unittest.TestCase):
     def test_now_button_exists(self):
         button = self.window.child_window(title="Now", control_type="Button")
         self.assertTrue(button.exists(), "Now button should exist")
+        
+    def test_tle_expand_collapse_button(self):
+        # (title: button_ExpandCollapse) <- Expand/Collapse button (left one)
+        # (title: label_DropHere) <- Ensure that clicking on expand/collapse makes this visible/not visible
+        pass
 
     # def test_print_all_elements(self):
     #     self.window.print_control_identifiers()

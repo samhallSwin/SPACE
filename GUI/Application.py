@@ -18,6 +18,8 @@ from skyfield.api import load
 from skyfield.api import Timescale
 from skyfield.api import EarthSatellite
 
+from Components.GraphDisplay import GraphDisplay
+from Components.TLEDisplay import TLEDisplay
 
 EARTH_RADIUS = 6378
 increment = False
@@ -36,12 +38,21 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(TimeGlobeWidget())
         # self.sphere = Sphere(self) 
         # self.setCentralWidget(self.sphere)
+        self.set_up_backend()
         self.set_up_tle_display()
+        self.set_up_graph_display()
         # self.buildUI()
 
     def set_up_tle_display(self):
         self.tle_display = TLEDisplay(self)
         self.tle_display.raise_()
+        
+    def set_up_graph_display(self):
+        self.graph_display = GraphDisplay(self)
+        self.graph_display.raise_()
+        
+    def set_up_backend(self):
+        self.backend = Backend()
         
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -682,6 +693,7 @@ class DropLabel(QLabel):
         self.setAcceptDrops(True)
         self.setAlignment(Qt.AlignCenter)
         self.setText("Drop\nHere")
+        self.setAccessibleName("label_DropHere")
         self.setFixedSize(100, 100)
         self.setStyleSheet("""
             border: 2px dashed #888;
@@ -722,6 +734,52 @@ class DropLabel(QLabel):
             background-color: #f8f8f8;
         """)
 #endregion
+
+
+#--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#region - Backend
+#--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+import sys
+
+# setting path
+sys.path.append('../SPACE')
+
+import module_factory
+from module_factory import ModuleKey
+
+from workflows import flomps
+
+import json
+
+class Backend():
+    def __init__(self):
+        print("Backend - Init Started")
+        
+        options = self.read_options_file()
+        self.sat_sim_module = module_factory.create_sat_sim_module()
+        self.sat_sim_module.config.read_options(options["sat_sim"])
+
+        print("Backend - Init complete")
+
+    #Yoinked from main.py
+    def read_options_file(self):
+        """Parse the current JSON file in use for options configuration."""
+        file = self.get_config_file()
+        with open(file) as f:
+            return json.load(f)
+
+    def get_config_file(self):
+        """Get the current JSON file in use for options configuration."""
+        config_file = ''
+        with open('settings.json') as f:
+            options = json.load(f)
+            config_file = options['config_file']
+
+        return config_file
+
+#endregion
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
