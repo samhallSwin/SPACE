@@ -62,8 +62,15 @@ class TimeSliderWidget(QWidget):
         self.time_display.setAccessibleName("clock_Time")
         self.time_display.setAccessibleDescription(QTime.currentTime().toString("hh:mm:ss"))
 
-        # Set time to current time
-        #self.time = QTime.currentTime()
+
+         # Slider
+        self.slider = QSlider(Qt.Horizontal)
+        self.slider.setRange(0, 360)
+        self.slider.setValue(90)  
+        self.slider.setTickInterval(30)
+        self.slider.setTickPosition(QSlider.TicksBelow)
+        self.slider.valueChanged.connect(self.onSlider)
+
         # Timer that updates clock
         self.timer = QTimer(self)
         self.timer.setInterval(1000)
@@ -71,13 +78,7 @@ class TimeSliderWidget(QWidget):
         self.now()
         self.start()
 
-        # Slider
-        self.slider = QSlider(Qt.Horizontal)
-        self.slider.setRange(0, 360)
-        self.slider.setValue(90)  
-        self.slider.setTickInterval(30)
-        #self.slider.setTickPosition(QSlider.TicksBelow)
-        self.slider.valueChanged.connect(self.onSlider)
+
 
         # Play button
         self.play_btn = QPushButton("▶")
@@ -108,14 +109,14 @@ class TimeSliderWidget(QWidget):
     # Animations Controls
         self.anim = QPropertyAnimation(self.slider, b"value", self)
         self.anim.setEasingCurve(QEasingCurve.Linear)
-        self.anim.setDuration(4000) 
+        self.anim.setDuration(4000) #Orbit duration
 
     # Time Controls
     # Updates display clock every second
     def tick(self):
         self.time = self.time.addSecs(1)
         self.time_display.setText(self.time.toString("hh:mm:ss"))
-        #self.time_display.setAccessibleDescription(self.time)
+        self.time_display.setAccessibleDescription(self.time.toString("hh:mm:ss"))
 
     def start(self):
         self.timer.start()
@@ -124,7 +125,7 @@ class TimeSliderWidget(QWidget):
         self.timer.stop()
         self.time = QTime.currentTime()
         self.time_display.setText(self.time.toString("hh:mm:ss"))
-        self.slider.setValue(seconds_to_degrees(self.time))
+        self.slider.setValue(seconds_to_degrees(QTime(0, 0).secsTo(self.time)))
         self.timer.start()
 
     def midnight(self):
@@ -144,6 +145,11 @@ class TimeSliderWidget(QWidget):
         self.time = QTime(0,0).addSecs(degrees_to_sec(value))
         self.time_display.setText(self.time.toString("hh:mm:ss"))
         self.timer.start()
+
+        
+        self.sphere = self.parent().sphere
+        self.sphere.yRot = float(value)
+        self.sphere.update()
 
     def scroll(self):
         self.anim.stop()
