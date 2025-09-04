@@ -19,6 +19,11 @@ Usage:
 Instantiate to setup Algorithmhandler and AlgorithmConfig.
 """
 
+"""
+Filename: algorithm_core.py
+Description: Manage FLOMPS algorithm processes with realistic satellite connectivity.
+"""
+
 from flomps_algorithm.algorithm_output import AlgorithmOutput
 import numpy as npy
 import random
@@ -100,29 +105,34 @@ class Algorithm():
 
     def start_algorithm_steps(self):
         """
-        New FLOMPS algorithm with realistic satellite connectivity and variable round lengths.
+        New FLOMPS algorithm: Wait until selected server connects to ALL other satellites.
         """
         adjacency_matrices = self.get_adjacency_matrices()
         algorithm_output = {}
 
         current_matrix_index = 0
-        round_length = 5  # Default round length
 
         while current_matrix_index < len(adjacency_matrices):
             # Select best server for this round
-            selected_server, actual_round_length = self.find_best_server_for_round(
-                current_matrix_index, round_length
-            )
+            selected_server, estimated_timestamps = self.find_best_server_for_round(current_matrix_index)
             self.current_server = selected_server
 
-            # Process this round's timestamps
-            round_end = min(current_matrix_index + actual_round_length, len(adjacency_matrices))
+            # Run this round until server connects to ALL satellites
+            round_start_index = current_matrix_index
+            timestep_in_round = 0
+            server_connected_to_all = False
+            num_satellites = len(self.satellite_names)
+            target_connections = num_satellites - 1  # All except self
 
-            for timestep_in_round in range(actual_round_length):
-                if current_matrix_index >= len(adjacency_matrices):
-                    break
-
+            while current_matrix_index < len(adjacency_matrices) and not server_connected_to_all:
+                timestep_in_round += 1
                 time_stamp, matrix = adjacency_matrices[current_matrix_index]
+
+                # Check if server now connects to all other satellites
+                server_connections = sum(matrix[selected_server]) - matrix[selected_server][selected_server]
+                if server_connections == target_connections:
+                    server_connected_to_all = True
+                    print(f"  ✓ Server {selected_server} connected to all {target_connections} satellites at timestep {timestep_in_round}")
 
                 # All timestamps are transmitting (no training delays)
                 phase = "TRANSMITTING"
@@ -141,28 +151,32 @@ class Algorithm():
                     'round_number': self.round_number,
                     'phase': phase,
                     'target_node': selected_server,
-                    'round_length': actual_round_length,
-                    'timestep_in_round': timestep_in_round + 1
+                    'round_length': timestep_in_round,  # This will be final length when round completes
+                    'timestep_in_round': timestep_in_round,
+                    'server_connections': server_connections,
+                    'target_connections': target_connections,
+                    'round_complete': server_connected_to_all
                 }
 
                 current_matrix_index += 1
 
+                # Safety timeout: If round takes too long, force completion
+                if timestep_in_round >= 20:  # Max 20 timestamps per round
+                    print(f"  ⚠ Round {self.round_number} timeout after {timestep_in_round} timestamps")
+                    server_connected_to_all = True
+
+            # Update round_length for all timestamps in this completed round
+            actual_round_length = timestep_in_round
+            for i in range(round_start_index, current_matrix_index):
+                if i < len(adjacency_matrices):
+                    timestamp_key = adjacency_matrices[i][0]
+                    if timestamp_key in algorithm_output:
+                        algorithm_output[timestamp_key]['round_length'] = actual_round_length
+
+            print(f"Round {self.round_number} completed in {actual_round_length} timestamps")
+
             # Move to next round
             self.round_number += 1
-
-            # Adaptive round length based on connectivity density
-            # If satellites are well connected, use shorter rounds
-            # If sparse, use longer rounds
-            if current_matrix_index < len(adjacency_matrices):
-                _, sample_matrix = adjacency_matrices[current_matrix_index]
-                connectivity_density = npy.sum(sample_matrix) / (len(sample_matrix) ** 2)
-
-                if connectivity_density > 0.3:  # Well connected
-                    round_length = 3
-                elif connectivity_density > 0.1:  # Moderately connected
-                    round_length = 5
-                else:  # Sparse
-                    round_length = 8
 
         # Store the algorithm output data for external access
         self.algorithm_output_data = algorithm_output

@@ -20,6 +20,9 @@ Usage:
 Instantiate AlgorithmOutput and assign FLInput.
 """
 
+"""
+Description: Prepares and sends data to Federated Learning module - CSV format only
+"""
 from interfaces.output import Output
 import os
 import sys
@@ -85,6 +88,9 @@ class AlgorithmOutput(Output):
             round_length = algo_op.get('round_length', 1)
             timestep_in_round = algo_op.get('timestep_in_round', 1)
             aggregator_id = algo_op.get('aggregator_id', 0)
+            server_connections = algo_op.get('server_connections', 0)
+            target_connections = algo_op.get('target_connections', 0)
+            round_complete = algo_op.get('round_complete', False)
 
             # Append the row with all the information
             algo_op_rows.append({
@@ -98,7 +104,10 @@ class AlgorithmOutput(Output):
                 'round_number': round_number,
                 'phase': phase,
                 'round_length': round_length,
-                'timestep_in_round': timestep_in_round
+                'timestep_in_round': timestep_in_round,
+                'server_connections': server_connections,
+                'target_connections': target_connections,
+                'round_complete': round_complete
             })
 
         # Convert the list of algorithm output rows to a DataFrame for easy processing and manipulation
