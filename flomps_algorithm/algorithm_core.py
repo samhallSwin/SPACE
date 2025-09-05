@@ -19,10 +19,6 @@ Usage:
 Instantiate to setup Algorithmhandler and AlgorithmConfig.
 """
 
-"""
-Filename: algorithm_core.py
-Description: Manage FLOMPS algorithm processes with realistic satellite connectivity.
-"""
 
 from flomps_algorithm.algorithm_output import AlgorithmOutput
 import numpy as npy
@@ -61,51 +57,73 @@ class Algorithm():
     def get_algorithm_output(self):
         return self.algorithm_output_data
 
-    def find_best_server_for_round(self, start_matrix_index=0, round_length=5):
+    def find_best_server_for_round(self, start_matrix_index=0):
         """
-        Find the server that connects to the MOST satellites over the next round_length timestamps.
-        More realistic for sparse satellite connectivity.
+        Find the server that will connect to ALL other satellites the fastest.
+        Uses cumulative connectivity - server can connect to satellites one at a time.
         """
         if start_matrix_index >= len(self.adjacency_matrices):
-            return 0, round_length  # Default fallback
+            return 0, 5  # Default fallback
 
         num_satellites = len(self.satellite_names)
         best_server = 0
-        best_total_connections = 0
+        best_timestamps_needed = float('inf')
 
         # Check each satellite as potential server
         for server_idx in range(num_satellites):
-            total_connections = 0
-
-            # Look ahead for the next 'round_length' timestamps
-            end_idx = min(start_matrix_index + round_length, len(self.adjacency_matrices))
-
-            for matrix_idx in range(start_matrix_index, end_idx):
-                _, matrix = self.adjacency_matrices[matrix_idx]
-                # Count how many other satellites this server connects to
-                connections_count = sum(matrix[server_idx]) - matrix[server_idx][server_idx]  # Exclude self-connection
-                total_connections += connections_count
+            timestamps_needed = self.calculate_cumulative_connection_time(server_idx, start_matrix_index)
 
             # Apply load balancing - prefer servers that haven't been selected much
-            # Subtract a small penalty for frequently selected servers
-            load_penalty = self.selection_counts[server_idx] * 0.1
-            adjusted_score = total_connections - load_penalty
+            load_penalty = self.selection_counts[server_idx] * 0.5
+            adjusted_time = timestamps_needed + load_penalty
 
-            if adjusted_score > best_total_connections:
-                best_total_connections = adjusted_score
+            if adjusted_time < best_timestamps_needed:
+                best_timestamps_needed = adjusted_time
                 best_server = server_idx
 
-        # Update selection count for the chosen server
+        # Update selection count
         self.selection_counts[best_server] += 1
 
-        print(f"Round {self.round_number}: Selected Server {best_server} ({self.satellite_names[best_server]}) "
-              f"with {best_total_connections:.1f} total connections over {round_length} timestamps")
+        actual_timestamps = int(best_timestamps_needed - self.selection_counts[best_server] * 0.5)
 
-        return best_server, round_length
+        print(f"Round {self.round_number}: Selected Server {best_server} ({self.satellite_names[best_server]}) "
+            f"- will connect to all {num_satellites-1} satellites in {actual_timestamps} timestamps")
+
+        return best_server, actual_timestamps
+
+    def calculate_cumulative_connection_time(self, server_idx, start_matrix_index, max_lookahead=20):
+        """
+        Calculate how many timestamps it takes for this server to connect to ALL other satellites
+        using cumulative connectivity (can connect to satellites one at a time).
+        """
+        num_satellites = len(self.satellite_names)
+        target_satellites = set(range(num_satellites))
+        target_satellites.remove(server_idx)  # Remove self from target list
+
+        connected_satellites = set()  # Track which satellites we've connected to
+
+        for timesteps_ahead in range(max_lookahead):
+            matrix_idx = start_matrix_index + timesteps_ahead
+            if matrix_idx >= len(self.adjacency_matrices):
+                break
+
+            _, matrix = self.adjacency_matrices[matrix_idx]
+
+            # Check which satellites this server connects to in this timestamp
+            for target_sat in range(num_satellites):
+                if target_sat != server_idx and matrix[server_idx][target_sat] == 1:
+                    connected_satellites.add(target_sat)
+
+            # Check if we've connected to all target satellites
+            if connected_satellites == target_satellites:
+                return timesteps_ahead + 1  # +1 because we need to include this timestamp
+
+        # If server never connects to all satellites within lookahead, return high penalty
+        return max_lookahead
 
     def start_algorithm_steps(self):
         """
-        New FLOMPS algorithm: Wait until selected server connects to ALL other satellites.
+        Realistic FLOMPS algorithm with cumulative connectivity tracking.
         """
         adjacency_matrices = self.get_adjacency_matrices()
         algorithm_output = {}
@@ -117,22 +135,37 @@ class Algorithm():
             selected_server, estimated_timestamps = self.find_best_server_for_round(current_matrix_index)
             self.current_server = selected_server
 
-            # Run this round until server connects to ALL satellites
+            # Initialize tracking for this round
             round_start_index = current_matrix_index
             timestep_in_round = 0
-            server_connected_to_all = False
             num_satellites = len(self.satellite_names)
-            target_connections = num_satellites - 1  # All except self
+            target_satellites = set(range(num_satellites))
+            target_satellites.remove(selected_server)  # Remove self from target list
+            connected_satellites = set()  # Track cumulative connections
+            round_complete = False
 
-            while current_matrix_index < len(adjacency_matrices) and not server_connected_to_all:
+            print(f"  Target: Server {selected_server} needs to connect to all {len(target_satellites)} other satellites")
+
+            while current_matrix_index < len(adjacency_matrices) and not round_complete:
                 timestep_in_round += 1
                 time_stamp, matrix = adjacency_matrices[current_matrix_index]
 
-                # Check if server now connects to all other satellites
-                server_connections = sum(matrix[selected_server]) - matrix[selected_server][selected_server]
-                if server_connections == target_connections:
-                    server_connected_to_all = True
-                    print(f"  ✓ Server {selected_server} connected to all {target_connections} satellites at timestep {timestep_in_round}")
+                # Check which NEW satellites this server connects to in this timestamp
+                current_timestamp_connections = set()
+                for target_sat in range(num_satellites):
+                    if target_sat != selected_server and matrix[selected_server][target_sat] == 1:
+                        current_timestamp_connections.add(target_sat)
+                        connected_satellites.add(target_sat)  # Add to cumulative set
+
+                # Check if server has now connected to ALL other satellites (cumulatively)
+                if connected_satellites == target_satellites:
+                    round_complete = True
+                    print(f"  ✓ Server {selected_server} connected to all {len(target_satellites)} satellites at timestep {timestep_in_round}")
+                    print(f"    Final connections: {sorted(list(connected_satellites))}")
+                else:
+                    missing_satellites = target_satellites - connected_satellites
+                    print(f"  → Server {selected_server} connected to {len(connected_satellites)}/{len(target_satellites)} satellites")
+                    print(f"    Still need: {sorted(list(missing_satellites))}")
 
                 # All timestamps are transmitting (no training delays)
                 phase = "TRANSMITTING"
@@ -147,23 +180,27 @@ class Algorithm():
                     'selected_satellite': selected_satellite_name,
                     'aggregator_id': selected_server,
                     'federatedlearning_adjacencymatrix': matrix,
-                    'aggregator_flag': True,  # Always true since we always select a server
+                    'aggregator_flag': True,
                     'round_number': self.round_number,
                     'phase': phase,
                     'target_node': selected_server,
-                    'round_length': timestep_in_round,  # This will be final length when round completes
+                    'round_length': timestep_in_round,  # Will be updated when round completes
                     'timestep_in_round': timestep_in_round,
-                    'server_connections': server_connections,
-                    'target_connections': target_connections,
-                    'round_complete': server_connected_to_all
+                    'server_connections_current': len(current_timestamp_connections),
+                    'server_connections_cumulative': len(connected_satellites),
+                    'target_connections': len(target_satellites),
+                    'connected_satellites': sorted(list(connected_satellites)),
+                    'missing_satellites': sorted(list(target_satellites - connected_satellites)),
+                    'round_complete': round_complete
                 }
 
                 current_matrix_index += 1
 
                 # Safety timeout: If round takes too long, force completion
-                if timestep_in_round >= 20:  # Max 20 timestamps per round
+                if timestep_in_round >= 20:
                     print(f"  ⚠ Round {self.round_number} timeout after {timestep_in_round} timestamps")
-                    server_connected_to_all = True
+                    print(f"    Only connected to {len(connected_satellites)}/{len(target_satellites)} satellites")
+                    round_complete = True
 
             # Update round_length for all timestamps in this completed round
             actual_round_length = timestep_in_round

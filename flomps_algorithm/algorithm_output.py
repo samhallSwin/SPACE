@@ -74,22 +74,23 @@ class AlgorithmOutput(Output):
         algo_op_rows = []
 
         for timestamp, algo_op in algorithm_output.items():
-            # Convert the aggregator_flag to 'None' if there is no connectivity among satellites
+            # Get all the standard fields
             aggregator_flag = algo_op['aggregator_flag'] if algo_op['aggregator_flag'] is not None else 'None'
-            # Get FLAM
             fl_am = algo_op['federatedlearning_adjacencymatrix']
-            # Get satellite count
             satellite_count = algo_op['satellite_count']
-            # Get chosen satellite name
             selected_satellite = algo_op['selected_satellite']
-            # Get additional info
             round_number = algo_op.get('round_number', 1)
             phase = algo_op.get('phase', 'TRANSMITTING')
             round_length = algo_op.get('round_length', 1)
             timestep_in_round = algo_op.get('timestep_in_round', 1)
             aggregator_id = algo_op.get('aggregator_id', 0)
-            server_connections = algo_op.get('server_connections', 0)
+
+            # Get cumulative tracking fields
+            server_connections_current = algo_op.get('server_connections_current', 0)
+            server_connections_cumulative = algo_op.get('server_connections_cumulative', 0)
             target_connections = algo_op.get('target_connections', 0)
+            connected_satellites = algo_op.get('connected_satellites', [])
+            missing_satellites = algo_op.get('missing_satellites', [])
             round_complete = algo_op.get('round_complete', False)
 
             # Append the row with all the information
@@ -105,12 +106,15 @@ class AlgorithmOutput(Output):
                 'phase': phase,
                 'round_length': round_length,
                 'timestep_in_round': timestep_in_round,
-                'server_connections': server_connections,
+                'server_connections_current': server_connections_current,
+                'server_connections_cumulative': server_connections_cumulative,
                 'target_connections': target_connections,
+                'connected_satellites': connected_satellites,
+                'missing_satellites': missing_satellites,
                 'round_complete': round_complete
             })
 
-        # Convert the list of algorithm output rows to a DataFrame for easy processing and manipulation
+        # Convert to DataFrame
         self.set_flam(pds.DataFrame(algo_op_rows))
 
     def set_result(self, algorithm_output):
@@ -144,7 +148,7 @@ class AlgorithmOutput(Output):
             file.write(self.get_flam().to_string(index=False))
 
     def _write_csv_format(self, algorithm_output):
-        """Write CSV format with round info for FL core compatibility"""
+        """Write CSV format with cumulative connectivity tracking for FL core compatibility"""
         # Generate timestamp string
         timestamp_str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
@@ -165,15 +169,28 @@ class AlgorithmOutput(Output):
                 # Get data for this timestep
                 matrix = data['federatedlearning_adjacencymatrix']
                 round_num = data.get('round_number', 1)
-                target_node = data.get('aggregator_id', 0)  # Use aggregator_id as target
+                target_node = data.get('aggregator_id', 0)
                 phase = data.get('phase', 'TRANSMITTING')
                 round_length = data.get('round_length', 1)
                 timestep_in_round = data.get('timestep_in_round', 1)
 
-                # Write header line with enhanced information
+                # New cumulative tracking fields
+                server_connections_current = data.get('server_connections_current', 0)
+                server_connections_cumulative = data.get('server_connections_cumulative', 0)
+                target_connections = data.get('target_connections', 0)
+                connected_satellites = data.get('connected_satellites', [])
+                missing_satellites = data.get('missing_satellites', [])
+                round_complete = data.get('round_complete', False)
+
+                # Write header line with enhanced cumulative information
                 f.write(f"Time: {time_stamp}, Timestep: {timestep}, Round: {round_num}, "
-                       f"Target Node: {target_node}, Phase: {phase}, "
-                       f"Round Length: {round_length}, Timestep in Round: {timestep_in_round}\n")
+                    f"Target Node: {target_node}, Phase: {phase}, "
+                    f"Round Length: {round_length}, Timestep in Round: {timestep_in_round}, "
+                    f"Current Connections: {server_connections_current}, "
+                    f"Cumulative Connections: {server_connections_cumulative}/{target_connections}, "
+                    f"Connected Sats: {connected_satellites}, "
+                    f"Missing Sats: {missing_satellites}, "
+                    f"Round Complete: {round_complete}\n")
 
                 # Write matrix rows
                 for i in range(len(matrix)):
@@ -183,4 +200,23 @@ class AlgorithmOutput(Output):
                 timestep += 1
 
         print(f"FLOMPS CSV format exported to {filename}")
-        print(f"Generated {timesteps} timesteps across {max([data.get('round_number', 1) for data in algorithm_output.values()])} rounds")
+
+        # Calculate and display round statistics
+        rounds = {}
+        for data in algorithm_output.values():
+            round_num = data.get('round_number', 1)
+            if round_num not in rounds:
+                rounds[round_num] = {
+                    'length': data.get('round_length', 1),
+                    'server': data.get('aggregator_id', 0),
+                    'completed': data.get('round_complete', False),
+                    'final_connections': data.get('server_connections_cumulative', 0),
+                    'target_connections': data.get('target_connections', 0)
+                }
+
+        print(f"Generated {timesteps} timesteps across {len(rounds)} rounds:")
+        for round_num, info in rounds.items():
+            status = "✓" if info['completed'] else "✗"
+            conn_status = f"{info['final_connections']}/{info['target_connections']}"
+            print(f"  Round {round_num}: Server {info['server']}, {info['length']} timestamps, "
+                f"Connections: {conn_status} {status}")
