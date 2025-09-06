@@ -53,16 +53,18 @@ class TestGUIWindow(unittest.TestCase):
         # print(clock.get_value())
         pass
     
-    # Need to update later as timer's name is the actual time.
     def test_click_midnight_button(self):
-        button = self.window.child_window(title="Midnight", control_type="Button")
-        self.assertTrue(button.exists(), "Midnight button should exist")
-        button.click_input()
+        midnight_button = self.window.child_window(title="Midnight", control_type="Button")
+        self.assertTrue(midnight_button.exists(), "Midnight button should exist")
+        # Click Stop button here if necessary
+        midnight_button.click_input()
 
-        # After clicking, check that the clock label shows midnight
-        clock_label = self.window.child_window(title="00:00:00", control_type="Text")
-        self.assertTrue(clock_label.exists(), "Clock should reset to 00:00:00 after Midnight is clicked")
-    
+        clock = self.window.child_window(class_name="QLineEdit", control_type="Edit", found_index=0)
+        clock_text = clock.iface_value.CurrentValue
+        print(f"Clock shows: {clock_text}")
+        
+        self.assertEqual(clock_text, "00:00:00", "Clock should reset to 00:00:00 after Midnight is clicked")
+            
     def test_slider_time_exists(self):
         slider = self.window.child_window(title="slider_Time", control_type="Slider")
         self.assertTrue(slider.exists(), "Time slider should exist")
