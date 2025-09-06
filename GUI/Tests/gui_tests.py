@@ -67,9 +67,6 @@ class TestGUIWindow(unittest.TestCase):
         slider = self.window.child_window(title="slider_Time", control_type="Slider")
         self.assertTrue(slider.exists(), "Time slider should exist")
         
-    def test_expand_collapse_exists(self):
-        pass
-        
     # Tests for Emelee:
     def test_start_button_exists(self):
         button = self.window.child_window(title="Start", control_type="Button")
@@ -83,8 +80,11 @@ class TestGUIWindow(unittest.TestCase):
         button = self.window.child_window(title="Now", control_type="Button")
         self.assertTrue(button.exists(), "Now button should exist")
         
-    def test_tle_expand_collapse_button(self):
+    def test_tle_expand_collapse_button_exists(self):
         # (title: button_ExpandCollapse) <- Expand/Collapse button (left one)
+        pass
+        
+    def test_click_tle_expand_collapse_button(self):
         # (title: label_DropHere) <- Ensure that clicking on expand/collapse makes this visible/not visible
         pass
 
