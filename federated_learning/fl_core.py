@@ -38,6 +38,7 @@ import torchvision
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from federated_learning.fl_output import FLOutput
 from federated_learning.fl_visualization import FLVisualization
+from federated_learning.model_evaluation import EnhancedModelEvaluationModule
 
 # Add path manager for universal path handling
 try:
@@ -98,7 +99,7 @@ class FederatedLearning:
         def update_model(self, global_state_dict):
             self.model.load_state_dict(global_state_dict)
 
-    def __init__(self):
+    def __init__(self, enable_model_evaluation=False):
         self.num_rounds = 10
         self.num_clients = 5
         self.global_model = None
@@ -106,6 +107,19 @@ class FederatedLearning:
         self.round_times = {}
         self.round_accuracies = []
         self.total_training_time = 0
+        self.model_evaluation_enabled = enable_model_evaluation
+        self.model_eval_module = None
+        self.selected_model_name = None
+        self.model_evaluation_history = []
+        
+        # Initialize model evaluation module if enabled
+        if self.model_evaluation_enabled:
+            try:
+                self.model_eval_module = EnhancedModelEvaluationModule()
+                print("✓ Model evaluation module initialized")
+            except Exception as e:
+                print(f"Warning: Failed to initialize model evaluation module: {e}")
+                self.model_evaluation_enabled = False
 
     def set_num_rounds(self, rounds: int) -> None:
         """Set the number of federated learning rounds."""
@@ -144,8 +158,109 @@ class FederatedLearning:
         client_datasets = random_split(full_dataset, [len(full_dataset) // self.num_clients] * self.num_clients)
         self.client_data = [DataLoader(dataset, batch_size=32, shuffle=True) for dataset in client_datasets]
 
-    def initialize_model(self):
-        """Initialize the global model"""
+    def initialize_model(self, model_name=None, auto_select=True, interactive_mode=True):
+        """Initialize the global model with optional model selection"""
+        if self.model_evaluation_enabled and auto_select and model_name is None:
+            try:
+                # Show available models and let user choose
+                if interactive_mode:
+                    available_models = self.model_eval_module.registry.list_models()
+                    print(f"\n{'='*60}")
+                    print("Available Models for Federated Learning:")
+                    print(f"{'='*60}")
+                    
+                    for i, model in enumerate(available_models, 1):
+                        model_info = self.model_eval_module.registry.get_model(model)
+                        print(f"{i}. {model}")
+                        print(f"   Description: {model_info.description}")
+                        print(f"   Category: {model_info.category}, Complexity: {model_info.complexity}")
+                        print()
+                    
+                    print(f"{len(available_models) + 1}. Auto-select best model")
+                    print(f"{len(available_models) + 2}. Use default model")
+                    print(f"{'='*60}")
+                    
+                    while True:
+                        try:
+                            choice = input(f"Please select a model (1-{len(available_models) + 2}): ").strip()
+                            choice_num = int(choice)
+                            
+                            if 1 <= choice_num <= len(available_models):
+                                # User selected a specific model
+                                selected_model_name = available_models[choice_num - 1]
+                                model_info = self.model_eval_module.registry.get_model(selected_model_name)
+                                self.global_model = model_info.model_class(**model_info.parameters)
+                                self.selected_model_name = selected_model_name
+                                print(f"✓ Using selected model: {selected_model_name}")
+                                break
+                            elif choice_num == len(available_models) + 1:
+                                # User chose auto-select
+                                if self.client_data:
+                                    criterion = nn.CrossEntropyLoss()
+                                    selected_name, selected_model = self.model_eval_module.select_model_for_fl(
+                                        self.client_data[0], criterion
+                                    )
+                                    self.selected_model_name = selected_name
+                                    self.global_model = selected_model
+                                    print(f"✓ Auto-selected model: {selected_name}")
+                                else:
+                                    self.global_model = self._create_default_model()
+                                    self.selected_model_name = "DefaultModel"
+                                    print("✓ Using default model (no data available for auto-selection)")
+                                break
+                            elif choice_num == len(available_models) + 2:
+                                # User chose default model
+                                self.global_model = self._create_default_model()
+                                self.selected_model_name = "DefaultModel"
+                                print("✓ Using default model")
+                                break
+                            else:
+                                print(f"Invalid choice. Please enter a number between 1 and {len(available_models) + 2}")
+                        except ValueError:
+                            print("Invalid input. Please enter a number.")
+                        except KeyboardInterrupt:
+                            print("\nOperation cancelled. Using default model.")
+                            self.global_model = self._create_default_model()
+                            self.selected_model_name = "DefaultModel"
+                            break
+                else:
+                    # Non-interactive auto-select
+                    if self.client_data:
+                        criterion = nn.CrossEntropyLoss()
+                        selected_name, selected_model = self.model_eval_module.select_model_for_fl(
+                            self.client_data[0], criterion
+                        )
+                        self.selected_model_name = selected_name
+                        self.global_model = selected_model
+                        print(f"✓ Auto-selected model: {selected_name}")
+                    else:
+                        self.global_model = self._create_default_model()
+                        self.selected_model_name = "DefaultModel"
+            except Exception as e:
+                print(f"Model selection failed: {e}. Using default model.")
+                self.global_model = self._create_default_model()
+                self.selected_model_name = "DefaultModel"
+        elif self.model_evaluation_enabled and model_name:
+            # Use specified model
+            try:
+                model_info = self.model_eval_module.registry.get_model(model_name)
+                if model_info:
+                    self.global_model = model_info.model_class(**model_info.parameters)
+                    self.selected_model_name = model_name
+                    print(f"✓ Using specified model: {model_name}")
+                else:
+                    raise ValueError(f"Model {model_name} not found in registry")
+            except Exception as e:
+                print(f"Failed to use specified model: {e}. Using default model.")
+                self.global_model = self._create_default_model()
+                self.selected_model_name = "DefaultModel"
+        else:
+            # Use default model
+            self.global_model = self._create_default_model()
+            self.selected_model_name = "DefaultModel"
+    
+    def _create_default_model(self):
+        """Create a default model as fallback"""
         class SimpleModel(nn.Module):
             def __init__(self):
                 super(SimpleModel, self).__init__()
@@ -155,7 +270,7 @@ class FederatedLearning:
                 x = x.view(x.size(0), -1)
                 return self.fc(x)
         
-        self.global_model = SimpleModel()
+        return SimpleModel()
 
     def train_client(self, model, data_loader):
         """Train a client model on local data"""
@@ -190,6 +305,51 @@ class FederatedLearning:
     def get_round_metrics(self) -> Dict:
         """Return round metrics for analysis"""
         return self.round_times
+    
+    def get_model_evaluation_summary(self) -> Dict:
+        """Get summary of model evaluation results"""
+        if not self.model_evaluation_enabled:
+            return {"message": "Model evaluation not enabled"}
+        
+        return {
+            "selected_model": self.selected_model_name,
+            "evaluation_history": self.model_evaluation_history,
+            "available_models": self.model_eval_module.registry.list_models() if self.model_eval_module else [],
+            "model_evaluation_enabled": self.model_evaluation_enabled
+        }
+    
+    def enable_model_evaluation(self):
+        """Enable model evaluation functionality"""
+        if not self.model_evaluation_enabled:
+            try:
+                self.model_eval_module = EnhancedModelEvaluationModule()
+                self.model_evaluation_enabled = True
+                print("✓ Model evaluation enabled")
+            except Exception as e:
+                print(f"Failed to enable model evaluation: {e}")
+    
+    def disable_model_evaluation(self):
+        """Disable model evaluation functionality"""
+        self.model_evaluation_enabled = False
+        self.model_eval_module = None
+        print("Model evaluation disabled")
+    
+    def list_available_models(self) -> List[str]:
+        """List all available models in the registry"""
+        if self.model_evaluation_enabled and self.model_eval_module:
+            return self.model_eval_module.registry.list_models()
+        return []
+    
+    def register_custom_model(self, name: str, model_class, parameters: Dict, 
+                            description: str, category: str, complexity: str):
+        """Register a custom model"""
+        if self.model_evaluation_enabled and self.model_eval_module:
+            self.model_eval_module.register_custom_model(
+                name, model_class, parameters, description, category, complexity
+            )
+            print(f"✓ Custom model '{name}' registered")
+        else:
+            print("Model evaluation not enabled. Cannot register custom model.")
     
     def get_latest_flam_file(self):
         """Get the latest generated FLAM file path"""
@@ -284,14 +444,14 @@ class FederatedLearning:
 
     # --- End FLAM-related code ---
 
-    def run(self, flam_path=None):
+    def run(self, flam_path=None, model_name=None, auto_select_model=True, interactive_mode=True):
         """
         Run the federated learning process using a parameter server object and modular client logic.
         """
         import random  # For synthetic adjacency matrix (demo only)
 
         self.initialize_data()
-        self.initialize_model()
+        self.initialize_model(model_name, auto_select_model, interactive_mode)
         total_start_time = time.time()
         round_accuracies = []
 
