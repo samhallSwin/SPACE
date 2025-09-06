@@ -44,14 +44,10 @@ class TestGUIWindow(unittest.TestCase):
         button = self.window.child_window(title="Midnight", control_type="Button")
         self.assertTrue(button.exists())
     
-    # Implement after clock is fixed (currently not fixed)
     def test_clock_exists(self):
-        # # (Name) text_Clock
-        # clock = self.window.child_window(title="edit_Clock", control_type="Edit")
-        
-        # # (Legacy|Accessible.Value or Value.Value) Time shown on clock
-        # print(clock.get_value())
-        pass
+        clock_container = self.window.child_window(title="clock_Time", control_type="Group")
+        clock_edit = clock_container.child_window(control_type="Edit")
+        self.assertTrue(clock_edit.exists())
     
     def test_click_midnight_button(self):
         # Click Midnight
@@ -69,7 +65,6 @@ class TestGUIWindow(unittest.TestCase):
         # Read clock text
         clock_text = clock_edit.iface_value.CurrentValue
         print(f"Clock shows: {clock_text}")
-
         self.assertEqual(clock_text, "00:00:00", "Clock should reset to 00:00:00 after Midnight is clicked")
             
     def test_slider_time_exists(self):
