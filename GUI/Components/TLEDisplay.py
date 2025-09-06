@@ -13,23 +13,21 @@
 #TODO: figure out how to access the SatSimHandler, to access the read_tle_file() function. once figured out, can remove the duplicated function from this code
 #TODO:
 
-from Components.CollapsibleOverlay import CollapsibleOverlay
+from Components.CollapsibleOverlay import CollapsibleOverlay, OverlaySide
 from Components.DropLabel import DropLabel
 from Components.TLESlot import TLESlot
 
 from PyQt5.QtWidgets import  QHBoxLayout, QLabel, QVBoxLayout, QWidget, QScrollArea
-from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtCore import Qt
 
 class TLEDisplay(CollapsibleOverlay):
-    update_signal = pyqtSignal()
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, side= OverlaySide.RIGHT):
         self.backend = parent.backend
-
-        self.tle_dict = {}
 
         super().__init__(parent)
 
+        self.control_panel_height_reduction = 260
         self.set_up_drop_label()
         self.set_up_scroll_box()
 
@@ -75,49 +73,45 @@ class TLEDisplay(CollapsibleOverlay):
             widget_to_remove.setParent(None)
             widget_to_remove.deleteLater()
 
-        for i in self.tle_dict:
+        for i in self.backend.tle_dict:
             name = str(i)
-            line_1 = self.tle_dict[name][0]
-            line_2 = self.tle_dict[name][1]
+            line_1 = self.backend.tle_dict[name][0]
+            line_2 = self.backend.tle_dict[name][1]
 
             tle_slot = TLESlot(self, name, line_1, line_2)
-            tle_slot.checkbox.stateChanged.connect(self.get_data_from_enabled_tle_slots)
-            tle_slot.checkbox.stateChanged.connect(self.emit_update_signal)
-
+            tle_slot.checkbox.stateChanged.connect(self.update_all_enabled_status)
+            
             self.inner_layout.addWidget(tle_slot)
 
-    def get_data_from_enabled_tle_slots(self):
+    def update_all_enabled_status(self):
         return_dict = {}
 
         for i in range(self.inner_layout.count()):
             slot = self.inner_layout.itemAt(i).widget()
             if(isinstance(slot, TLESlot)):
-                if slot.checkbox.isChecked():
-                    return_dict[slot.tle_name] = [slot.tle_line_1, slot.tle_line_2]
-        
-        print(f"Return_dict: {return_dict}")
-        return return_dict
+                return_dict[slot.tle_name] = slot.checkbox.isChecked()
+
+        self.backend.update_all_element_states(return_dict)
 
     def add_elements(self, tle_data):
-        print("Adding Elements")
-        for i in tle_data:
-            name = str(i)
-            line_1 = tle_data[name][0]
-            line_2 = tle_data[name][1]
-
-            self.tle_dict[name] = [line_1, line_2]
+        self.backend.add_elements(tle_data)
 
         self.populate_scroll_items()
 
     def delete_element(self, element_name):
-        del self.tle_dict[element_name]
+        self.backend.delete(element_name)
 
         self.populate_scroll_items()
 
+    def toggle_size(self):
+        if self.expanded:
+            self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+            self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        else:
+            self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+            self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
 
-    def emit_update_signal(self):
-        self.update_signal.emit()
-        print("Sending update signal")
+        super().toggle_size()
 
     def on_file_dropped(self, tle_file_path):
         print("File dropped from: " + tle_file_path)
