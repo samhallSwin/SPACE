@@ -19,10 +19,19 @@ class TestGUIWindow(unittest.TestCase):
         script_path = Path("GUI") / "Application.py"
         cls.proc = subprocess.Popen([str(python_exe), str(script_path)])
 
-        time.sleep(2)
+        # Wait until the window appears (max 15 seconds)
+        cls.app = Application(backend="uia")
+        for _ in range(30):  # 30 * 0.5s = 15s
+            try:
+                cls.app.connect(title_re="S.P.A.C.E")
+                break
+            except Exception:
+                time.sleep(0.5)
+        else:
+            raise RuntimeError("Could not find window with title 'S.P.A.C.E' after 15 seconds")
 
-        cls.app = Application(backend="uia").connect(title="S.P.A.C.E")
-        cls.window = cls.app.window(title="S.P.A.C.E")
+        cls.window = cls.app.window(title_re="S.P.A.C.E")
+        cls.window.wait("visible", timeout=10)
 
     @classmethod
     def tearDownClass(cls):

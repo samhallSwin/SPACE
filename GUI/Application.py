@@ -109,9 +109,6 @@ class TimeGlobeWidget(QWidget):
             h.addWidget(btn)
         v.addLayout(h)
 
-  
-
-
         self.start_btn.clicked.connect(self.start)
         self.stop_btn.clicked.connect(self.stop)
         self.now_btn.clicked.connect(self.now)
