@@ -54,15 +54,22 @@ class TestGUIWindow(unittest.TestCase):
         pass
     
     def test_click_midnight_button(self):
+        # Click Midnight
         midnight_button = self.window.child_window(title="Midnight", control_type="Button")
-        self.assertTrue(midnight_button.exists(), "Midnight button should exist")
-        # Click Stop button here if necessary
         midnight_button.click_input()
 
-        clock = self.window.child_window(class_name="QLineEdit", control_type="Edit", found_index=0)
-        clock_text = clock.iface_value.CurrentValue
+        # Click Stop if needed
+        stop_button = self.window.child_window(title="Stop", control_type="Button")
+        stop_button.click_input()
+
+        # Locate clock container and QLineEdit inside
+        clock_container = self.window.child_window(title="clock_Time", control_type="Group")
+        clock_edit = clock_container.child_window(control_type="Edit")
+
+        # Read clock text
+        clock_text = clock_edit.iface_value.CurrentValue
         print(f"Clock shows: {clock_text}")
-        
+
         self.assertEqual(clock_text, "00:00:00", "Clock should reset to 00:00:00 after Midnight is clicked")
             
     def test_slider_time_exists(self):

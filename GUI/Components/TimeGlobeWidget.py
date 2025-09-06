@@ -49,17 +49,20 @@ class TimeGlobeWidget(QWidget):
 
         self.backend.subscribe(self.onDataChanged)
         
+        # Container for Clock
+        self.clock_container = QWidget()
+        self.clock_container.setAccessibleName("clock_Time")
+        clock_layout = QVBoxLayout(self.clock_container)
+        clock_layout.setContentsMargins(0, 0, 0, 0)
+        
         # Clock Display
         self.time_display = QLineEdit(self)
         self.time_display.setReadOnly(True)  # Prevent edits
         self.time_display.setAlignment(Qt.AlignCenter)
         self.time_display.setFont(font)
         self.time_display.setStyleSheet("border: none; background: transparent;")  # look like QLabel
-
-        # Accessibility for testing automation
-        self.time_display.setAccessibleName("clock_Time")
-        self.time_display.setAccessibleDescription(QTime.currentTime().toString("hh:mm:ss"))
-
+        
+        clock_layout.addWidget(self.time_display)
 
          # Slider
         self.slider = QSlider(Qt.Horizontal)
@@ -68,6 +71,9 @@ class TimeGlobeWidget(QWidget):
         self.slider.setTickInterval(30)
         self.slider.setTickPosition(QSlider.TicksBelow)
         self.slider.valueChanged.connect(self.onSlider)
+        
+        # Accessibility for testing automation       
+        self.slider.setAccessibleName("slider_Time")
 
         # Timer that updates clock
         self.timer = QTimer(self)
@@ -97,7 +103,8 @@ class TimeGlobeWidget(QWidget):
 
         # Layout
         layout.addWidget(self.globe)
-        layout.addWidget(self.time_display)
+        #layout.addWidget(self.time_display)
+        layout.addWidget(self.clock_container)
         layout.addWidget(self.slider)
         self.setLayout(layout)
         h = QHBoxLayout()
