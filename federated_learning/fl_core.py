@@ -13,6 +13,7 @@ Changelog:
 - 2024-09-16: Offloaded Model Manger to model.py, Refactored Standalone
 - 2025-05-07: Remade file: Added TensorFlow + PyTorch conversion and saving functionality. Removed all Flower functionality
 - 2025-05-09: Added processing time tracking for rounds and overall training
+- 2025-10-04: Integrated FLAM file parsing and dynamic topology adaptation
 
 Usage:
 Run this file directly to start a Multithreading instance of Tensorflow FL with the chosen number of clients rounds and model.
@@ -33,6 +34,7 @@ from datetime import datetime
 import glob
 from torch.utils.data import DataLoader, Subset, random_split
 import torchvision
+import re
 
 # Add the project root directory to the Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -444,12 +446,55 @@ class FederatedLearning:
 
     # --- End FLAM-related code ---
 
+    @staticmethod
+    def parse_flam_file(flam_path):
+        """
+        Parse the FLAM CSV file and yield a dict for each timestep:
+        {
+            'timestep': int,
+            'round': int,
+            'target_node': int,
+            'phase': str,
+            'connected_sats': List[int],
+            'missing_sats': List[int],
+            'adjacency': List[List[int]]
+        }
+        """
+        with open(flam_path, 'r') as f:
+            lines = f.readlines()
+
+        i = 0
+        while i < len(lines):
+            line = lines[i].strip()
+            if line.startswith("Time:"):
+                # Parse header
+                header = line
+                timestep = int(re.search(r'Timestep: (\d+)', header).group(1))
+                round_num = int(re.search(r'Round: (\d+)', header).group(1))
+                target_node = int(re.search(r'Target Node: (\d+)', header).group(1))
+                phase = re.search(r'Phase: ([A-Z]+)', header).group(1)
+                connected_sats = eval(re.search(r'Connected Sats: (\[.*?\])', header).group(1))
+                missing_sats = eval(re.search(r'Missing Sats: (\[.*?\])', header).group(1))
+                adjacency = []
+                for j in range(i+1, i+1+8):  # 8 clients/nodes
+                    adjacency.append([int(x) for x in lines[j].strip().split(',')])
+                yield {
+                    'timestep': timestep,
+                    'round': round_num,
+                    'target_node': target_node,
+                    'phase': phase,
+                    'connected_sats': connected_sats,
+                    'missing_sats': missing_sats,
+                    'adjacency': adjacency
+                }
+                i += 8
+            i += 1
+
+
     def run(self, flam_path=None, model_name=None, auto_select_model=True, interactive_mode=True):
         """
-        Run the federated learning process using a parameter server object and modular client logic.
+        Run the federated learning process using FLAM file for topology and participation.
         """
-        import random  # For synthetic adjacency matrix (demo only)
-
         self.initialize_data()
         self.initialize_model(model_name, auto_select_model, interactive_mode)
         total_start_time = time.time()
@@ -459,58 +504,58 @@ class FederatedLearning:
         server = self.ParameterServer(self.global_model)
         clients = [self.Client(i, type(self.global_model)(), self.client_data[i]) for i in range(self.num_clients)]
 
-        for round_num in range(self.num_rounds):
-            print(f"\n--- Federated Round {round_num+1} ---")
-            ps_client = round_num % self.num_clients
-            print(f"Parameter Server for this round: Client {ps_client+1}")
+        flam_schedule = list(self.parse_flam_file(flam_path))
+        print(f"Loaded FLAM schedule with {len(flam_schedule)} timesteps.")
 
-            # --- Synthetic adjacency matrix for demo/testing ---
-            # In production, replace this with FLAM adjacency matrix logic!
-            possible_clients = [i for i in range(self.num_clients)]
-            num_in_range = random.randint(1, len(possible_clients))
-            in_range_clients = random.sample(possible_clients, num_in_range)
-            out_of_range_clients = [i for i in possible_clients if i not in in_range_clients]
-            # --- End synthetic adjacency matrix ---
+        for flam_entry in flam_schedule:
+            print(f"\n--- Timestep {flam_entry['timestep']} | Round {flam_entry['round']} ---")
+            ps_client = flam_entry['target_node']
+            phase = flam_entry['phase']
+            in_range_clients = flam_entry['connected_sats']
+            out_of_range_clients = flam_entry['missing_sats']
 
+            print(f"Parameter Server for this timestep: Client {ps_client+1}")
+            print(f"Phase: {phase}")
             print(f"In-range clients: {[f'Client {i+1}' for i in in_range_clients]}")
             print(f"Out-of-range clients: {[f'Client {i+1}' for i in out_of_range_clients]}")
-            print(f"Parameter Server (Client {ps_client+1}) will aggregate this round.")
+            print(f"Parameter Server (Client {ps_client+1}) will aggregate this timestep.")
 
             # Distribute global model to all clients
             global_state = server.get_global_model().state_dict()
             for client in clients:
                 client.update_model(global_state)
 
-            # Each in-range client trains and sends update to server
+            # Only train during TRAINING phase
             round_accuracies_this = []
-            for client_id, client in enumerate(clients):
-                if client_id in in_range_clients:
-                    state_dict, acc = client.train()
-                    server.receive_update(state_dict)
-                    round_accuracies_this.append(acc)
-                    print(f"Client {client.client_id+1} accuracy: {acc:.2%}")
+            if phase == "TRANSMITTING":
+                for client_id, client in enumerate(clients):
+                    if client_id in in_range_clients:
+                        state_dict, acc = client.train()
+                        server.receive_update(state_dict)
+                        round_accuracies_this.append(acc)
+                        print(f"Client {client.client_id+1} accuracy: {acc:.2%}")
+                    else:
+                        print(f"Client {client.client_id+1} skipped (out of range)")
+
+                # Server aggregates updates from in-range clients
+                server.aggregate()
+                if round_accuracies_this:
+                    avg_acc = sum(round_accuracies_this) / len(round_accuracies_this)
+                    print(f"Timestep {flam_entry['timestep']} average in-range client accuracy: {avg_acc:.2%}")
                 else:
-                    print(f"Client {client.client_id+1} skipped (out of range)")
+                    print(f"Timestep {flam_entry['timestep']}: No clients in range to train.")
 
-            # Server aggregates updates from in-range clients
-            server.aggregate()
-            if round_accuracies_this:
-                avg_acc = sum(round_accuracies_this) / len(round_accuracies_this)
-                print(f"Round {round_num+1} average in-range client accuracy: {avg_acc:.2%}")
-            else:
-                print(f"Round {round_num+1}: No clients in range to train.")
-
-            self.round_times[f"round_{round_num + 1}"] = time.time() - total_start_time
-            round_accuracies.append(avg_acc if round_accuracies_this else 0)
+                self.round_times[f"timestep_{flam_entry['timestep']}"] = time.time() - total_start_time
+                round_accuracies.append(avg_acc if round_accuracies_this else 0)
 
         self.total_training_time = time.time() - total_start_time
         self.round_accuracies = round_accuracies
 
         print(f"\nFederated learning process completed in {self.total_training_time:.2f} seconds.")
-        print("\nRound-wise processing times and accuracies:")
+        print("\nTimestep-wise processing times and accuracies:")
         for idx, round_time in self.round_times.items():
             print(f"{idx}: {round_time:.2f} seconds, Accuracy: {round_accuracies[int(idx.split('_')[1]) - 1]:.2%}")
-        print(f"Average round time: {self.total_training_time/self.num_rounds:.2f} seconds")
+        print(f"Average timestep time: {self.total_training_time/len(self.round_times):.2f} seconds")
 
 if __name__ == "__main__":
     """Standalone entry point for testing FederatedLearning."""
@@ -531,8 +576,13 @@ if __name__ == "__main__":
     fl_instance.set_num_rounds(num_rounds)
     fl_instance.set_num_clients(num_clients)
     
-    # Let it auto-detect the latest FLAM file instead of hardcoding
-    fl_instance.run(flam_path=None)
+    # Prompt user for FLAM file path
+    flam_path = input("Enter the path to your FLAM file:\n").strip()
+    if not os.path.isfile(flam_path):
+        print(f"Error: FLAM file not found at '{flam_path}'")
+        sys.exit(1)
+
+    fl_instance.run(flam_path=flam_path)
 
     # Evaluate the model
     output = FLOutput()
