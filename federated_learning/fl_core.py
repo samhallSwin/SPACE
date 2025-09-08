@@ -101,7 +101,7 @@ class FederatedLearning:
         def update_model(self, global_state_dict):
             self.model.load_state_dict(global_state_dict)
 
-    def __init__(self, enable_model_evaluation=False):
+    def __init__(self, enable_model_evaluation=True):
         self.num_rounds = 10
         self.num_clients = 5
         self.global_model = None
