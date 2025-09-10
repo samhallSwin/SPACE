@@ -18,10 +18,9 @@ class TestGUIWindow(unittest.TestCase):
         python_exe = Path(".venv") / "Scripts" / "python.exe"
         script_path = Path("GUI") / "Application.py"
         cls.proc = subprocess.Popen([str(python_exe), str(script_path)])
-
-        # Wait until the window appears (max 15 seconds)
+        
         cls.app = Application(backend="uia")
-        for _ in range(30):  # 30 * 0.5s = 15s
+        for _ in range(30):
             try:
                 cls.app.connect(title_re="S.P.A.C.E")
                 break
@@ -31,7 +30,7 @@ class TestGUIWindow(unittest.TestCase):
             raise RuntimeError("Could not find window with title 'S.P.A.C.E' after 15 seconds")
 
         cls.window = cls.app.window(title_re="S.P.A.C.E")
-        cls.window.wait("visible", timeout=10)
+        cls.window.wait("visible", timeout=10)        
 
     @classmethod
     def tearDownClass(cls):
@@ -50,19 +49,18 @@ class TestGUIWindow(unittest.TestCase):
         self.assertTrue(clock_edit.exists())
     
     def test_click_midnight_button(self):
-        # Click Midnight
         midnight_button = self.window.child_window(title="Midnight", control_type="Button")
         midnight_button.click_input()
 
-        # Click Stop if needed
         stop_button = self.window.child_window(title="Stop", control_type="Button")
         stop_button.click_input()
 
-        # Locate clock container and QLineEdit inside
         clock_container = self.window.child_window(title="clock_Time", control_type="Group")
         clock_edit = clock_container.child_window(control_type="Edit")
+        
+        self.assertTrue(clock_container.exists())
+        self.assertTrue(clock_edit.exists())
 
-        # Read clock text
         clock_text = clock_edit.iface_value.CurrentValue
         print(f"Clock shows: {clock_text}")
         self.assertEqual(clock_text, "00:00:00", "Clock should reset to 00:00:00 after Midnight is clicked")
