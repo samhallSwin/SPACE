@@ -85,12 +85,13 @@ class AlgorithmOutput(Output):
             timestep_in_round = algo_op.get('timestep_in_round', 1)
             aggregator_id = algo_op.get('aggregator_id', 0)
 
-            # Get cumulative tracking fields
+            # Get enhanced server analysis fields
             server_connections_current = algo_op.get('server_connections_current', 0)
             server_connections_cumulative = algo_op.get('server_connections_cumulative', 0)
             target_connections = algo_op.get('target_connections', 0)
             connected_satellites = algo_op.get('connected_satellites', [])
             missing_satellites = algo_op.get('missing_satellites', [])
+            target_satellites = algo_op.get('target_satellites', [])
             round_complete = algo_op.get('round_complete', False)
 
             # Append the row with all the information
@@ -111,6 +112,7 @@ class AlgorithmOutput(Output):
                 'target_connections': target_connections,
                 'connected_satellites': connected_satellites,
                 'missing_satellites': missing_satellites,
+                'target_satellites': target_satellites,
                 'round_complete': round_complete
             })
 
@@ -148,7 +150,7 @@ class AlgorithmOutput(Output):
             file.write(self.get_flam().to_string(index=False))
 
     def _write_csv_format(self, algorithm_output):
-        """Write CSV format with cumulative connectivity tracking for FL core compatibility"""
+        """Write CSV format with comprehensive server analysis for FL core compatibility"""
         # Generate timestamp string
         timestamp_str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
@@ -174,15 +176,16 @@ class AlgorithmOutput(Output):
                 round_length = data.get('round_length', 1)
                 timestep_in_round = data.get('timestep_in_round', 1)
 
-                # New cumulative tracking fields
+                # Enhanced server analysis fields
                 server_connections_current = data.get('server_connections_current', 0)
                 server_connections_cumulative = data.get('server_connections_cumulative', 0)
                 target_connections = data.get('target_connections', 0)
                 connected_satellites = data.get('connected_satellites', [])
                 missing_satellites = data.get('missing_satellites', [])
+                target_satellites = data.get('target_satellites', [])
                 round_complete = data.get('round_complete', False)
 
-                # Write header line with enhanced cumulative information
+                # Write header line with comprehensive server analysis
                 f.write(f"Time: {time_stamp}, Timestep: {timestep}, Round: {round_num}, "
                     f"Target Node: {target_node}, Phase: {phase}, "
                     f"Round Length: {round_length}, Timestep in Round: {timestep_in_round}, "
@@ -190,6 +193,7 @@ class AlgorithmOutput(Output):
                     f"Cumulative Connections: {server_connections_cumulative}/{target_connections}, "
                     f"Connected Sats: {connected_satellites}, "
                     f"Missing Sats: {missing_satellites}, "
+                    f"Target Sats: {target_satellites}, "
                     f"Round Complete: {round_complete}\n")
 
                 # Write matrix rows
@@ -201,22 +205,36 @@ class AlgorithmOutput(Output):
 
         print(f"FLOMPS CSV format exported to {filename}")
 
-        # Calculate and display round statistics
+        # Calculate and display comprehensive round statistics
         rounds = {}
         for data in algorithm_output.values():
             round_num = data.get('round_number', 1)
             if round_num not in rounds:
+                target_connections = data.get('target_connections', 0)
+                final_connections = data.get('server_connections_cumulative', 0)
+                success_rate = (final_connections / target_connections * 100) if target_connections > 0 else 0
+
                 rounds[round_num] = {
                     'length': data.get('round_length', 1),
                     'server': data.get('aggregator_id', 0),
+                    'server_name': data.get('selected_satellite', 'Unknown'),
                     'completed': data.get('round_complete', False),
-                    'final_connections': data.get('server_connections_cumulative', 0),
-                    'target_connections': data.get('target_connections', 0)
+                    'final_connections': final_connections,
+                    'target_connections': target_connections,
+                    'success_rate': success_rate,
+                    'target_satellites': data.get('target_satellites', [])
                 }
 
-        print(f"Generated {timesteps} timesteps across {len(rounds)} rounds:")
+        print(f"\nGenerated {timesteps} timesteps across {len(rounds)} rounds:")
+        print("=" * 80)
+
         for round_num, info in rounds.items():
-            status = "✓" if info['completed'] else "✗"
+            status = "✓ SUCCESS" if info['completed'] else "✗ TIMEOUT"
             conn_status = f"{info['final_connections']}/{info['target_connections']}"
-            print(f"  Round {round_num}: Server {info['server']}, {info['length']} timestamps, "
-                f"Connections: {conn_status} {status}")
+
+            print(f"Round {round_num}: Server {info['server']} ({info['server_name']})")
+            print(f"  Length: {info['length']} timestamps")
+            print(f"  Connections: {conn_status} ({info['success_rate']:.1f}%)")
+            print(f"  Target Satellites: {info['target_satellites']}")
+            print(f"  Status: {status}")
+            print("-" * 40)
