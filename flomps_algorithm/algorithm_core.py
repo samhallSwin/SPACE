@@ -2,7 +2,7 @@
 Filename: algorithm_core.py
 Description: Manage FLOMPS algorithm processes.
 Initial Creator: Elysia Guglielmo (System Architect)
-Author: Yuganya Perumal, Gagandeep Singh
+Contributors: Yuganya Perumal, Gagandeep Singh
 Date: 2024-07-31
 Version: 1.0
 Python Version:
@@ -13,10 +13,17 @@ Changelog:
 - 2024-09-09: Move Algorithm Steps from Algorithm Handler to Algorithm Core by Yuganya Perrumal
 - 2024-09-21: Implemented Load Balancing based on past selection of the satellite when there more than one satellite with max no. of connectivity.
 - 2024-10-03: Removed validation for satellite names. auto generation of satellite names implemented if none found.
+- 2025-08-29: Fixed import path issues for interfaces module by moving sys.path.append before imports.
+- 2025-09-05: Major algorithm optimization - replaced connection-count based server selection with time-based optimization.
+- 2025-09-05: Added calculate_cumulative_connection_time() function for predictive server selection.
+- 2025-09-05: Implemented cumulative connectivity model for more realistic satellite communication behavior.
+- 2025-09-05: Enhanced load balancing with increased penalty factor (0.1 to 0.5) for better satellite rotation.
 
 
 Usage:
 Instantiate to setup Algorithmhandler and AlgorithmConfig.
+
+quick run: cd (path)/flomps_algorithm && python algorithm_handler.py (path)/sat_sim/output/sat_sim_xxxx.txt
 """
 
 

@@ -14,6 +14,9 @@ Changelog:
 - 2024-09-22: Implemented Input validation.
 - 2024-10-03: Implemented auto generation of satellite names if satellite simulator component does not provide one.
 - 2024-10-14: Modified read_adjacency_matrices() method to accomodate modified version of output.txt from sat sim component
+- 2025-08-29: Fixed import path issues by moving sys.path.append before import statements to resolve ModuleNotFoundError.
+- 2025-08-29: Added main execution block (__name__ == "__main__") to enable script execution from command line.
+- 2025-08-29: Implemented proper command line argument handling and user feedback for algorithm processing.
 
 Usage:
 Instantiate AlgorithmHandler and assign Algorithm.

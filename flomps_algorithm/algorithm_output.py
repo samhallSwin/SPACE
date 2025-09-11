@@ -2,7 +2,7 @@
 Filename: algorithm_output.py
 Description: Prepares and sends data to Federated Learning module
 Initial Creator: Elysia Guglielmo (System Architect),
-Author: Gagandeep Singh
+Contributor: Gagandeep Singh
 Date: 2025-06-04
 Version: 1.
 Python Version:
@@ -15,6 +15,9 @@ Changelog:
 - 2024-09-21: Algorithm output re organised to remove redundancy and added timestamp and satellite name to data structure passed to FL.
 - 2024-10-14: Output file name changed to FLAM.txt as per client feedback.
 - 2025-06-04: Removed hardcoded paths, added universal path management.
+- 2025-09-05: Enhanced output generation to support new time-optimized algorithm with improved CSV export format.
+- 2025-09-05: Added support for round-based output structure with predictive timestamp information.
+- 2025-09-05: Improved file naming conventions to include satellite count and timestep information in CSV exports.
 
 Usage:
 Instantiate AlgorithmOutput and assign FLInput.
