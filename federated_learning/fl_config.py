@@ -10,6 +10,7 @@ Changelog:
 - 2024-08-02: Initial creation.
 - 2024-09-16: Supported standalone execution, refactored Model Setters
 - 2025-05-15: Added JSON file reading, and printing the options out to see the connection
+- 2025-01-07: Added Enhanced Model Evaluation Module integration
 Usage: 
 - Import this module and call read_options_from_file() with a JSON config file path.
 - Alternatively, run the file directly to test configuration loading.
@@ -45,10 +46,15 @@ class Config:
         self.options = options
         self.set_federated_learning_model()
         self.set_federated_learning()
+        
+        # Enable model evaluation if configured
+        if self.options.get("model_evaluation", {}).get("enable_auto_selection", False):
+            self.fl_core.enable_model_evaluation()
 
     def read_options_from_file(self, file_path: str):
         with open(file_path, 'r') as file:
             full_config = json.load(file)
+        
         options = full_config.get("federated_learning", {})
         self.read_options(options)
 
@@ -56,15 +62,18 @@ class Config:
         self.fl_core.set_num_rounds(self.options["num_rounds"])
         self.fl_core.set_num_clients(self.options["num_clients"])
 
-        self.fl_core.print_config_summary(
-        model_type=self.options["model_type"],
-        data_set=self.options["data_set"]
-        )
+        if hasattr(self.fl_core, 'print_config_summary'):
+            self.fl_core.print_config_summary(
+                model_type=self.options["model_type"],
+                data_set=self.options["data_set"]
+            )
         print ("FL setters called")
 
     def set_federated_learning_model(self) -> None:
         self.model.set_model_type(self.options["model_type"])
         self.model.set_data_set(self.options["data_set"])
+        
+        # Set model directly (model selection will be handled in initialize_model if enabled)
         self.fl_core.set_model(self.model)
         print ("MODEL setters called")
 
