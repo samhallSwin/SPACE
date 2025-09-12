@@ -18,6 +18,8 @@ Changelog:
 - 2025-09-05: Added calculate_cumulative_connection_time() function for predictive server selection.
 - 2025-09-05: Implemented cumulative connectivity model for more realistic satellite communication behavior.
 - 2025-09-05: Enhanced load balancing with increased penalty factor (0.1 to 0.5) for better satellite rotation.
+- 2025-09-12: Code cleanup - removed redundant find_best_server_for_round() and unused calculate_cumulative_connection_time() functions.
+- 2025-09-12: Optimized function hierarchy for better maintainability and eliminated dead code.
 
 
 Usage:
@@ -63,70 +65,6 @@ class Algorithm():
 
     def get_algorithm_output(self):
         return self.algorithm_output_data
-
-    def find_best_server_for_round(self, start_matrix_index=0):
-        """
-        Find the server that will connect to ALL other satellites the fastest.
-        Uses cumulative connectivity - server can connect to satellites one at a time.
-        """
-        if start_matrix_index >= len(self.adjacency_matrices):
-            return 0, 5  # Default fallback
-
-        num_satellites = len(self.satellite_names)
-        best_server = 0
-        best_timestamps_needed = float('inf')
-
-        # Check each satellite as potential server
-        for server_idx in range(num_satellites):
-            timestamps_needed = self.calculate_cumulative_connection_time(server_idx, start_matrix_index)
-
-            # Apply load balancing - prefer servers that haven't been selected much
-            load_penalty = self.selection_counts[server_idx] * 0.5
-            adjusted_time = timestamps_needed + load_penalty
-
-            if adjusted_time < best_timestamps_needed:
-                best_timestamps_needed = adjusted_time
-                best_server = server_idx
-
-        # Update selection count
-        self.selection_counts[best_server] += 1
-
-        actual_timestamps = int(best_timestamps_needed - self.selection_counts[best_server] * 0.5)
-
-        print(f"Round {self.round_number}: Selected Server {best_server} ({self.satellite_names[best_server]}) "
-            f"- will connect to all {num_satellites-1} satellites in {actual_timestamps} timestamps")
-
-        return best_server, actual_timestamps
-
-    def calculate_cumulative_connection_time(self, server_idx, start_matrix_index, max_lookahead=20):
-        """
-        Calculate how many timestamps it takes for this server to connect to ALL other satellites
-        using cumulative connectivity (can connect to satellites one at a time).
-        """
-        num_satellites = len(self.satellite_names)
-        target_satellites = set(range(num_satellites))
-        target_satellites.remove(server_idx)  # Remove self from target list
-
-        connected_satellites = set()  # Track which satellites we've connected to
-
-        for timesteps_ahead in range(max_lookahead):
-            matrix_idx = start_matrix_index + timesteps_ahead
-            if matrix_idx >= len(self.adjacency_matrices):
-                break
-
-            _, matrix = self.adjacency_matrices[matrix_idx]
-
-            # Check which satellites this server connects to in this timestamp
-            for target_sat in range(num_satellites):
-                if target_sat != server_idx and matrix[server_idx][target_sat] == 1:
-                    connected_satellites.add(target_sat)
-
-            # Check if we've connected to all target satellites
-            if connected_satellites == target_satellites:
-                return timesteps_ahead + 1  # +1 because we need to include this timestamp
-
-        # If server never connects to all satellites within lookahead, return high penalty
-        return max_lookahead
 
     def analyze_all_satellites(self, start_matrix_index, max_lookahead=20):
         """
