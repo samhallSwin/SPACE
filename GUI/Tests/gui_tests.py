@@ -83,12 +83,20 @@ class TestGUIWindow(unittest.TestCase):
         self.assertTrue(button.exists(), "Now button should exist")
         
     def test_tle_expand_collapse_button_exists(self):
-        # (title: button_ExpandCollapse) <- Expand/Collapse button (left one)
-        pass
+        button = self.window.child_window(title="button_ExpandCollapse", control_type="Button")
+        self.assertTrue(button.exists(), "TLE Expand/Collapse button should exist")
         
+    # Overlay works by physically collapsing and hiding via opacity
+    # Could be worth looking into setVisible
     def test_click_tle_expand_collapse_button(self):
-        # (title: label_DropHere) <- Ensure that clicking on expand/collapse makes this visible/not visible
-        pass
+        button = self.window.child_window(title="button_ExpandCollapse", control_type="Button")
+        label = self.window.child_window(title="Drop Label", control_type="Text")
+        initial_visible = label.is_visible()
+        
+        button.click_input()
+        time.sleep(0.5)
+        new_visible = label.is_visible()
+        self.assertNotEqual(initial_visible, new_visible, "Clicking Expand/Collapse should toggle visibility of DropHere label")
 
     # def test_print_all_elements(self):
     #     self.window.print_control_identifiers()

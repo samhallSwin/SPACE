@@ -61,6 +61,8 @@ class CollapsibleOverlay(QFrame):
         self.main_layout.setContentsMargins(0, 0, 0, 0)
         self.main_layout.setSpacing(0)
 
+        self.toggle_button.setAccessibleName("button_ExpandCollapse")
+        
         self.toggle_button.clicked.connect(self.toggle_size)
         self.update_size()
 
