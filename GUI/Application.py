@@ -4,8 +4,9 @@ from PyQt5.QtCore import Qt, QTime, QTimer
 from PyQt5.QtGui import QFontDatabase, QFont, QSurfaceFormat, QImage
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QPushButton, QSlider, QOpenGLWidget, QLineEdit
+    QLabel, QPushButton, QSlider, QOpenGLWidget, QLineEdit, QSpinBox, QTimeEdit
 )
+from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import pyqtSignal, QPropertyAnimation, QEasingCurve
 from OpenGL.GL import *
 from OpenGL.GLU import *
@@ -18,8 +19,6 @@ Seconds_Per_Day = 24 * 60 *60
 Earth_Degrees = 360
 Seconds_Per_Degree = Seconds_Per_Day / 360
 Rot_Dur = 4000 #Aninmation speed in miliseconds
-
-
 #---------------------------------------------------------------
 # Convert seconds since midnight to degrees of rotation
 
@@ -29,6 +28,11 @@ def degrees_to_sec(deg: int):
 def seconds_to_degrees(s: int):
     s = s % Seconds_Per_Day
     return float(s / Seconds_Per_Degree)
+
+
+
+
+
 
 
 # ————————————————————————————————
@@ -109,10 +113,10 @@ class GlobeWidget(QOpenGLWidget):
         # Position the camera
         gluLookAt(0, 0, 5, 0, 0, 0, 0, 1, 0)
 
-        # FIX 1: Align poles vertically (Z → Y)
+        # Align poles vertically (Z → Y)
         glRotatef(-90, 1, 0, 0)  # Rotate globe forward so poles face up/down
 
-        # FIX 2: Rotate east–west around vertical (Z now acts as vertical)
+        # Rotate east–west around vertical (Z now acts as vertical)
         glRotatef(self.yRot, 0, 0, 1)
 
         # Draw Earth (opaque)
@@ -139,38 +143,43 @@ class GlobeWidget(QOpenGLWidget):
 # ————————————————————————————————
 #  2) Time + Globe + Slider UI
 # ————————————————————————————————
-class TimeGlobeWidget(QWidget):
+class MainMenu(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("Clock Display")
-        self.setGeometry(100, 100, 800, 400)
-
-        font = QFont('Arial', 120, QFont.Bold)
-
-        layout = QVBoxLayout()
-
+        #Layout Boxes       
+        outer = QVBoxLayout()
+        globe_layout = QVBoxLayout()
+        controlpanel = QVBoxLayout()
+        time_controls = QHBoxLayout()
         self.globe = GlobeWidget()
+        globe_layout.addWidget(self.globe)
 
-        # Clock Display
+
+#------ Clock Display
+        font_id = QFontDatabase.addApplicationFont('Assets\A-Space Regular Demo.otf')
+        self.font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
+        self.space_font = QFont(self.font_family, 50)
+
         self.time_display = QLineEdit(self)
         self.time_display.setReadOnly(True)  # Prevent edits
         self.time_display.setAlignment(Qt.AlignCenter)
-        self.time_display.setFont(font)
+        self.time_display.setFont(self.space_font)
         self.time_display.setStyleSheet("border: none; background: transparent;")  # look like QLabel
 
         # Accessibility for testing automation
         self.time_display.setAccessibleName("clock_Time")
         self.time_display.setAccessibleDescription(QTime.currentTime().toString("hh:mm:ss"))
+        controlpanel.addWidget(self.time_display)
 
-
-         # Slider
-        self.slider = QSlider(Qt.Horizontal)
+#-------Slider
+        self.slider = self.style_slider(QSlider(Qt.Horizontal))
         self.slider.setRange(0, Seconds_Per_Day)
         self.slider.setValue(90)  
         self.slider.setTickInterval(30)
         self.slider.setTickPosition(QSlider.TicksBelow)
         self.slider.valueChanged.connect(self.onSlider)
+        controlpanel.addWidget(self.slider)
 
         # Timer that updates clock
         self.timer = QTimer(self)
@@ -180,33 +189,47 @@ class TimeGlobeWidget(QWidget):
         self.start()
 
 
+        # Time Window
+        #start_time = 
+        #end_time = 
 
+
+        #start_edit = QTimeEdit(start_time or QTime.currentTime())
+        #end_edit   = QTimeEdit(end_time   or QTime.currentTime().addSecs(3600))
+
+        #self.slider.setRange(start_time, end_time)
+
+
+# ----- Time Controls
         # Play button
-        self.play_btn = QPushButton("▶")
+        self.play_btn = self.style_button(QPushButton("▶"))
         self.play_btn.clicked.connect(self.scroll)
+        time_controls.addWidget(self.play_btn)
         # Stop Button
-        self.stop_btn = QPushButton("Stop")
+        self.stop_btn = self.style_button(QPushButton("Stop"))
         self.stop_btn.clicked.connect(self.stop)
+        time_controls.addWidget(self.stop_btn)
         # Start Button
-        self.start_btn    = QPushButton("Start")
+        self.start_btn = self.style_button(QPushButton("Start"))
         self.start_btn.clicked.connect(self.start)
+        time_controls.addWidget(self.start_btn)
         # Current Time Button
-        self.now_btn      = QPushButton("Now")
+        self.now_btn = self.style_button(QPushButton("Now"))
         self.now_btn.clicked.connect(self.now)
+        time_controls.addWidget(self.now_btn)
         # Reset Button
-        self.midnight_btn = QPushButton("Midnight")
+        self.midnight_btn = self.style_button(QPushButton("Midnight"))
         self.midnight_btn.clicked.connect(self.midnight)
+        time_controls.addWidget(self.midnight_btn)
 
 
         # Layout
-        layout.addWidget(self.globe)
-        layout.addWidget(self.time_display)
-        layout.addWidget(self.slider)
-        self.setLayout(layout)
-        h = QHBoxLayout()
-        for btn in (self.play_btn, self.start_btn, self.stop_btn, self.now_btn, self.midnight_btn):
-            h.addWidget(btn)
-        layout.addLayout(h)
+        controlpanel.addLayout(time_controls)
+        outer.addLayout(globe_layout)
+        outer.addLayout(controlpanel)
+        self.setLayout(outer)
+        
+        
         
 
     # Animations Controls
@@ -260,14 +283,64 @@ class TimeGlobeWidget(QWidget):
         self.slider.setValue(degrees_to_sec(QTime(0,0).secsTo(self.time)))
         self.slider.blockSignals(True)
 
-        
-
-
     def scroll(self):
         self.anim.stop()
         self.anim.setStartValue(self.slider.value())
         self.anim.setEndValue(self.slider.maximum())
         self.anim.start()
+
+#---------------------------------------------------------------
+# Styling
+
+    def style_button(self, btn):
+        btn.setCursor(Qt.PointingHandCursor)
+        btn.setMinimumHeight(36)
+        self.btn_font = QFont(self.font_family, 20)
+        btn.setFont(self.btn_font)
+        btn.setStyleSheet("""
+            QPushButton {
+                background: #3A86FF;
+                color: #FFFFFF;
+                border: 1px solid #2A6FD6;
+                border-radius: 8px;
+                padding: 6px 12px;
+               
+            }
+            QPushButton:hover   { background: #4F95FF; }
+            QPushButton:pressed { background: #2A6FD6; }
+            QPushButton:disabled{
+                background: #D9E6FF;
+                color: #8AA9E6;
+                border-color: #BFD2FF;
+            }
+        """)
+        return btn
+
+    def style_slider(self, slider):
+        slider.setCursor(Qt.PointingHandCursor)
+        slider.setStyleSheet("""
+            QSlider::groove:horizontal {
+                height: 6px;
+                background: #E6EAF2;
+                border-radius: 3px;
+            }
+            QSlider::sub-page:horizontal {
+                background: #3A86FF;
+                border-radius: 3px;
+            }
+            QSlider::add-page:horizontal {
+                background: #E6EAF2;
+                border-radius: 3px;
+            }
+            QSlider::handle:horizontal {
+                background: #FFFFFF;
+                border: 1px solid #2A6FD6;
+                width: 16px;
+                margin: -5px 0;   /* centers thumb on 6px track */
+                border-radius: 8px;
+            }
+        """)
+        return slider
 
 # ————————————————————————————————
 #  3) Main Window
@@ -277,7 +350,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("S.P.A.C.E.")
         self.resize(1280, 720)
-        self.setCentralWidget(TimeGlobeWidget())
+        self.setCentralWidget(MainMenu())
 
 # ————————————————————————————————
 #  4) Application Entry
