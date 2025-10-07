@@ -1,7 +1,7 @@
 import sys
 import numpy as np
-from PyQt5 import Qtcore, QTGui, QtWidgets
-from PyQt5.QtCore import Qt, QTime, QTimer,
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import Qt, QTime, QTimer
 from PyQt5.QtGui import QFontDatabase, QFont, QSurfaceFormat, QImage
 from PyQt5.QtWidgets import (
     QRadioButton, QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
