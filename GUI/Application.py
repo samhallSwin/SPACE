@@ -1,15 +1,18 @@
 import sys
 import numpy as np
-from PyQt5.QtCore import Qt, QTime, QTimer
+from PyQt5 import Qtcore, QTGui, QtWidgets
+from PyQt5.QtCore import Qt, QTime, QTimer,
 from PyQt5.QtGui import QFontDatabase, QFont, QSurfaceFormat, QImage
 from PyQt5.QtWidgets import (
-    QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
+    QRadioButton, QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QPushButton, QSlider, QOpenGLWidget, QLineEdit, QSpinBox, QTimeEdit
 )
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import pyqtSignal, QPropertyAnimation, QEasingCurve
 from OpenGL.GL import *
 from OpenGL.GLU import *
+
+
 
 
 #----------------------------------------------------------------
@@ -157,7 +160,7 @@ class MainMenu(QWidget):
 
 
 #------ Clock Display
-        font_id = QFontDatabase.addApplicationFont('Assets\A-Space Regular Demo.otf')
+        font_id = QFontDatabase.addApplicationFont('Assets/A-Space Regular Demo.otf')
         self.font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
         self.space_font = QFont(self.font_family, 50)
 
@@ -170,7 +173,6 @@ class MainMenu(QWidget):
         # Accessibility for testing automation
         self.time_display.setAccessibleName("clock_Time")
         self.time_display.setAccessibleDescription(QTime.currentTime().toString("hh:mm:ss"))
-        controlpanel.addWidget(self.time_display)
 
 #-------Slider
         self.slider = self.style_slider(QSlider(Qt.Horizontal))
@@ -179,7 +181,6 @@ class MainMenu(QWidget):
         self.slider.setTickInterval(30)
         self.slider.setTickPosition(QSlider.TicksBelow)
         self.slider.valueChanged.connect(self.onSlider)
-        controlpanel.addWidget(self.slider)
 
         # Timer that updates clock
         self.timer = QTimer(self)
@@ -204,29 +205,37 @@ class MainMenu(QWidget):
         # Play button
         self.play_btn = self.style_button(QPushButton("▶"))
         self.play_btn.clicked.connect(self.scroll)
-        time_controls.addWidget(self.play_btn)
+        # Speed Controls
+        self.onex_radiobtn = QRadioButton()
+        self.onex_radiobtn.setGeometry(QtCore.QRect(180, 120, 95, 20))
+        self.twox_radiobtn = QRadioButton()
+        self.twox_radiobtn.setGeometry(QtCore. QRect(180, 120, 95, 20))
         # Stop Button
         self.stop_btn = self.style_button(QPushButton("Stop"))
         self.stop_btn.clicked.connect(self.stop)
-        time_controls.addWidget(self.stop_btn)
+     
         # Start Button
         self.start_btn = self.style_button(QPushButton("Start"))
         self.start_btn.clicked.connect(self.start)
-        time_controls.addWidget(self.start_btn)
+
         # Current Time Button
         self.now_btn = self.style_button(QPushButton("Now"))
         self.now_btn.clicked.connect(self.now)
-        time_controls.addWidget(self.now_btn)
+      
         # Reset Button
         self.midnight_btn = self.style_button(QPushButton("Midnight"))
         self.midnight_btn.clicked.connect(self.midnight)
-        time_controls.addWidget(self.midnight_btn)
+       
 
 
         # Layout
+        for w in (self.time_display, self.slider):
+            controlpanel.addWidget(w)
+        for w in (self.play_btn, self.stop_btn, self.start_btn, self.now_btn, self.midnight_btn):
+            time_controls.addWidget(w)
+        for l in (globe_layout, controlpanel):
+            outer.addLayout(l)
         controlpanel.addLayout(time_controls)
-        outer.addLayout(globe_layout)
-        outer.addLayout(controlpanel)
         self.setLayout(outer)
         
         
