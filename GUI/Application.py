@@ -150,19 +150,24 @@ class MainMenu(QWidget):
     def __init__(self):
         super().__init__()
 
+        self.setWindowTitle("Clock Display")
+        self.setGeometry(100, 100, 800, 400)
+
         #Layout Boxes       
         outer = QVBoxLayout()
         globe_layout = QVBoxLayout()
         controlpanel = QVBoxLayout()
         time_controls = QHBoxLayout()
+        settings = QVBoxLayout()
         self.globe = GlobeWidget()
         globe_layout.addWidget(self.globe)
 
 
 #------ Clock Display
-        font_id = QFontDatabase.addApplicationFont('Assets/A-Space Regular Demo.otf')
-        self.font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
-        self.space_font = QFont(self.font_family, 50)
+        #font_id = QFontDatabase.addApplicationFont('Assets/A-Space Regular Demo.otf')
+        #self.font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
+        #self.space_font = QFont(self.font_family, 50)
+        self.space_font = QFont("Arial", 50)
 
         self.time_display = QLineEdit(self)
         self.time_display.setReadOnly(True)  # Prevent edits
@@ -175,8 +180,25 @@ class MainMenu(QWidget):
         self.time_display.setAccessibleDescription(QTime.currentTime().toString("hh:mm:ss"))
 
 #-------Slider
+        # Time Window
+        start_time = 0
+        end_time = Seconds_Per_Day
+
+        self.timeedit_lbl = QLabel("Set Time Frame (24hr)")
+        self.start_tf = QTimeEdit(self)
+        self.end_tf   = QTimeEdit(self)
+        self.timeedit_btn = self.style_button(QPushButton("Change Time Frame"))
+        self.timeedit_btn.clicked.connect(self.edit_time)
+
+        for w in (self.start_tf, self.end_tf):
+            w.setDisplayFormat("HH:mm")             
+            w.setMinimumTime(QTime(0, 0))
+            w.setMaximumTime(QTime(23, 59))
+            w.setAccelerated(True)    
+        
+
         self.slider = self.style_slider(QSlider(Qt.Horizontal))
-        self.slider.setRange(0, Seconds_Per_Day)
+        self.slider.setRange(start_time, end_time)
         self.slider.setValue(90)  
         self.slider.setTickInterval(30)
         self.slider.setTickPosition(QSlider.TicksBelow)
@@ -190,24 +212,17 @@ class MainMenu(QWidget):
         self.start()
 
 
-        # Time Window
-        #start_time = 
-        #end_time = 
-
-
-        #start_edit = QTimeEdit(start_time or QTime.currentTime())
-        #end_edit   = QTimeEdit(end_time   or QTime.currentTime().addSecs(3600))
-
-        #self.slider.setRange(start_time, end_time)
-
+        
 
 # ----- Time Controls
         # Play button
         self.play_btn = self.style_button(QPushButton("▶"))
         self.play_btn.clicked.connect(self.scroll)
         # Speed Controls
+        self.onex_lbl = QLabel("1x")
         self.onex_radiobtn = QRadioButton()
         self.onex_radiobtn.setGeometry(QtCore.QRect(180, 120, 95, 20))
+        self.twox_lbl = QLabel("2x")
         self.twox_radiobtn = QRadioButton()
         self.twox_radiobtn.setGeometry(QtCore. QRect(180, 120, 95, 20))
         # Stop Button
@@ -229,16 +244,25 @@ class MainMenu(QWidget):
 
 
         # Layout
+        lower = QHBoxLayout()
+
+        for w in (self.timeedit_lbl, self.start_tf, self.end_tf, self.timeedit_btn, self.onex_lbl,  self.onex_radiobtn, self.twox_lbl, self.twox_radiobtn):
+            settings.addWidget(w)
         for w in (self.time_display, self.slider):
             controlpanel.addWidget(w)
         for w in (self.play_btn, self.stop_btn, self.start_btn, self.now_btn, self.midnight_btn):
             time_controls.addWidget(w)
-        for l in (globe_layout, controlpanel):
-            outer.addLayout(l)
         controlpanel.addLayout(time_controls)
+        for l in (settings, controlpanel):
+            lower.addLayout(l)
+        for l in (globe_layout, lower):
+            outer.addLayout(l)
+
+
+        
         self.setLayout(outer)
         
-        
+      
         
 
     # Animations Controls
@@ -297,6 +321,13 @@ class MainMenu(QWidget):
         self.anim.setStartValue(self.slider.value())
         self.anim.setEndValue(self.slider.maximum())
         self.anim.start()
+    
+    def edit_time(self):
+        self.slider.setRange((self.start_tf.time().msecsSinceStartOfDay() // 1000),(self.end_tf.time().msecsSinceStartOfDay() // 1000))
+        print(self.start_tf.time(), self.end_tf.time())
+        print((self.start_tf.time().msecsSinceStartOfDay() // 1000),(self.end_tf.time().msecsSinceStartOfDay() // 1000))
+
+        
 
 #---------------------------------------------------------------
 # Styling
@@ -304,7 +335,7 @@ class MainMenu(QWidget):
     def style_button(self, btn):
         btn.setCursor(Qt.PointingHandCursor)
         btn.setMinimumHeight(36)
-        self.btn_font = QFont(self.font_family, 20)
+        self.btn_font = QFont("Arial", 50)
         btn.setFont(self.btn_font)
         btn.setStyleSheet("""
             QPushButton {
@@ -350,6 +381,8 @@ class MainMenu(QWidget):
             }
         """)
         return slider
+
+        
 
 # ————————————————————————————————
 #  3) Main Window
