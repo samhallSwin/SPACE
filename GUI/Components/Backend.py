@@ -10,12 +10,17 @@ from workflows import flomps
 
 import json
 
+from datetime import datetime, timedelta, timezone
+
+# ensures there is only a single instance of this class at runtime
 class Singleton(type):
     _instances = {}
 
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:
-            cls._instances[cls] = super().__call__(*args, **kwargs)
+            # Create a new instance the first time
+            instance = super().__call__(*args, **kwargs)
+            cls._instances[cls] = instance
         return cls._instances[cls]
 
 class Backend(metaclass=Singleton):
@@ -33,8 +38,38 @@ class Backend(metaclass=Singleton):
         self.sat_sim_module.config.read_options(options["sat_sim"])
 
         self.instance = self.sat_sim_module.handler.sat_sim
+
+        self.set_local_time()
         
         print("Backend - Init complete")
+
+    def set_local_time(self):
+        # Get the current time
+        self.current_time = datetime.now(timezone.utc).replace(microsecond=0)
+        
+        # Get the last midnight
+        last_midnight = datetime.combine(self.current_time.date(), datetime.min.time(), tzinfo=timezone.utc)
+        self.instance.start_time = last_midnight
+
+        # Get the next midnight
+        next_midnight = last_midnight + timedelta(days=1)
+        self.instance.end_time = next_midnight
+
+        print(f"Now: {self.current_time}, Last midnight: {last_midnight}, Next midnight: {next_midnight}")
+
+        self.instance.set_timestep(0.0166666)
+
+        print(f"Instance start time: {self.instance.start_time}, Instance end time: {self.instance.end_time}, Instance timestep: {self.instance.timestep}")
+        print(f"print time: {self.current_time.strftime("%H:%M:%S")}")
+
+    def on_slider_change(self, value):
+        print("Backend - on_slider-change")
+        #Handle time slider value changes.
+        print(f"timestep: {self.instance.timestep}, value: {value}")
+        self.current_time = self.instance.start_time + (value * self.instance.timestep)
+        
+        self._notify()
+
 
     #Yoinked from main.py
     def read_options_file(self):
@@ -70,8 +105,8 @@ class Backend(metaclass=Singleton):
 
     def get_satellite_positions(self):
         self.instance.set_tle_data(self.get_data_from_enabled_tle_slots())
-
-        return self.instance.get_satellite_positions(self.instance.start_time)
+        
+        return self.instance.get_satellite_positions(self.current_time)
 
     #TODO: add functionality to manipulate tle_dict (Add, Remove, RemoveAt)
     def add_elements(self, tle_data):
