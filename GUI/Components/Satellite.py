@@ -11,8 +11,6 @@ from skyfield.api import EarthSatellite
 
 from skyfield.constants import ERAD
 
-from Components.Backend import Backend
-
 class Satellite():
     #A class to hold all information relating to a satellite to not overcrowd a dictionary
     def __init__(self, satellite):
@@ -114,33 +112,3 @@ class Satellites(QOpenGLWidget):#Technically not needed, just here to show the s
         for satellite in self.satellites.values():
             satellite.DrawSatellite(self.quadric, self.position)
             satellite.DrawOrbit()
-        adj_matrix = self.backend.instance.generate_adjacency_matrix(self.backend.instance.get_satellite_positions())
-        self.DrawConnections(adj_matrix)
-
-    def DrawConnections(self, adj_matrix=None):
-        if adj_matrix is None or not np.any(adj_matrix): return
-        sats = list(self.satellites)
-        size = len(sats)
-        
-        for row in range(size):
-            for column in range(row+1,size):
-                if adj_matrix[row][column]:
-                    firstSatellite = self.satellites[sats[row]]
-                    secondSatellite = self.satellites[sats[column]]
-
-                    if not all([firstSatellite.show, secondSatellite.show]): continue #if one of the satellites isn't shown, don't draw connection
-
-                    glColor3f(1,0,0)
-                    glLineWidth(2)
-                    
-                    #Variable Dashed lines for variable communications strengths
-                    #glEnable(GL_LINE_STIPPLE)
-                    #pattern = 16**(int(adj_matrix[row][column]*4))-1 & 0xFFFF
-                    #glLineStipple(1, pattern)
-                    
-                    glBegin(GL_LINE_STRIP)
-                    glVertex(firstSatellite.positions[self.position])
-                    glVertex(secondSatellite.positions[self.position])
-                    glEnd()
-                    
-                    #glDisable(GL_LINE_STIPPLE)

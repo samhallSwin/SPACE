@@ -8,7 +8,6 @@ Description: This script handles satellite simulations using TLE data and provid
 
 from datetime import datetime, timedelta
 from skyfield.api import load, EarthSatellite, utc
-from skyfield.constants import ERAD
 import numpy as np
 import os
 from .sat_sim_output import SatSimOutput
@@ -101,41 +100,19 @@ class SatSim:
         # Calculate the Euclidean distance between two satellite positions.
         return np.linalg.norm(np.array(pos1) - np.array(pos2))
 
-    # Old adjacency matrix calculation that relied on proximity
-    # def generate_adjacency_matrix(self, positions, distance_threshold=10000):
-    #     # Generate an adjacency matrix based on the distances between satellites.
-    #     keys = list(positions.keys())
-    #     size = len(keys)
-    #     adj_matrix = np.zeros((size, size), dtype=int)
+    def generate_adjacency_matrix(self, positions, distance_threshold=10000):
+        # Generate an adjacency matrix based on the distances between satellites.
+        keys = list(positions.keys())
+        size = len(keys)
+        adj_matrix = np.zeros((size, size), dtype=int)
 
-    #     # Compute distances between all satellite pairs and populate the adjacency matrix
-    #     for i in range(size):
-    #         for j in range(i + 1, size):
-    #             dist = self.calculate_distance(positions[keys[i]], positions[keys[j]])
-    #             adj_matrix[i, j] = adj_matrix[j, i] = 1 if dist < distance_threshold else 0
+        # Compute distances between all satellite pairs and populate the adjacency matrix
+        for i in range(size):
+            for j in range(i + 1, size):
+                dist = self.calculate_distance(positions[keys[i]], positions[keys[j]])
+                adj_matrix[i, j] = adj_matrix[j, i] = 1 if dist < distance_threshold else 0
 
-    #     return adj_matrix, keys
-    
-    def generate_adjacency_matrix(self, positions): #gpt math, idk
-        P = np.array(list(positions.values()))
-
-        # Compute all pairwise differences (P2 - P1)
-        D = P[None, :, :] - P[:, None, :]
-
-        # Quadratic coefficients
-        a = np.sum(D * D, axis=2)
-        b = 2 * np.sum(P[:, None, :] * D, axis=2)
-        c = np.sum(P[:, None, :] * P[:, None, :], axis=2) - (ERAD/1000)**2
-
-        # Discriminant
-        disc = b**2 - 4 * a * c
-        intersects = disc >= 0
-
-        # Build adjacency matrix (1 = visible, 0 = blocked or same)
-        adj_matrix = (~intersects).astype(int)
-        np.fill_diagonal(adj_matrix, 0)
-
-        return adj_matrix
+        return adj_matrix, keys
 
     def run_with_adj_matrix(self):
         # Run the simulation in CLI mode and generate adjacency matrices.
