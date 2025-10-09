@@ -18,12 +18,6 @@ class GraphDisplay(CollapsibleOverlay):
         
         self.expanded = True
         self.tle_display = parent.tle_display
-        
-        self.control_panel_height_reduction = 260
-        self.set_up_adjacency_graph()
-        self.set_up_connection_graph()
-        
-        self.overlay.setAccessibleName("GraphDisplayOverlay")
 
         super().__init__(parent)
         self.setStyleSheet("background-color: #f0f0f0; border: 1px solid gray;")
