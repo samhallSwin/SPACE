@@ -30,6 +30,8 @@ class TLEDisplay(CollapsibleOverlay):
         self.control_panel_height_reduction = 260
         self.set_up_drop_label()
         self.set_up_scroll_box()
+        
+        self.overlay.setAccessibleName("TLEDisplayOverlay")
 
     def set_up_drop_label(self):
         # Use a horizontal layout
