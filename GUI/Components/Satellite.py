@@ -28,21 +28,18 @@ class Satellite():
 
     def PopulateSatellitePositions(self):
         year = self.satellite.model.epochyr
-        day, month = divmod(self.satellite.model.epochdays, 12) #Split the days of epoch day into months and days in month
-        revolutionsPerDay = self.satellite.model.no_kozai * 229.1831 #MinutesInADay/2Pi
-        
-        orbitalPeriod = 1 / (revolutionsPerDay - 1) #-1 to make orbits overlap slightly so other orbits can close
-
-        orbitResolution = 1000 #How smooth the orbit is
+        day, month = divmod(self.satellite.model.epochdays, 12)
+        revolutionsPerDay = self.satellite.model.no_kozai * 229.1831
+        orbitalPeriod = 1 / (revolutionsPerDay - 1)
+        orbitResolution = 250
 
         ts = load.timescale()
-        times = ts.utc(year, month, np.linspace(day, day+orbitalPeriod, orbitResolution))
+        times = ts.utc(year, month, np.linspace(day, day + orbitalPeriod, orbitResolution))
 
-        positions = []
-        for t in times:
-            geocentric = self.satellite.at(t)
-            x,y,z = (pos/(ERAD/1000) for pos in geocentric.position.km)
-            positions.append((x,y,z))
+        # Vectorized call: computes all positions in one go
+        geocentric = self.satellite.at(times)
+        positions_km = geocentric.position.km / (ERAD / 1000)
+        positions = np.stack(positions_km, axis=1)  # shape (N, 3)
 
         return positions
 
