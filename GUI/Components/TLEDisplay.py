@@ -50,6 +50,8 @@ class TLEDisplay(CollapsibleOverlay):
 
         #set up event listener
         self.drop_label.fileDropped.connect(self.on_file_dropped)
+        self.drop_label.setEnabled(self.expanded)
+        self.drop_label.setAcceptDrops(self.expanded)
  
     def set_up_scroll_box(self):
         # Scroll area
@@ -113,6 +115,8 @@ class TLEDisplay(CollapsibleOverlay):
             self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
 
         super().toggle_size()
+        self.drop_label.setEnabled(self.expanded)
+        self.drop_label.setAcceptDrops(self.expande)
 
     def on_file_dropped(self, tle_file_path):
         print("File dropped from: " + tle_file_path)
