@@ -44,6 +44,7 @@ class MainWindow(QMainWindow):
 
     def set_up_backend(self):
         self.backend = Backend()
+
     #PATCHNOTE: Added ResizeEvent to main window, solved TLEDisplay resize issue
     #TODO: figure out resize update for tleDisplay scoll window
     def resizeEvent(self, event):
