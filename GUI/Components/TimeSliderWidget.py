@@ -1,158 +1,51 @@
-import sys
-import numpy as np
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import Qt, QTime, QTimer
+from PyQt5.QtCore import Qt, QTime, QTimer, QPropertyAnimation, QEasingCurve, QRect
 from PyQt5.QtGui import QFontDatabase, QFont, QSurfaceFormat, QImage
-from PyQt5.QtWidgets import (
-    QRadioButton, QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QPushButton, QSlider, QOpenGLWidget, QLineEdit, QSpinBox, QTimeEdit, QButtonGroup
-)
-from PyQt5.QtGui import QPixmap
-from PyQt5.QtCore import pyqtSignal, QPropertyAnimation, QEasingCurve
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QRadioButton, QHBoxLayout, QPushButton, QSlider, QTimeEdit, QPushButton, QVBoxLayout, QWidget, QLineEdit, QLabel
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
+from skyfield.api import load
+from skyfield.api import Timescale
+from skyfield.api import EarthSatellite
+from GlobeWidget import GlobeWidget
+import datetime
+from Backend import Backend
+import matplotlib
 
-
-
-#----------------------------------------------------------------
-# Constants
+#TEMP#
+import random #To temporarily select a couple satellites from the 3le file sam posted
+from skyfield.constants import ERAD
 
 Seconds_Per_Day = 24 * 60 *60
 Earth_Degrees = 360
 Seconds_Per_Degree = Seconds_Per_Day / 360
-Rot_Dur = 4000 #Aninmation speed in miliseconds
-#---------------------------------------------------------------
-# Convert seconds since midnight to degrees of rotation
 
 def degrees_to_sec(deg: int):
-    return float(deg * Seconds_Per_Degree) % Seconds_Per_Day
+    return int(deg * Seconds_Per_Degree) % Seconds_Per_Day
 
 def seconds_to_degrees(s: int):
     s = s % Seconds_Per_Day
-    return float(s / Seconds_Per_Degree)
+    return int(s / Seconds_Per_Degree)
 
 
 
 
 
-
-# ————————————————————————————————
-#  1) OpenGL Globe
-# ————————————————————————————————
-class GlobeWidget(QOpenGLWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.xRot = 0.0
-        self.yRot = 90.0  # Start with prime meridian facing front
-        self.zRot = 0.0
-        self.quadric = None
-        self.textureID = 0
-
-    def initializeGL(self):
-        glClearColor(0.2, 0.3, 0.3, 1.0)
-        glEnable(GL_DEPTH_TEST)
-        glEnable(GL_TEXTURE_2D)
-
-        # Load Textures
-        self.textureID = self.loadTexture("Assets/Earth.png")
-        self.bgtextureID = self.loadTexture("Assets/Background.jpg")
-        if not self.textureID:
-            glDisable(GL_TEXTURE_2D)
-        else:
-            print(f"[OK] Texture loaded. ID: {self.textureID}")
-
-        # Flip texture vertically
-        glMatrixMode(GL_TEXTURE)
-        glLoadIdentity()
-        glScalef(1.0, -1.0, 1.0)  # Flip vertically
-        glMatrixMode(GL_MODELVIEW)
-
-        self.quadric = gluNewQuadric()
-        gluQuadricTexture(self.quadric, GL_TRUE)
-
-        glMatrixMode(GL_PROJECTION)
-        glLoadIdentity()
-        gluPerspective(45, self.width() / (self.height() or 1), 1.0, 100.0)
-        glMatrixMode(GL_MODELVIEW)
-        glLoadIdentity()
-
-    def loadTexture(self, path):
-        img = QImage(path)
-        if img.isNull():
-            print(f"[Warning] Failed to load texture: {path}")
-            return 0
-
-        img = img.convertToFormat(QImage.Format_RGBA8888)
-        w, h = img.width(), img.height()
-        ptr = img.bits()
-        ptr.setsize(img.byteCount())
-        arr = np.array(ptr, dtype=np.uint8).reshape(h, w, 4)
-
-        tex = glGenTextures(1)
-        glBindTexture(GL_TEXTURE_2D, tex)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, arr)
-        glBindTexture(GL_TEXTURE_2D, 0)
-        return tex
-
-    def drawCone(self, radius, height, num_slices):
-        glBegin(GL_TRIANGLE_FAN)
-        glColor4f(1.0, 0.5, 0.0, 0.5)  # Transparent orange
-        glVertex3f(0, height / 2, 0)
-        for i in range(num_slices + 1):
-            angle = i * (2.0 * np.pi) / num_slices
-            x = radius * np.cos(angle)
-            z = radius * np.sin(angle)
-            glVertex3f(x, -height / 2, z)
-        glEnd()
-
-    def paintGL(self):
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        glLoadIdentity()
-
-        # Position the camera
-        gluLookAt(0, 0, 5, 0, 0, 0, 0, 1, 0)
-
-        # Align poles vertically (Z → Y)
-        glRotatef(-90, 1, 0, 0)  # Rotate globe forward so poles face up/down
-
-        # Rotate east–west around vertical (Z now acts as vertical)
-        glRotatef(self.yRot, 0, 0, 1)
-
-        # Draw Earth (opaque)
-        if self.textureID:
-            glEnable(GL_TEXTURE_2D)
-            glBindTexture(GL_TEXTURE_2D, self.textureID)
-
-        glColor4f(1.0, 1.0, 1.0, 1.0)  # Ensure Earth is fully opaque
-        gluSphere(self.quadric, 1.0, 40, 40)
-
-        if self.textureID:
-            glBindTexture(GL_TEXTURE_2D, 0)
-            glDisable(GL_TEXTURE_2D)
-
-        # Draw transparent cone
-        glEnable(GL_BLEND)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-        glDepthMask(GL_FALSE)
-        self.drawCone(radius=1.5, height=2.0, num_slices=40)
-        glDepthMask(GL_TRUE)
-        glDisable(GL_BLEND)
-
-
-# ————————————————————————————————
-#  2) Time + Globe + Slider UI
-# ————————————————————————————————
-class MainMenu(QWidget):
+class TimeSliderWidget(QWidget):
     def __init__(self):
         super().__init__()
 
         self.setWindowTitle("Clock Display")
         self.setGeometry(100, 100, 800, 400)
 
-       
+        #Layout Boxes       
+        outer = QVBoxLayout()
+        globe_layout = QVBoxLayout()
+        controlpanel = QVBoxLayout()
+        time_controls = QHBoxLayout()
+        settings = QVBoxLayout()
+        self.globe = GlobeWidget()
+        globe_layout.addWidget(self.globe)
 
 
 #------ Clock Display
@@ -211,19 +104,12 @@ class MainMenu(QWidget):
         self.play_btn = self.style_button(QPushButton("▶"))
         self.play_btn.clicked.connect(self.scroll)
         # Speed Controls
-       
-        self.onex_radiobtn = QRadioButton("1x")
+        self.onex_lbl = QLabel("1x")
+        self.onex_radiobtn = QRadioButton()
         self.onex_radiobtn.setGeometry(QtCore.QRect(180, 120, 95, 20))
-        self.onex_radiobtn.setChecked(True)
-        self.twox_radiobtn = QRadioButton("2x")
+        self.twox_lbl = QLabel("2x")
+        self.twox_radiobtn = QRadioButton()
         self.twox_radiobtn.setGeometry(QtCore. QRect(180, 120, 95, 20))
-        self.threex_radiobtn = QRadioButton("3x")
-        self.twox_radiobtn.setGeometry(QtCore. QRect(180, 120, 95, 20))
-        
-        self.group = QButtonGroup()
-        for rb in (self.onex_radiobtn, self.twox_radiobtn, self. threex_radiobtn):
-            self.group.addButton(rb)  
-
         # Stop Button
         self.stop_btn = self.style_button(QPushButton("Stop"))
         self.stop_btn.clicked.connect(self.stop)
@@ -243,22 +129,10 @@ class MainMenu(QWidget):
 
 
         # Layout
-         #Layout Boxes       
-        outer = QVBoxLayout()
-        globe_layout = QVBoxLayout()
-        controlpanel = QVBoxLayout()
-        time_controls = QHBoxLayout()
-        settings = QVBoxLayout()
-        self.globe = GlobeWidget()
         lower = QHBoxLayout()
-        animcont = QHBoxLayout()
-        globe_layout.addWidget(self.globe)
-      
-        for w in (self.onex_radiobtn, self.twox_radiobtn, self. threex_radiobtn):
-            animcont.addWidget(w)
-        for w in (self.timeedit_lbl, self.start_tf, self.end_tf, self.timeedit_btn):
+
+        for w in (self.timeedit_lbl, self.start_tf, self.end_tf, self.timeedit_btn, self.onex_lbl,  self.onex_radiobtn, self.twox_lbl, self.twox_radiobtn):
             settings.addWidget(w)
-        settings.addLayout(animcont)
         for w in (self.time_display, self.slider):
             controlpanel.addWidget(w)
         for w in (self.play_btn, self.stop_btn, self.start_btn, self.now_btn, self.midnight_btn):
@@ -284,13 +158,10 @@ class MainMenu(QWidget):
     # Time Controls
     # Updates display clock every second
     def tick(self):
-        #print(self.time.msecsSinceStartOfDay()//1000)
-        clocktime = self.time.msecsSinceStartOfDay() //1000
-        if (clocktime) < (self.slider.maximum()):
-            self.time = self.time.addSecs(1)
-            self.time_display.setText(self.time.toString("hh:mm:ss"))
-            self.time_display.setAccessibleDescription(self.time.toString("hh:mm:ss"))
-            
+        self.time = self.time.addSecs(1)
+        self.time_display.setText(self.time.toString("hh:mm:ss"))
+        self.time_display.setAccessibleDescription(self.time.toString("hh:mm:ss"))
+
     def start(self):
         self.timer.start()
 
@@ -330,26 +201,16 @@ class MainMenu(QWidget):
         self.slider.setValue(degrees_to_sec(QTime(0,0).secsTo(self.time)))
         self.slider.blockSignals(True)
 
-    def scroll(self, ):
-        btn = self.group.checkedButton()
-        mode = btn.text() if btn else None
-        if mode == "1x":
-            Rot_Dur = 10000
-        elif mode == "2x":
-            Rot_Dur = 5000
-        if mode == "3x":
-            Rot_Dur = 1000
+    def scroll(self):
         self.anim.stop()
         self.anim.setStartValue(self.slider.value())
         self.anim.setEndValue(self.slider.maximum())
-        self.anim.setDuration(Rot_Dur)
         self.anim.start()
     
     def edit_time(self):
         self.slider.setRange((self.start_tf.time().msecsSinceStartOfDay() // 1000),(self.end_tf.time().msecsSinceStartOfDay() // 1000))
         print(self.start_tf.time(), self.end_tf.time())
         print((self.start_tf.time().msecsSinceStartOfDay() // 1000),(self.end_tf.time().msecsSinceStartOfDay() // 1000))
-        print(self.slider.maximum())
 
         
 
@@ -358,8 +219,8 @@ class MainMenu(QWidget):
 
     def style_button(self, btn):
         btn.setCursor(Qt.PointingHandCursor)
-        btn.setMinimumHeight(36)
-        self.btn_font = QFont("Arial", 20)
+        btn.setMinimumHeight(20)
+        self.btn_font = QFont("Arial",20)
         btn.setFont(self.btn_font)
         btn.setStyleSheet("""
             QPushButton {
@@ -407,26 +268,3 @@ class MainMenu(QWidget):
         return slider
 
         
-
-# ————————————————————————————————
-#  3) Main Window
-# ————————————————————————————————
-class MainWindow(QMainWindow):
-    def __init__(self):
-        super().__init__()
-        self.setWindowTitle("S.P.A.C.E.")
-        self.resize(1280, 720)
-        self.setCentralWidget(MainMenu())
-
-# ————————————————————————————————
-#  4) Application Entry
-# ————————————————————————————————
-if __name__ == "__main__":
-    fmt = QSurfaceFormat()
-    fmt.setVersion(2, 1)
-    QSurfaceFormat.setDefaultFormat(fmt)
-
-    app = QApplication(sys.argv)
-    w = MainWindow()
-    w.show()
-    sys.exit(app.exec_())
