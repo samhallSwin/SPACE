@@ -116,7 +116,7 @@ class TLEDisplay(CollapsibleOverlay):
 
         super().toggle_size()
         self.drop_label.setEnabled(self.expanded)
-        self.drop_label.setAcceptDrops(self.expande)
+        self.drop_label.setAcceptDrops(self.expanded)
 
     def on_file_dropped(self, tle_file_path):
         print("File dropped from: " + tle_file_path)
