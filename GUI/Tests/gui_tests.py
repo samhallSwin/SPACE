@@ -84,23 +84,43 @@ class TestGUIWindow(unittest.TestCase):
         self.assertTrue(button.exists(), "Now button should exist")
         
     def test_tle_expand_collapse_button_exists(self):
-        button = self.window.child_window(title="button_ExpandCollapse", control_type="Button")
-        self.assertTrue(button.exists(), "TLE Expand/Collapse button should exist")
         
-    # Overlay works by physically collapsing and hiding via opacity
-    # Could be worth looking into setVisible
-    # def test_click_tle_expand_collapse_button(self):
-    #     button = self.window.child_window(title="button_ExpandCollapse", control_type="Button")
-    #     label = self.window.child_window(title="Drop Label", control_type="Text")
-    #     initial_visible = label.is_visible()
-        
-    #     tle_file = self.repo_root / "TLEs" / "SatCount1.tle"
-    #     label.fileDropped.emit(tle_file)
+        # Verify that the Expand/Collapse button exists within the TLEDisplay panel.
+        # The test checks if the overlay component (TLEDisplay) is present and contains the expected button element.
 
-    #     button.click_input()
-    #     time.sleep(0.5)
-    #     new_visible = label.is_visible()
-    #     self.assertNotEqual(initial_visible, new_visible, "Clicking Expand/Collapse should toggle visibility of DropHere label")
+        # Locate the TLEDisplay container by its class name
+        tle_display = self.window.child_window(class_name="TLEDisplay")
+        self.assertTrue(tle_display.exists(), "TLEDisplay panel should exist")
+
+        # Locate the expand/collapse button inside the TLEDisplay
+        button = tle_display.child_window(control_type="Button")
+        self.assertTrue(button.exists(), "Expand/Collapse button should exist within TLEDisplay")
+        
+        tle_display_overlay = tle_display.child_window(title="TLEDisplayOverlay")
+
+        initial_visible = tle_display_overlay.is_enabled()
+
+        # Click the button to toggle expand/collapse
+        button.click_input()
+        time.sleep(0.5)  # Give GUI time to update
+
+        # Verify that the visibility has changed (toggled)
+        new_visible = tle_display_overlay.is_enabled()
+        self.assertNotEqual(
+            initial_visible,
+            new_visible,
+            "Clicking the Expand/Collapse button should toggle TLEDisplay visibility"
+        )
+
+    def test_graph_display_expand_button_exists(self):
+        
+        # Verify that the Expand/Collapse button exists within the GraphDisplay panel.
+        
+        graph_display = self.window.child_window(class_name="GraphDisplay")
+        self.assertTrue(graph_display.exists(), "GraphDisplay panel should exist")
+
+        button = graph_display.child_window(control_type="Button")
+        self.assertTrue(button.exists(), "Expand/Collapse button should exist within GraphDisplay")
 
     # def test_print_all_elements(self):
     #     self.window.print_control_identifiers()
