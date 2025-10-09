@@ -40,9 +40,18 @@ class GraphDisplay(CollapsibleOverlay):
         self.graphLayout.addWidget(self.canvas_conn, stretch=5)
 
     def update_graphs(self):
+        positions = self.backend.get_satellite_positions()
+        if not positions:
+            print("No satellite positions; skipping graph update.")
+            self.ax_adj.clear()
+            self.ax_conn.clear()
+            self.canvas_adj.draw()
+            self.canvas_conn.draw()
+            return
+        
         try:
 
-            adj_matrix, keys = self.backend.instance.generate_adjacency_matrix(self.backend.get_satellite_positions())
+            adj_matrix, keys = self.backend.instance.generate_adjacency_matrix(positions)
 
             # --- update adjacency graph ---
             self.ax_adj.clear()
