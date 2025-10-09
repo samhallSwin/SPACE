@@ -22,10 +22,10 @@ from PyQt5.QtCore import Qt
 
 class TLEDisplay(CollapsibleOverlay):
 
-    def __init__(self, parent=None, side= OverlaySide.RIGHT):
+    def __init__(self, parent=None, side= OverlaySide.LEFT):
         self.backend = parent.backend
 
-        super().__init__(parent)
+        super().__init__(parent, side)
 
         self.control_panel_height_reduction = 260
         self.set_up_drop_label()
@@ -50,6 +50,8 @@ class TLEDisplay(CollapsibleOverlay):
 
         #set up event listener
         self.drop_label.fileDropped.connect(self.on_file_dropped)
+        self.drop_label.setEnabled(self.expanded)
+        self.drop_label.setAcceptDrops(self.expanded)
  
     def set_up_scroll_box(self):
         # Scroll area
@@ -63,6 +65,7 @@ class TLEDisplay(CollapsibleOverlay):
         # Add scroll area to fill remaining space
         self.content_layout.addWidget(self.scroll_area, stretch=1)
 
+    #TODO: change this to an object pool, to reduce the cost of creating 
     def populate_scroll_items(self):
         #clear all existing items
         #TODO: update existing items, then Add/Clear additional items as needed.
@@ -112,6 +115,8 @@ class TLEDisplay(CollapsibleOverlay):
             self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
 
         super().toggle_size()
+        self.drop_label.setEnabled(self.expanded)
+        self.drop_label.setAcceptDrops(self.expanded)
 
     def on_file_dropped(self, tle_file_path):
         print("File dropped from: " + tle_file_path)

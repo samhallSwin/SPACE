@@ -32,7 +32,7 @@ class MainWindow(QMainWindow):
         
         self.set_up_tle_display()
         
-        #self.set_up_graph_display()
+        self.set_up_graph_display()
     
     def set_up_tle_display(self):
         self.tle_display = TLEDisplay(self)
@@ -57,5 +57,5 @@ class MainWindow(QMainWindow):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = MainWindow()
-    window.show()
+    window.showMaximized()
     sys.exit(app.exec_())

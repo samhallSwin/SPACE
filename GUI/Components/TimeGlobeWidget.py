@@ -19,6 +19,7 @@ from skyfield.api import Timescale
 from skyfield.api import EarthSatellite
 
 from Components.GlobeWidget import GlobeWidget
+from Components.Backend import Backend
 
 Seconds_Per_Day = 24 * 60 *60
 Earth_Degrees = 360
@@ -41,7 +42,7 @@ class TimeGlobeWidget(QWidget):
         self.setWindowTitle("Clock Display")
         self.setGeometry(100, 100, 800, 400)
 
-        font = QFont('Arial', 120, QFont.Bold)
+        font = QFont('Arial', 48, QFont.Bold)
 
         layout = QVBoxLayout()
 
@@ -51,6 +52,7 @@ class TimeGlobeWidget(QWidget):
         
         # Container for Clock
         self.clock_container = QWidget()
+        self.clock_container.setMaximumHeight(100)
         self.clock_container.setAccessibleName("clock_Time")
         self.clock_layout = QVBoxLayout(self.clock_container)
         self.clock_layout.setContentsMargins(0, 0, 0, 0)
@@ -119,6 +121,9 @@ class TimeGlobeWidget(QWidget):
         self.anim = QPropertyAnimation(self.slider, b"value", self)
         self.anim.setEasingCurve(QEasingCurve.Linear)
         self.anim.setDuration(Rot_Dur) #Orbit duration
+        
+    def update(self):
+        Backend().on_slider_change(self.slider.value())
 
     # Time Controls
     # Updates display clock every second
@@ -126,6 +131,7 @@ class TimeGlobeWidget(QWidget):
         self.time = self.time.addSecs(1)
         self.time_display.setText(self.time.toString("hh:mm:ss"))
         self.time_display.setAccessibleDescription(self.time.toString("hh:mm:ss"))
+        self.update()
 
     def start(self):
         self.timer.start()

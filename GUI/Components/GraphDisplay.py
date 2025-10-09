@@ -1,92 +1,78 @@
 
-from PyQt5.QtWidgets import QGraphicsOpacityEffect, QSizePolicy, QPushButton, QVBoxLayout, QWidget
+from PyQt5.QtWidgets import QGraphicsOpacityEffect, QSizePolicy, QPushButton, QVBoxLayout, QWidget, QMessageBox
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+import numpy as np
+import networkx as nx
 
-from Components.CollapsibleOverlay import CollapsibleOverlay
+from Components.CollapsibleOverlay import CollapsibleOverlay, OverlaySide
 
 class GraphDisplay(CollapsibleOverlay):
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, side= OverlaySide.RIGHT):
+        self.backend = parent.backend
 
-        self.full_width = 300  # Total width when expanded
-        self.collapsed_width = 20
+        super().__init__(parent,side)
 
-        self.above_height_amount = 0
-        #used to lift the bottom ogf the overlay from the bottom of the application
-        self.control_panel_height_reduction = 110 #TODO: find a better way to provide and access this information
-        
-        self.expanded = True
-        self.tle_display = parent.tle_display
+        self.control_panel_height_reduction = 260
+        self.set_up_adjacency_graph()
+        self.set_up_connection_graph()
 
-        super().__init__(parent)
-        self.setStyleSheet("background-color: #f0f0f0; border: 1px solid gray;")
-        self.setParent(parent)
-        self.setVisible(True)
-
-        self.set_up_content_window()
-        
-        self.set_up_collapse_button()
-        
-        self.update_height()
-        self.toggle_width()
-
-    def set_up_content_window(self):
-        self.overlay = QWidget(self)
-        print(self.parent().width())
-        self.overlay.setGeometry(30, 0, self.full_width if self.expanded else self.collapsed_width, self.parent().height() - self.overlay.height() - self.control_panel_height_reduction)
-        self.overlay.setStyleSheet("background-color: #dddddd;")
-        self.overlay.setVisible(True)
-
-        self.content_window = QVBoxLayout()
-        self.content_window.setObjectName("Content Window")
-
-        self.overlay.setLayout(self.content_window)
+        self.backend.subscribe(self.update_graphs)
 
     def set_up_adjacency_graph(self):
         # Layout for graphs and controls
         self.graphLayout = QVBoxLayout()
-        self.content_window.addLayout(self.graphLayout, stretch=5)
+        self.content_layout.addLayout(self.graphLayout, stretch=5)
 
-        # Matplotlib figure and canvas for adjacency matrix and network graph
-        self.figure, self.axes = plt.subplots(nrows=1, ncols=2, figsize=(10, 5))
-        self.canvas = FigureCanvas(self.figure)
-        self.canvas.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.graphLayout.addWidget(self.canvas, stretch=10)
-    
+        # --- Adjacency graph ---
+        self.figure_adj, self.ax_adj = plt.subplots(figsize=(6, 4))
+        self.canvas_adj = FigureCanvas(self.figure_adj)
+        self.canvas_adj.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.graphLayout.addWidget(self.canvas_adj, stretch=5)
+
+
     def set_up_connection_graph(self):
-            pass
-    
-    def set_up_collapse_button(self):
-        self.toggle_button = QPushButton("▼\nE\nx\np\na\nn\nd", self)
-        self.toggle_button.setGeometry(self.parent().width() - 20, self.above_height_amount, 20, self.height())
+        # --- Connection graph ---
+        self.figure_conn, self.ax_conn = plt.subplots(figsize=(6, 4))
+        self.canvas_conn = FigureCanvas(self.figure_conn)
+        self.canvas_conn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.graphLayout.addWidget(self.canvas_conn, stretch=5)
 
-        self.opacity_effect = QGraphicsOpacityEffect(self.toggle_button)
-        self.toggle_button.setGraphicsEffect(self.opacity_effect)
-        self.opacity_effect.setOpacity(1.0)
-
-        # Set up enter/leave events
-        self.toggle_button.installEventFilter(self)
-
-        self.toggle_button.clicked.connect(self.toggle_width)
-
-    def toggle_width(self):
-        self.expanded = not self.expanded
-
-        #start_rect = self.geometry()
-        end_width = self.full_width if self.expanded else self.collapsed_width
-        #end_rect = QRect(0, 0, self.parent().width(), end_height)
-        self.setGeometry(self.parent().width() - 20, 0, end_width, self.height())  # Start with just the button height
-
-        self.overlay.setVisible(self.expanded)
-        self.toggle_button.setText("▲\nC\no\nl\nl\na\np\ns\ne" if self.expanded else "▼\nE\nx\np\na\nn\nd")
+    def update_graphs(self):
+        positions = self.backend.get_satellite_positions()
+        if not positions:
+            print("No satellite positions; skipping graph update.")
+            self.ax_adj.clear()
+            self.ax_conn.clear()
+            self.canvas_adj.draw()
+            self.canvas_conn.draw()
+            return
         
-    def update_height(self):
-        target_width = self.full_width if self.expanded else self.collapsed_width
-        target_height = self.parent().height() - self.above_height_amount - self.control_panel_height_reduction
+        try:
 
-        self.setGeometry(0, self.above_height_amount, target_width, target_height)  # Start with just the button height
-        self.toggle_button.setGeometry(0, self.above_height_amount, 20, target_height)
+            adj_matrix, keys = self.backend.instance.generate_adjacency_matrix(positions)
+
+            # --- update adjacency graph ---
+            self.ax_adj.clear()
+            self.ax_adj.imshow(adj_matrix, cmap='Blues', interpolation='none', aspect='equal')
+            self.ax_adj.set_title('Adjacency Matrix')
+            self.ax_adj.set_xticks(np.arange(len(keys)))
+            self.ax_adj.set_yticks(np.arange(len(keys)))
+            self.ax_adj.set_xticklabels(keys, rotation=90)
+            self.ax_adj.set_yticklabels(keys)
+            self.canvas_adj.draw()
+
+            # --- update connection graph ---
+            G = nx.from_numpy_array(adj_matrix)
+            pos = nx.spring_layout(G)
+            self.ax_conn.clear()
+            nx.draw(G, pos, ax=self.ax_conn, with_labels=True, node_color='skyblue')
+            self.ax_conn.set_title('Connection Graph')
+            self.canvas_conn.draw()
+
+        except ValueError as e:
+            QMessageBox.critical(self, "Error", f"An error occurred during graph update: {e}")
 
 #        
 #
@@ -135,3 +121,38 @@ class GraphDisplay(CollapsibleOverlay):
 #                       adj_matrix[i, j] = adj_matrix[j, i] = 1 if dist < distance_threshold else 0
 #       
 #               return adj_matrix, keys
+#
+#def save_adj_matrix_for_specified_timeframe(self):
+#        #Save the adjacency matrices and network graphs to files.
+#        try:
+#            output_file, _ = QFileDialog.getSaveFileName(self, "Save Adjacency Matrix", "", "Text Files (*.txt);;All Files (*)")
+#            pdf_file, _ = QFileDialog.getSaveFileName(self, "Save Network Graphs PDF", "", "PDF Files (*.pdf);;All Files (*)")
+#
+#            if output_file and pdf_file:
+#                matrices = self.simulation.run_with_adj_matrix()
+#                if not matrices:
+#                    QMessageBox.warning(self, "No Data", "No data was generated to save.")
+#                    return
+#
+#                with open(output_file, 'w') as f:
+#                    for timestamp, matrix in matrices:
+#                        formatted_timestamp = timestamp if isinstance(timestamp, str) else timestamp.utc_iso()
+#                        f.write(f"Time: {formatted_timestamp}\n")
+#                        np.savetxt(f, matrix, fmt='%d')
+#                        f.write("\n")
+#
+#                with PdfPages(pdf_file) as pdf:
+#                    for timestamp, matrix in matrices:
+#                        formatted_timestamp = timestamp if isinstance(timestamp, str) else timestamp.utc_iso()
+#                        G = nx.from_numpy_array(matrix)
+#                        pos = nx.spring_layout(G)
+#                        plt.figure()
+#                        nx.draw(G, pos, with_labels=True, node_color='skyblue')
+#                        plt.title(f"Network Graph at {formatted_timestamp}")
+#                        pdf.savefig()
+#                        plt.close()
+#
+#                QMessageBox.information(self, "Success", "Adjacency matrix and network graphs saved successfully!")
+#
+#        except Exception as e:
+#            QMessageBox.critical(self, "Error", f"An error occurred while saving the matrix: {e}")
