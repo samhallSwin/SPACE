@@ -4,9 +4,9 @@ from pathlib import Path
 from PyQt5.QtWidgets import QWidget, QVBoxLayout
 from PyQt5.QtCore import Qt
 
-repo_root = Path(file).parents[3]
-sys.path.append(str(repo_root))
-sys.path.append(str(repo_root / "GUI"))
+# repo_root = Path(file).parents[3]
+# sys.path.append(str(repo_root))
+# sys.path.append(str(repo_root / "GUI"))
 
 from GUI.Components.TLEDisplay import TLEDisplay
 class HostWindow(QWidget):
