@@ -17,6 +17,10 @@ class SatSimHandler(Handler):
         self.sat_sim = sat_sim
         self.data_loaded = False
 
+    def parse_input(self, file):
+        # Implementation of abstract method - delegates to parse_file
+        return self.parse_file(file)
+
     def parse_file(self, file):
         # Reads TLE data from a file and sends it to the SatSim module if not already loaded.
         if self.data_loaded:
