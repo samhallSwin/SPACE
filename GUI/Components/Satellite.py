@@ -109,3 +109,36 @@ class Satellites(QOpenGLWidget):#Technically not needed, just here to show the s
         for satellite in self.satellites.values():
             satellite.DrawSatellite(self.quadric, self.position)
             satellite.DrawOrbit()
+            
+    def DrawConnections(self, adj_matrix=None):
+        if adj_matrix is None or not np.any(adj_matrix):
+            return
+
+        sats = list(self.satellites)
+        size = len(sats)
+
+        # Precompute visible connection pairs using numpy
+        mask = np.triu(adj_matrix, 1)  # upper triangle only
+        rows, cols = np.where(mask)
+        if len(rows) == 0:
+            return
+
+        lines = np.empty((len(rows) * 2, 3), dtype=np.float32)
+
+        for i, (r, c) in enumerate(zip(rows, cols)):
+            first = self.satellites[sats[r]]
+            second = self.satellites[sats[c]]
+
+            if not (first.show and second.show):
+                continue
+
+            lines[i * 2] = first.positions[self.position].astype(np.float32)
+            lines[i * 2 + 1] = second.positions[self.position].astype(np.float32)
+
+        glColor3f(1, 0, 0)
+        glLineWidth(2)
+
+        glEnableClientState(GL_VERTEX_ARRAY)
+        glVertexPointer(3, GL_FLOAT, 0, lines)
+        glDrawArrays(GL_LINES, 0, len(lines))
+        glDisableClientState(GL_VERTEX_ARRAY)
