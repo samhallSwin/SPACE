@@ -294,6 +294,13 @@ class GlobeWidget(QOpenGLWidget):
     def updateSpaceObjects(self):
         tle_data = self.backend.tle_dict
         tle_status = self.backend.tle_status
+        
+        #Delete satellites no longer in TLE data (except ground stations)
+        for key in list(self.spaceObjects.keys()):
+            obj = self.spaceObjects[key]
+            if obj.type != SpaceObjectType.GroundStation and key not in tle_data:
+                del self.spaceObjects[key]
+        
         if not tle_data and not tle_status:
             print("Null passed")
             return
@@ -304,12 +311,6 @@ class GlobeWidget(QOpenGLWidget):
             if key not in self.spaceObjects:
                 satellite = EarthSatellite(lines[0], lines[1], key)
                 self.spaceObjects[key] = Satellite(SpaceObjectType.Satellite, key, satellite)
-
-        #Delete satellites no longer in TLE data (except ground stations)
-        for key in list(self.spaceObjects.keys()):
-            obj = self.spaceObjects[key]
-            if obj.type != SpaceObjectType.GroundStation and key not in tle_data:
-                del self.spaceObjects[key]
 
         #Changes boolean for show in space objects
         for name, value in tle_status.items():
