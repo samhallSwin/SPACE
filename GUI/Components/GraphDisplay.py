@@ -1,4 +1,3 @@
-
 from PyQt5.QtWidgets import QGraphicsOpacityEffect, QSizePolicy, QPushButton, QVBoxLayout, QWidget, QMessageBox
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -20,6 +19,16 @@ class GraphDisplay(CollapsibleOverlay):
 
         self.backend.subscribe(self.update_graphs)
 
+        self.adj_img = None
+        self.conGraph = None
+        self.conGraphPos = None
+        self.conGraphNodes = None
+        self.conGraphEdges = None
+        self.conGraphLabels = None
+
+        self.oldMatrix = None
+        self.oldKeys = []
+
     def set_up_adjacency_graph(self):
         # Layout for graphs and controls
         self.graphLayout = QVBoxLayout()
@@ -40,39 +49,61 @@ class GraphDisplay(CollapsibleOverlay):
         self.graphLayout.addWidget(self.canvas_conn, stretch=5)
 
     def update_graphs(self):
-        positions = self.backend.get_satellite_positions()
-        if not positions:
-            print("No satellite positions; skipping graph update.")
-            self.ax_adj.clear()
-            self.ax_conn.clear()
-            self.canvas_adj.draw()
-            self.canvas_conn.draw()
-            return
-        
+        adj_matrix = self.backend.adjacencyMatrix
+        keys = self.backend.adjacencyMatrixKeys
+
+        if adj_matrix is None: return
+        # if self.oldMatrix is not None and np.array_equal(self.oldMatrix, adj_matrix): return
         try:
-
-            adj_matrix, keys = self.backend.instance.generate_adjacency_matrix(positions)
-
             # --- update adjacency graph ---
-            self.ax_adj.clear()
-            self.ax_adj.imshow(adj_matrix, cmap='Blues', interpolation='none', aspect='equal')
-            self.ax_adj.set_title('Adjacency Matrix')
-            self.ax_adj.set_xticks(np.arange(len(keys)))
-            self.ax_adj.set_yticks(np.arange(len(keys)))
-            self.ax_adj.set_xticklabels(keys, rotation=90)
-            self.ax_adj.set_yticklabels(keys)
-            self.canvas_adj.draw()
+            if self.adj_img is None:
+                self.adj_img = self.ax_adj.imshow(adj_matrix, cmap='Blues', interpolation='none', aspect='equal')
+                self.ax_adj.set_title('Adjacency Matrix')
+            else:
+                self.adj_img.set_data(adj_matrix)
+
+            if len(self.ax_adj.get_xticks()) != len(keys):
+                self.ax_adj.set_xticks(np.arange(len(keys)))
+                self.ax_adj.set_yticks(np.arange(len(keys)))
+                self.ax_adj.set_xticklabels(keys, rotation=90)
+                self.ax_adj.set_yticklabels(keys)
+
+            if self.canvas_adj.width() > 0 and self.canvas_adj.height() > 0:#Get rid of runtimeWarning
+                self.canvas_adj.draw()  
 
             # --- update connection graph ---
-            G = nx.from_numpy_array(adj_matrix)
-            pos = nx.spring_layout(G)
-            self.ax_conn.clear()
-            nx.draw(G, pos, ax=self.ax_conn, with_labels=True, node_color='skyblue')
-            self.ax_conn.set_title('Connection Graph')
-            self.canvas_conn.draw()
+            if self.conGraph is None:
+                self.conGraph = nx.from_numpy_array(adj_matrix)
+                self.conGraphPos = nx.spring_layout(self.conGraph)
+                self.conGraphNodes = nx.draw_networkx_nodes(self.conGraph, self.conGraphPos, ax=self.ax_conn, node_color='skyblue')
+                self.conGraphEdges = nx.draw_networkx_edges(self.conGraph, self.conGraphPos, ax=self.ax_conn)
+                self.conGraphLabels = nx.draw_networkx_labels(self.conGraph, self.conGraphPos, ax=self.ax_conn)
+                self.ax_conn.set_title('Connection Graph')
+            else:
+                self.conGraph = nx.from_numpy_array(adj_matrix)
+                # if len(self.conGraphPos) != len(self.conGraph):#Will only change graph if nodes are changed, if labels are then it will break
+                if self.conGraphNodes is not None:
+                    self.conGraphNodes.remove()
+                if self.conGraphLabels is not None:
+                    for label in self.conGraphLabels.values():
+                        label.remove()
+                self.conGraphPos = nx.spring_layout(self.conGraph, pos=self.conGraphPos, iterations=1)
+                self.conGraphNodes = nx.draw_networkx_nodes(self.conGraph, self.conGraphPos, ax=self.ax_conn, node_color='skyblue')
+                self.conGraphLabels = nx.draw_networkx_labels(self.conGraph, self.conGraphPos, ax=self.ax_conn)
+
+                if self.conGraphEdges is not None:
+                    self.conGraphEdges.remove()
+                self.conGraphEdges = nx.draw_networkx_edges(self.conGraph, self.conGraphPos, ax=self.ax_conn)
+
+            if self.canvas_conn.width() > 0 and self.canvas_adj.height() > 0:
+                self.canvas_conn.draw()
+
+            self.oldMatrix = adj_matrix.copy()
 
         except ValueError as e:
             QMessageBox.critical(self, "Error", f"An error occurred during graph update: {e}")
+        except Exception as e:
+            print(f'Exception Occurred: {e.with_traceback}')
 
 #        
 #
