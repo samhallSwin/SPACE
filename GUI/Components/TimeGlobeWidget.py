@@ -87,8 +87,6 @@ class TimeGlobeWidget(QWidget):
         self.now()
         self.start()
 
-
-
         # Play button
         self.play_btn = QPushButton("▶")
         self.play_btn.clicked.connect(self.scroll)
@@ -105,7 +103,6 @@ class TimeGlobeWidget(QWidget):
         self.midnight_btn = QPushButton("Midnight")
         self.midnight_btn.clicked.connect(self.midnight)
 
-
         # Layout
         layout.addWidget(self.globe)
         layout.addWidget(self.clock_container)
@@ -115,12 +112,13 @@ class TimeGlobeWidget(QWidget):
         for btn in (self.play_btn, self.start_btn, self.stop_btn, self.now_btn, self.midnight_btn):
             h.addWidget(btn)
         layout.addLayout(h)
-        
 
     # Animations Controls
         self.anim = QPropertyAnimation(self.slider, b"value", self)
         self.anim.setEasingCurve(QEasingCurve.Linear)
         self.anim.setDuration(Rot_Dur) #Orbit duration
+        
+        self.setFocusPolicy(Qt.StrongFocus)
         
     def update(self):
         Backend().on_slider_change(self.slider.value())
@@ -182,3 +180,15 @@ class TimeGlobeWidget(QWidget):
         self.anim.setStartValue(self.slider.value())
         self.anim.setEndValue(self.slider.maximum())
         self.anim.start()
+        
+    def keyPressEvent(self, event):
+        match event.text().lower():
+            case 'n':
+                self.now()
+            case 'm':
+                self.midnight()
+            case ' ':
+                if self.timer.isActive():
+                    self.timer.stop()
+                else:
+                    self.timer.start()
