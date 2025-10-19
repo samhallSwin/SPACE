@@ -131,6 +131,7 @@ class TimeGlobeWidget(QWidget):
         self.time = self.time.addSecs(1)
         self.time_display.setText(self.time.toString("hh:mm:ss"))
         self.time_display.setAccessibleDescription(self.time.toString("hh:mm:ss"))
+        self.slider.setValue((QTime(0,0).secsTo(self.time)))
         self.update()
 
     def start(self):
