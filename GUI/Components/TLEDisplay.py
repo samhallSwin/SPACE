@@ -76,10 +76,10 @@ class TLEDisplay(CollapsibleOverlay):
             widget_to_remove.setParent(None)
             widget_to_remove.deleteLater()
 
-        for i in self.backend.tle_dict:
-            name = str(i)
-            line_1 = self.backend.tle_dict[name][0]
-            line_2 = self.backend.tle_dict[name][1]
+        for key, value in self.backend.tle_dict.items():
+            name = str(key)
+            line_1 = value[0]
+            line_2 = value[1]
 
             tle_slot = TLESlot(self, name, line_1, line_2)
             tle_slot.checkbox.stateChanged.connect(self.update_all_enabled_status)
