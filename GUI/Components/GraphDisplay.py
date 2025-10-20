@@ -58,18 +58,13 @@ class GraphDisplay(CollapsibleOverlay):
             # --- update adjacency graph ---
             if self.adj_img is None:
                 self.adj_img = self.ax_adj.imshow(adj_matrix, cmap='Blues', interpolation='none', aspect='equal')
+                self.ax_adj.clear()
+                self.ax_adj.imshow(adj_matrix, cmap='Blues', interpolation='none', aspect='equal')
                 self.ax_adj.set_title('Adjacency Matrix')
-            else:
-                self.adj_img.set_data(adj_matrix)
-
-            if len(self.ax_adj.get_xticks()) != len(keys):
                 self.ax_adj.set_xticks(np.arange(len(keys)))
                 self.ax_adj.set_yticks(np.arange(len(keys)))
                 self.ax_adj.set_xticklabels(keys, rotation=90)
-                self.ax_adj.set_yticklabels(keys)
-
-            if self.canvas_adj.width() > 0 and self.canvas_adj.height() > 0:#Get rid of runtimeWarning
-                self.canvas_adj.draw()  
+                self.ax_adj.set_yticklabels(keys) 
 
             # --- update connection graph ---
             if self.conGraph is None:
@@ -82,16 +77,16 @@ class GraphDisplay(CollapsibleOverlay):
             else:
                 self.conGraph = nx.from_numpy_array(adj_matrix)
                 # if len(self.conGraphPos) != len(self.conGraph):#Will only change graph if nodes are changed, if labels are then it will break
-                if self.conGraphNodes is not None:
+                if self.conGraphNodes:
                     self.conGraphNodes.remove()
-                if self.conGraphLabels is not None:
+                if self.conGraphLabels:
                     for label in self.conGraphLabels.values():
                         label.remove()
                 self.conGraphPos = nx.spring_layout(self.conGraph, pos=self.conGraphPos, iterations=1)
                 self.conGraphNodes = nx.draw_networkx_nodes(self.conGraph, self.conGraphPos, ax=self.ax_conn, node_color='skyblue')
                 self.conGraphLabels = nx.draw_networkx_labels(self.conGraph, self.conGraphPos, ax=self.ax_conn)
 
-                if self.conGraphEdges is not None:
+                if self.conGraphEdges:
                     self.conGraphEdges.remove()
                 self.conGraphEdges = nx.draw_networkx_edges(self.conGraph, self.conGraphPos, ax=self.ax_conn)
 
