@@ -155,3 +155,9 @@ class Backend(metaclass=Singleton):
             print(f"{cls_name} Computation Time:",end-start)
         TotalEnd=time()
         print("Total Computation Time:", TotalEnd-TotalStart)
+        
+    def delete_all(self):
+        self.tle_dict.clear()
+        self.tle_status.clear()
+
+        self._notify()
