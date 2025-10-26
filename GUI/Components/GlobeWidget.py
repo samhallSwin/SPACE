@@ -332,11 +332,3 @@ class GlobeWidget(QOpenGLWidget):
                 keys.append(key)
                 
         self.ObjectAdjacencyMatrix.generate_adjacency_matrix(positions, keys)
-    
-    def resizeGL(self, w, h):
-        glViewport(0, 0, w, h)
-        glMatrixMode(GL_PROJECTION)
-        glLoadIdentity()
-        aspect = w / h if h != 0 else 1
-        gluPerspective(45.0, aspect, 1.0, 100.0)
-        glMatrixMode(GL_MODELVIEW)
