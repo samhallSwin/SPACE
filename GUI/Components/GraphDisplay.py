@@ -58,6 +58,7 @@ class GraphDisplay(CollapsibleOverlay):
             # --- update adjacency graph ---
             if self.adj_img is None:
                 self.adj_img = self.ax_adj.imshow(adj_matrix, cmap='Blues', interpolation='none', aspect='equal')
+            else:
                 self.ax_adj.clear()
                 self.ax_adj.imshow(adj_matrix, cmap='Blues', interpolation='none', aspect='equal')
                 self.ax_adj.set_title('Adjacency Matrix')
@@ -92,6 +93,7 @@ class GraphDisplay(CollapsibleOverlay):
 
             if self.canvas_conn.width() > 0 and self.canvas_adj.height() > 0:
                 self.canvas_conn.draw()
+                self.canvas_adj.draw()
 
             self.oldMatrix = adj_matrix.copy()
 
