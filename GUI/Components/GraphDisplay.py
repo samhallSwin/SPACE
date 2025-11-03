@@ -1,6 +1,15 @@
-from PyQt5.QtWidgets import QGraphicsOpacityEffect, QSizePolicy, QPushButton, QVBoxLayout, QWidget, QMessageBox
+"""
+Filename: GraphDisplay.py
+Author: Luke Magnuson, Nikola Markoski
+Description: This script derives from collapsibleOverlay, and serves as a display for the connection and adjacency graphs.
+These graphs are drawn from the Sat_Sim instance from user supplied data.
+"""
+
+from PyQt5.QtWidgets import QFileDialog, QSizePolicy, QPushButton, QVBoxLayout, QWidget, QMessageBox
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_pdf import PdfPages
+
 import numpy as np
 import networkx as nx
 
@@ -16,6 +25,11 @@ class GraphDisplay(CollapsibleOverlay):
         self.control_panel_height_reduction = 260
         self.set_up_adjacency_graph()
         self.set_up_connection_graph()
+
+        self.output_button = QPushButton("Generate Output File")
+        self.output_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.output_button.clicked.connect(self.save_adj_matrix_for_specified_timeframe)
+        self.graphLayout.addWidget(self.output_button)
 
         self.backend.subscribe(self.update_graphs)
 
@@ -37,7 +51,7 @@ class GraphDisplay(CollapsibleOverlay):
         # --- Adjacency graph ---
         self.figure_adj, self.ax_adj = plt.subplots(figsize=(6, 4))
         self.canvas_adj = FigureCanvas(self.figure_adj)
-        self.canvas_adj.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        #self.canvas_adj.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.graphLayout.addWidget(self.canvas_adj, stretch=5)
 
 
@@ -65,8 +79,8 @@ class GraphDisplay(CollapsibleOverlay):
                 self.ax_adj.set_xticks(np.arange(len(keys)))
                 self.ax_adj.set_yticks(np.arange(len(keys)))
                 self.ax_adj.set_xticklabels(keys, rotation=90)
-                self.ax_adj.set_yticklabels(keys) 
-
+                self.ax_adj.set_yticklabels(keys)
+            
             # --- update connection graph ---
             if self.conGraph is None:
                 self.conGraph = nx.from_numpy_array(adj_matrix)
@@ -101,3 +115,46 @@ class GraphDisplay(CollapsibleOverlay):
             QMessageBox.critical(self, "Error", f"An error occurred during graph update: {e}")
         except Exception as e:
             print(f'Exception Occurred: {e.with_traceback}')
+
+    def save_adj_matrix_for_specified_timeframe(self):
+        #Save the adjacency matrices and network graphs to files.
+        try:
+            output_file, _ = QFileDialog.getSaveFileName(self, "Save Adjacency Matrix", "", "Text Files (*.txt);;All Files (*)")
+            pdf_file, _ = QFileDialog.getSaveFileName(self, "Save Network Graphs PDF", "", "PDF Files (*.pdf);;All Files (*)")
+
+            print("GraphDisplay -----------------------------------------------------------------1")
+
+            if output_file and pdf_file:
+                self.backend.instance.set_tle_data(self.backend.get_data_from_enabled_tle_slots())
+                matrices = self.backend.instance.run_with_adj_matrix()
+
+                print("GraphDisplay -----------------------------------------------------------------2")
+
+                if not matrices:
+                    QMessageBox.warning(self, "No Data", "No data was generated to save.")
+                    return
+                
+                with open(output_file, 'w') as f:
+                    print("GraphDisplay - Working on output file")
+                    for timestamp, matrix in matrices:
+                        formatted_timestamp = timestamp if isinstance(timestamp, str) else timestamp.utc_iso()
+                        f.write(f"Time: {formatted_timestamp}\n")
+                        np.savetxt(f, matrix, fmt='%d')
+                        f.write("\n")
+
+                with PdfPages(pdf_file) as pdf:
+                    print("GraphDisplay - Working on PDF")
+                    for timestamp, matrix in matrices:
+                        formatted_timestamp = timestamp if isinstance(timestamp, str) else timestamp.utc_iso()
+                        G = nx.from_numpy_array(matrix)
+                        pos = nx.spring_layout(G)
+                        plt.figure()
+                        nx.draw(G, pos, with_labels=True, node_color='skyblue')
+                        plt.title(f"Network Graph at {formatted_timestamp}")
+                        pdf.savefig()
+                        plt.close()
+
+                QMessageBox.information(self, "Success", "Adjacency matrix and network graphs saved successfully!")
+
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"An error occurred while saving the matrix: {e}")
