@@ -17,7 +17,7 @@ from Components.CollapsibleOverlay import CollapsibleOverlay, OverlaySide
 from Components.DropLabel import DropLabel
 from Components.TLESlot import TLESlot
 
-from PyQt5.QtWidgets import  QHBoxLayout, QLabel, QVBoxLayout, QWidget, QScrollArea
+from PyQt5.QtWidgets import  QHBoxLayout, QLabel, QVBoxLayout, QWidget, QScrollArea, QSizePolicy, QPushButton
 from PyQt5.QtCore import Qt
 
 class TLEDisplay(CollapsibleOverlay):
@@ -32,24 +32,41 @@ class TLEDisplay(CollapsibleOverlay):
         self.set_up_scroll_box()
 
     def set_up_drop_label(self):
-        # Use a horizontal layout
-        self.drop_layout = QHBoxLayout()
-        self.drop_layout.setContentsMargins(10, 10, 10, 10)
-        self.drop_layout.setSpacing(15)
+            # Main vertical layout for the drop section
+            self.drop_section_layout = QVBoxLayout()
+            self.drop_section_layout.setContentsMargins(10, 10, 10, 10)
+            self.drop_section_layout.setSpacing(10)
 
-        # Add DropLabel on the left
-        self.drop_label = DropLabel(self)
-        self.drop_layout.addWidget(self.drop_label)
+            # Horizontal layout for DropLabel + right content
+            self.drop_layout = QHBoxLayout()
+            self.drop_layout.setSpacing(15)
 
-        # Add your existing content on the right
-        self.right_content = QLabel("Collapsible content goes here.")
-        self.right_content.setWordWrap(True)
-        self.drop_layout.addWidget(self.right_content)
+            # DropLabel on the left
+            self.drop_label = DropLabel(self)
+            self.drop_layout.addWidget(self.drop_label)
 
-        self.content_layout.addLayout(self.drop_layout)
+            # Right content label
+            self.right_content = QLabel("Collapsible content goes here.")
+            self.right_content.setWordWrap(True)
+            self.drop_layout.addWidget(self.right_content)
 
-        #set up event listener
-        self.drop_label.fileDropped.connect(self.on_file_dropped)
+            # Add drop layout to main vertical layout
+            self.drop_section_layout.addLayout(self.drop_layout)
+
+            # Add "Delete All" button beneath DropLabel
+            self.delete_all_button = QPushButton("Delete All")
+            self.delete_all_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+            self.delete_all_button.clicked.connect(self.backend.delete_all)
+            self.delete_all_button.clicked.connect(self.populate_scroll_items)
+            self.drop_section_layout.addWidget(self.delete_all_button)
+
+            # Add the combined drop section layout to the content layout
+            self.content_layout.addLayout(self.drop_section_layout)
+
+            # Setup event listener
+            self.drop_label.fileDropped.connect(self.on_file_dropped)
+            self.drop_label.setEnabled(self.expanded)
+            self.drop_label.setAcceptDrops(self.expanded)
  
     def set_up_scroll_box(self):
         # Scroll area
@@ -74,10 +91,10 @@ class TLEDisplay(CollapsibleOverlay):
             widget_to_remove.setParent(None)
             widget_to_remove.deleteLater()
 
-        for i in self.backend.tle_dict:
-            name = str(i)
-            line_1 = self.backend.tle_dict[name][0]
-            line_2 = self.backend.tle_dict[name][1]
+        for key, value in self.backend.tle_dict.items():
+            name = str(key)
+            line_1 = value[0]
+            line_2 = value[1]
 
             tle_slot = TLESlot(self, name, line_1, line_2)
             tle_slot.checkbox.stateChanged.connect(self.update_all_enabled_status)
@@ -113,6 +130,8 @@ class TLEDisplay(CollapsibleOverlay):
             self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
 
         super().toggle_size()
+        self.drop_label.setEnabled(self.expanded)
+        self.drop_label.setAcceptDrops(self.expanded)
 
     def on_file_dropped(self, tle_file_path):
         print("File dropped from: " + tle_file_path)

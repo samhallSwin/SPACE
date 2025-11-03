@@ -1,0 +1,14 @@
+Adj Matrix
+- Column XYZ
+- Row XYZ
+- Table 
+- stored in top right pull out menu
+- Also shows network diagram (connection graph) version
+
+Satellite Imaging Sim
+- Permanent view window bottom right of earth
+
+Ground station position
+- Design a way for user to input custom position.
+
+

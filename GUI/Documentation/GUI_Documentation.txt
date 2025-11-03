@@ -1,0 +1,21 @@
+Earth Texture:
+For Development purposes Nasa “November, Blue Marble Next Generation w/ Topography and Bathymetry” was chosen as the earth texture specifically the 21600 x 10800 pixel version in PNG. Despite its larger file than JPEG it is a lossless form of compressing meaning the image will be clearer when blown up inside the program.
+181 MB - PNG
+https://eoimages.gsfc.nasa.gov/images/imagerecords/73000/73884/world.topo.bathy.200411.3x21600x10800.png 
+https://visibleearth.nasa.gov/images/73884/november-blue-marble-next-generation-w-topography-and-bathymetry/73900l 
+
+Published November 1, 2004
+Data acquired November 1 - 30, 2004
+
+
+Skybox:
+This set of star maps was created by plotting the position, brightness, and color of just over 100 million stars from the Bright Star, Tycho-2, and UCAC3 star catalogs
+Deep Star Maps
+https://svs.gsfc.nasa.gov/3895 
+Released Tuesday, January 17, 2012
+
+
+Font 
+Audiowide
+license: SIL Open Font License (OFL)
+link: https://www.fontspace.com/audiowide-font-f13636

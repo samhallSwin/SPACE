@@ -89,24 +89,18 @@ class CollapsibleOverlay(QFrame):
 
     def _stop_animations(self):
         """Stop & clear any running animations/groups before starting new ones."""
-        if getattr(self, "_group", None) is not None:
-            try:
-                self._group.stop()
-            except Exception:
-                pass
-            self._group = None
-        if getattr(self, "_anim", None) is not None:
-            try:
-                self._anim.stop()
-            except Exception:
-                pass
-            self._anim = None
-        if getattr(self, "_fade", None) is not None:
-            try:
-                self._fade.stop()
-            except Exception:
-                pass
-            self._fade = None
+        attributes = ["_group", "_anim", "_fade"]
+        for attr in attributes:
+            obj = getattr(self, attr, None)
+            
+            if obj is None: continue
+
+            try: 
+                obj.stop()
+            except Exception as e:
+                print(f'{e}')
+
+            setattr(self, attr, None)
 
     # ----------------------------
     # Toggle / coordination
