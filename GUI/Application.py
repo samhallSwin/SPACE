@@ -1,4 +1,8 @@
 import sys
+import os
+
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
+
 from PyQt5.QtWidgets import QApplication, QMainWindow, QOpenGLWidget
 
 from Components.GraphDisplay import GraphDisplay
@@ -8,7 +12,7 @@ from Components.TimeGlobeWidget import TimeGlobeWidget
 
 
 #TEMP#
-import random #To temporarily select a couple satellites from the 3le file sam posted
+import random # To temporarily select a couple satellites from the 3le file sam posted
 from skyfield.constants import ERAD
 
 EARTH_RADIUS = 6378
